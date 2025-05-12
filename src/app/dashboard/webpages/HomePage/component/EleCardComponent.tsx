@@ -1,0 +1,119 @@
+import React, { useEffect, useState } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
+import { Box, Button, Card, CardMedia, Divider, Typography } from '@mui/material';
+import axios from 'axios';
+
+import EditCardModal from '../formComponent/EditCardModal';
+
+const EleCardComponent = () => {
+  const [open, setOpen] = useState(false);
+  const [cardData, setCardData] = useState<any>(null);
+
+  const { api_getEleCardData, api_updateleCardData } = ProjectApiList();
+
+  const fetchCardData = async () => {
+    try {
+      const res = await axios.get(api_getEleCardData);
+      setCardData(res.data.data);
+    } catch (err) {
+      console.error('Error fetching card data:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCardData();
+  }, []);
+
+  const handleSave = async (updatedForm: any) => {
+    try {
+      const payload = new FormData();
+      payload.append('eleCardComp_title', updatedForm.title);
+      payload.append('eleCardComp_desc', updatedForm.description);
+      payload.append('eleCardComp_img1', updatedForm.image1);
+      payload.append('eleCardComp_img2', updatedForm.image2);
+
+      const res = await axios.put(api_updateleCardData, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (res.data.status === 'success') {
+        fetchCardData();
+        setOpen(false);
+      }
+    } catch (err) {
+      console.error('Error updating card:', err);
+    }
+  };
+
+  if (!cardData) return null;
+
+  return (
+    <Card
+      sx={{
+        p: 3,
+        mb: 4,
+        boxShadow: 3,
+        borderRadius: 2,
+        backgroundColor: '#fafafa',
+      }}
+    >
+      <Typography variant="h5" align="center" fontWeight={600} gutterBottom>
+        Elfo Combo Card
+      </Typography>
+
+      <Divider sx={{ my: 3 }} />
+
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 3,
+        }}
+      >
+        <CardMedia
+          component="img"
+          image={cardData.eleCardComp_img1}
+          alt="Combo Item 1"
+          sx={{ width: 120, height: 120, borderRadius: 2, objectFit: 'cover' }}
+        />
+        <CardMedia
+          component="img"
+          image={cardData.eleCardComp_img2}
+          alt="Combo Item 2"
+          sx={{ width: 120, height: 120, borderRadius: 2, objectFit: 'cover' }}
+        />
+
+        <Box sx={{ flex: 1, textAlign: 'center' }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            {cardData.eleCardComp_title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {cardData.eleCardComp_desc}
+          </Typography>
+        </Box>
+
+        <Box display="flex" justifyContent="center">
+          <Button variant="contained" onClick={() => setOpen(true)}>
+            Edit
+          </Button>
+        </Box>
+      </Box>
+
+      <EditCardModal
+        open={open}
+        onClose={() => setOpen(false)}
+        data={{
+          title: cardData.eleCardComp_title,
+          description: cardData.eleCardComp_desc,
+          image1: cardData.eleCardComp_img1,
+          image2: cardData.eleCardComp_img2,
+        }}
+        onSave={handleSave}
+      />
+    </Card>
+  );
+};
+
+export default EleCardComponent;

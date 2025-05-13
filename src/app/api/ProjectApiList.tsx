@@ -20,10 +20,13 @@ export default function ProjectApiList() {
 
     api_getNavigationContent: `${baseUrl}/api/home/get-navigation`,
     api_updateNavigationContent: `${baseUrl}/api/home/update-navigation`,
-
+    
     api_getMenuItemsData: `${baseUrl}/api/home/get-menu-items`,
     api_addMenuItemsData: `${baseUrl}/api/home/add-menu-item`,
     api_updateMenuItemsData: `${baseUrl}/api/home/update-menu-item`,
+    
+    api_logIn: `${baseUrl}/api/auth/login`,
+    api_signUp: `${baseUrl}/api/auth/signup`,
   };
 
   return apiList;

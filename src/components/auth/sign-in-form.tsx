@@ -3,6 +3,7 @@
 import * as React from 'react';
 import RouterLink from 'next/link';
 import { useRouter } from 'next/navigation';
+import ProjectApiList from '@/app/api/ProjectApiList';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -15,11 +16,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { EyeSlash as EyeSlashIcon } from '@phosphor-icons/react/dist/ssr/EyeSlash';
+import axios from 'axios';
 import { Controller, useForm } from 'react-hook-form';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
-import { authClient } from '@/lib/auth/client';
 import { useUser } from '@/hooks/use-user';
 
 const schema = zod.object({
@@ -29,10 +30,11 @@ const schema = zod.object({
 
 type Values = zod.infer<typeof schema>;
 
-const defaultValues = { email: 'sofia@devias.io', password: 'Secret1' } satisfies Values;
+// const defaultValues = { email: 'sofia@devias.io', password: 'Secret1' } satisfies Values;
 
 export function SignInForm(): React.JSX.Element {
   const router = useRouter();
+  const { api_logIn } = ProjectApiList();
 
   const { checkSession } = useUser();
 
@@ -45,38 +47,67 @@ export function SignInForm(): React.JSX.Element {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
+  } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const onSubmit = React.useCallback(
-    async (values: Values): Promise<void> => {
-      setIsPending(true);
+  const logInFunction = async (values: Record<string, any>) => {
+    setIsPending(true);
 
-      const { error } = await authClient.signInWithPassword(values);
+    try {
+      const response = await axios.post(api_logIn, values);
 
-      if (error) {
-        setError('root', { type: 'server', message: error });
-        setIsPending(false);
-        return;
+      if (response.status === 200) {
+        const { token, user } = response.data;
+
+        // Save token and user info in localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('adminUser', JSON.stringify(user));
+
+        router.push('/dashboard');
+        window.location.reload();
+      } else {
+        throw new Error('Login failed');
       }
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Something went wrong';
+      setError('root', {
+        type: 'manual',
+        message,
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
 
-      // Refresh the auth state
-      await checkSession?.();
+  const onSubmit = (values: Record<string, any>) => {
+    logInFunction(values);
+  };
 
-      // UserProvider, for this case, will not refresh the router
-      // After refresh, GuestGuard will handle the redirect
-      router.refresh();
-    },
-    [checkSession, router, setError]
-  );
+  React.useEffect(() => {
+    setTimeout(() => {
+      // router.refresh();
+      // window.location.reload();
+    }, 1000);
+  }, []);
 
   return (
     <Stack spacing={4}>
       <Stack spacing={1}>
-        <Typography variant="h4">Sign in</Typography>
+        <Typography variant="h4">Admin Login</Typography>
         <Typography color="text.secondary" variant="body2">
           Don&apos;t have an account?{' '}
-          <Link component={RouterLink} href={paths.auth.signUp} underline="hover" variant="subtitle2">
-            Sign up
+          <Link
+            component={RouterLink}
+            href={paths.auth.signUp}
+            underline="hover"
+            variant="subtitle2"
+            sx={{
+              color: '#de4a1c',
+              '&:hover': {
+                color: '#bf3e18', // darker shade for hover effect
+              },
+            }}
+          >
+            Admin Sign up
           </Link>
         </Typography>
       </Stack>
@@ -128,26 +159,27 @@ export function SignInForm(): React.JSX.Element {
             )}
           />
           <div>
-            <Link component={RouterLink} href={paths.auth.resetPassword} variant="subtitle2">
+            {/* <Link component={RouterLink} href={paths.auth.resetPassword} variant="subtitle2">
               Forgot password?
-            </Link>
+            </Link> */}
           </div>
           {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
-          <Button disabled={isPending} type="submit" variant="contained">
+          <Button
+            disabled={isPending}
+            type="submit"
+            variant="contained"
+            sx={{
+              backgroundColor: '#de4a1c',
+              '&:hover': {
+                backgroundColor: '#bf3e18', // darker shade for hover effect
+              },
+            }}
+          >
             Sign in
           </Button>
         </Stack>
       </form>
-      <Alert color="warning">
-        Use{' '}
-        <Typography component="span" sx={{ fontWeight: 700 }} variant="inherit">
-          sofia@devias.io
-        </Typography>{' '}
-        with password{' '}
-        <Typography component="span" sx={{ fontWeight: 700 }} variant="inherit">
-          Secret1
-        </Typography>
-      </Alert>
+      
     </Stack>
   );
 }

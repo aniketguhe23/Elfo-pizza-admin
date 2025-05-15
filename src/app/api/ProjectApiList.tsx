@@ -27,6 +27,22 @@ export default function ProjectApiList() {
     
     api_logIn: `${baseUrl}/api/auth/login`,
     api_signUp: `${baseUrl}/api/auth/signup`,
+
+    api_getCategories: `${baseUrl}/api/menu/categories/get`,
+    api_createCategories: `${baseUrl}/api/menu/categories/create`,
+    api_updateCategories: `${baseUrl}/api/menu/categories/update`,
+
+    api_getSubCategories: `${baseUrl}/api/menu/subcategories/get`,
+    api_createSubCategories: `${baseUrl}/api/menu/subcategories/create`,
+    api_updateSubCategories: `${baseUrl}/api/menu/subcategories/update`,
+
+    api_getItems: `${baseUrl}/api/menu/items/get`,
+    api_createItem: `${baseUrl}/api/menu/items/create`,
+    api_updateItem: `${baseUrl}/api/menu/items/update`,
+
+    api_getItemVariants: `${baseUrl}/api/menu/item-variants/get`,
+    api_createItemVariant: `${baseUrl}/api/menu/item-variants/create`,
+    api_updateItemVariant: `${baseUrl}/api/menu/item-variants/update`,
   };
 
   return apiList;

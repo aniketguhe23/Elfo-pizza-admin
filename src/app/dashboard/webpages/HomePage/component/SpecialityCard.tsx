@@ -5,10 +5,6 @@ import {
   Button,
   Card,
   CardMedia,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   Typography,
 } from '@mui/material';
@@ -112,44 +108,46 @@ const SpecialityCard = () => {
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 5 }}>
-          <Button variant="contained" size="small" onClick={() => setOpen(true)}>
+          <Button variant="contained" size="small" onClick={() => setOpen(true)}  sx={{
+              mt: { xs: 2, sm: 0 },
+            
+              backgroundColor: '#d3d3d3',
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'black', // light gray
+                color: 'white',
+              },
+            }}>
             Edit
           </Button>
         </Box>
       </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Specialities</DialogTitle>
-        <DialogContent dividers>
-          <SpecialityEditForm
-            defaultValues={{
-              title: specialityData?.speciality1_maintitle || '',
-              subtitle: specialityData?.speciality1_subtitle || '',
-              dishes: [
-                {
-                  title: specialityData?.speciality1_card1_title || '',
-                  subtitle: specialityData?.speciality1_card1_subtitle || '',
-                  button: specialityData?.speciality1_card1_button || '',
-                  image: specialityData?.speciality1_card1_img || null,
-                },
-                {
-                  title: specialityData?.speciality1_card2_title || '',
-                  subtitle: specialityData?.speciality1_card2_subtitle || '',
-                  button: specialityData?.speciality1_card2_button || '',
-                  image: specialityData?.speciality1_card2_img || null,
-                },
-              ],
-            }}
-            onSubmit={handleUpdate}
-            onCancel={() => setOpen(false)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {open && (
+        <SpecialityEditForm
+          open={open}
+          defaultValues={{
+            title: specialityData?.speciality1_maintitle || '',
+            subtitle: specialityData?.speciality1_subtitle || '',
+            dishes: [
+              {
+                title: specialityData?.speciality1_card1_title || '',
+                subtitle: specialityData?.speciality1_card1_subtitle || '',
+                button: specialityData?.speciality1_card1_button || '',
+                image: specialityData?.speciality1_card1_img || null,
+              },
+              {
+                title: specialityData?.speciality1_card2_title || '',
+                subtitle: specialityData?.speciality1_card2_subtitle || '',
+                button: specialityData?.speciality1_card2_button || '',
+                image: specialityData?.speciality1_card2_img || null,
+              },
+            ],
+          }}
+          onSubmit={handleUpdate}
+          onCancel={() => setOpen(false)}
+        />
+      )}
     </>
   );
 };

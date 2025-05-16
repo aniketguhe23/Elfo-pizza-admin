@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
   Button,
@@ -8,8 +9,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
+  InputAdornment,
   MenuItem,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -19,10 +21,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Plus } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import ProjectApiList from '@/app/api/ProjectApiList';
+import { Pencil, Plus, Search, Trash, Trash2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 
 interface Item {
   id: number;
@@ -30,13 +31,19 @@ interface Item {
 }
 
 interface ItemVariant {
-  id: number;
+  variantId: number;
   item_id: number;
   size: string;
-  crust_type: string;
+  crustType: string;
   price: number;
   itemName?: string;
-  variantId?: any;
+}
+
+interface FormData {
+  item_id: number;
+  size: string;
+  crustType: string;
+  price: number;
 }
 
 const ItemVariantComponent = () => {
@@ -44,26 +51,21 @@ const ItemVariantComponent = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ItemVariant | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const {
-    api_getItemVariants,
-    api_createItemVariant,
-    api_updateItemVariant,
-    api_getItems,
-  } = ProjectApiList();
+  const { api_getItemVariants, api_createItemVariant, api_updateItemVariant, api_getItems } = ProjectApiList();
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors },
-  } = useForm<{
-    item_id: number;
-    size: string;
-    crust_type: string;
-    price: number;
-  }>();
+  } = useForm<FormData>();
+
+  useEffect(() => {
+    fetchVariants();
+    fetchItems();
+  }, []);
 
   const fetchVariants = async () => {
     try {
@@ -83,17 +85,12 @@ const ItemVariantComponent = () => {
     }
   };
 
-  useEffect(() => {
-    fetchVariants();
-    fetchItems();
-  }, []);
-
   const handleDialogOpen = (variant?: ItemVariant) => {
-    setEditingVariant(variant || null);
+    setEditingVariant(variant ?? null);
     reset({
       item_id: variant?.item_id ?? undefined,
-      size: variant?.size || '',
-      crust_type: variant?.crust_type || '',
+      size: variant?.size ?? '',
+      crustType: variant?.crustType ?? '',
       price: variant?.price ?? undefined,
     });
     setOpen(true);
@@ -105,11 +102,10 @@ const ItemVariantComponent = () => {
     setOpen(false);
   };
 
-  const onSubmit = async (data: any) => {
-
+  const onSubmit = async (data: FormData) => {
     try {
       if (editingVariant) {
-        await axios.put(`${api_updateItemVariant}/${editingVariant?.variantId}`, data);
+        await axios.put(`${api_updateItemVariant}/${editingVariant.variantId}`, data);
       } else {
         await axios.post(api_createItemVariant, data);
       }
@@ -120,115 +116,229 @@ const ItemVariantComponent = () => {
     }
   };
 
+  const filteredVariants = variants.filter(
+    (v) =>
+      v.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.crustType.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight={600}>
+        <Typography variant="h4" fontWeight={700}>
           Item Variants
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => handleDialogOpen()}
-          sx={{
-            backgroundColor: '#635bff',
-            color: '#fff',
-            fontSize: '14px',
-            padding: '6px 16px',
-            borderRadius: '4px',
-            gap: '8px',
-            '&:hover': { backgroundColor: '#3d33ff' },
-          }}
-        >
-          <Plus height={17} />
-          Add Variant
-        </Button>
+        <Box display="flex" gap={2}>
+          <TextField
+            size="small"
+            placeholder="Search variants"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => handleDialogOpen()}
+            sx={{
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            Add New
+          </Button>
+        </Box>
       </Box>
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #ddd', borderRadius: 1 }}>
+      <Typography variant="subtitle1" gutterBottom>
+        You have {variants.length} total variants
+      </Typography>
+
+      <TableContainer sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell><strong>S. No</strong></TableCell>
-              <TableCell><strong>Item</strong></TableCell>
-              <TableCell><strong>Size</strong></TableCell>
-              <TableCell><strong>Crust Type</strong></TableCell>
-              <TableCell><strong>Price</strong></TableCell>
-              <TableCell align="center"><strong>Actions</strong></TableCell>
+              <TableCell>S. No</TableCell>
+              <TableCell>Item Name</TableCell>
+              <TableCell>Size</TableCell>
+              <TableCell>Crust</TableCell>
+              <TableCell>Price (₹)</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {variants.map((variant:any, index) => (
-              <TableRow key={variant.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{variant.itemName || '-'}</TableCell>
-                <TableCell>{variant.size}</TableCell>
-                <TableCell>{variant.crustType}</TableCell>
-                <TableCell>₹{variant.price}</TableCell>
-                <TableCell align="center">
-                  <Button variant="outlined" size="small" onClick={() => handleDialogOpen(variant)}>
-                    Edit
-                  </Button>
+            {filteredVariants.length > 0 ? (
+              filteredVariants.map((sub, index) => (
+                <TableRow key={index}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{sub.itemName}</TableCell>
+                  <TableCell>{sub.size}</TableCell>
+                  <TableCell>{sub.crustType}</TableCell>
+                  <TableCell>₹{sub.price}</TableCell>
+
+                  <TableCell>
+                    <IconButton onClick={() => handleDialogOpen(sub)}>
+                      <Pencil size={16} />
+                    </IconButton>
+                    <IconButton>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body2" color="textSecondary">
+                    No subcategories found.
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={open} onClose={handleDialogClose} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="sm"
+        BackdropProps={{
+    sx: {
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      backdropFilter: 'blur(2px)',
+    },
+  }}
+      >
         <DialogTitle>{editingVariant ? 'Edit Variant' : 'Add Variant'}</DialogTitle>
+
         <DialogContent dividers>
-          <Box component="form" id="variant-form" onSubmit={handleSubmit(onSubmit)} display="flex" flexDirection="column" gap={2}>
-            <TextField
-              select
-              label="Select Item"
-              fullWidth
-              {...register('item_id', { required: 'Item is required' })}
-              error={!!errors.item_id}
-              helperText={errors.item_id?.message}
-            >
-              {items.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </TextField>
+          <Box
+            component="form"
+            id="variant-form"
+            onSubmit={handleSubmit(onSubmit)}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            mt={1}
+          >
+            {/* Select Item */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Select Item</Box>
+              <TextField
+                select
+                fullWidth
+                {...register('item_id', { required: 'Item is required' })}
+                error={!!errors.item_id}
+                helperText={errors.item_id?.message}
+                size="small"
+              >
+                {items.map((item) => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
 
-            <TextField
-              label="Size"
-              fullWidth
-              {...register('size', { required: 'Size is required' })}
-              error={!!errors.size}
-              helperText={errors.size?.message}
-            />
+            {/* Size */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Size</Box>
+              <TextField
+                fullWidth
+                {...register('size', { required: 'Size is required' })}
+                error={!!errors.size}
+                helperText={errors.size?.message}
+                size="small"
+              />
+            </Box>
 
-            <TextField
-              label="Crust Type"
-              fullWidth
-              {...register('crust_type', { required: 'Crust type is required' })}
-              error={!!errors.crust_type}
-              helperText={errors.crust_type?.message}
-            />
+            {/* Crust Type */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Crust Type</Box>
+              <TextField
+                fullWidth
+                {...register('crustType', { required: 'Crust type is required' })}
+                error={!!errors.crustType}
+                helperText={errors.crustType?.message}
+                size="small"
+              />
+            </Box>
 
-            <TextField
-              type="number"
-              label="Price (₹)"
-              fullWidth
-              {...register('price', {
-                required: 'Price is required',
-                valueAsNumber: true,
-                min: { value: 0, message: 'Price must be a positive number' },
-              })}
-              error={!!errors.price}
-              helperText={errors.price?.message}
-            />
+            {/* Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                {...register('price', {
+                  required: 'Price is required',
+                  valueAsNumber: true,
+                  min: { value: 0, message: 'Price must be a positive number' },
+                })}
+                error={!!errors.price}
+                helperText={errors.price?.message}
+                size="small"
+              />
+            </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
+
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
+          <Button
+            onClick={handleDialogClose}
+            variant="outlined"
+            color="secondary"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              color: '#333', // dark gray text
+              borderColor: '#ccc', // light gray border
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#f2f2f2', // slightly darker gray on hover
+                color: '#000',
+                borderColor: '#bbb',
+              },
+            }}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="variant-form" variant="contained">
+          <Button
+            type="submit"
+            form="variant-form"
+            variant="contained"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
             {editingVariant ? 'Update' : 'Save'}
           </Button>
         </DialogActions>

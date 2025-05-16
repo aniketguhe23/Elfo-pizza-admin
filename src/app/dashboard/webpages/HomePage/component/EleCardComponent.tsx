@@ -95,7 +95,16 @@ const EleCardComponent = () => {
         </Box>
 
         <Box display="flex" justifyContent="center">
-          <Button variant="contained" onClick={() => setOpen(true)}>
+          <Button variant="contained" onClick={() => setOpen(true)}  sx={{
+              mt: { xs: 2, sm: 0 },
+              ml: 15,
+              backgroundColor: '#d3d3d3',
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'black', // light gray
+                color: 'white',
+              },
+            }}>
             Edit
           </Button>
         </Box>

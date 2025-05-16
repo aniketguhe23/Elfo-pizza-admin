@@ -83,7 +83,7 @@ const WhyElfoPage = () => {
 
   return (
     <>
-      <Card sx={{ p: 3, mb: 4, backgroundColor: '#fafafa'  }}>
+      <Card sx={{ p: 3, mb: 4, backgroundColor: '#fafafa' }}>
         <Typography variant="h5" align="center" fontWeight={600} gutterBottom>
           Why Choose Elfo?
         </Typography>
@@ -129,26 +129,31 @@ const WhyElfoPage = () => {
         </Box>
 
         <Box display="flex" justifyContent="flex-end" mt={4}>
-          <Button variant="contained" size="medium" onClick={() => setOpen(true)}>
+          <Button variant="contained" size="medium" onClick={() => setOpen(true)}  sx={{
+              mt: { xs: 2, sm: 0 },
+              ml: 15,
+              backgroundColor: '#d3d3d3',
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'black', // light gray
+                color: 'white',
+              },
+            }}>
             Edit Content
           </Button>
         </Box>
       </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Why Elfo Content</DialogTitle>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth  BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(3px)',
+        },
+      }}>
+        <DialogTitle sx={{ textAlign: 'center' }}>Edit Why Elfo Content</DialogTitle>
         <DialogContent dividers>
-          <WhyElfoEditForm
-            defaultValues={{ list: data }}
-            onSubmit={handleSave}
-            onCancel={() => setOpen(false)}
-          />
+          <WhyElfoEditForm defaultValues={{ list: data }} onSubmit={handleSave} onCancel={() => setOpen(false)} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary" variant="outlined">
-            Cancel
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );

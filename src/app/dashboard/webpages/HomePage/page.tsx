@@ -18,7 +18,7 @@ const HomeTab = () => {
       {/* <ExploreFeature /> */}
       <WhyElfoPage />
       <EleCardComponent />
-      <MenuItemsComponent />
+      {/* <MenuItemsComponent /> */}
     </>
   );
 };

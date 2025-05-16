@@ -5,21 +5,18 @@ import {
   Button,
   Card,
   CardMedia,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   Grid,
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-
 import PizzaCardEdit from '../formComponent/PizzaCardEdit';
+
+// import EditPizzaCardModal from '../formComponent/EditPizzaCardModal';
 
 const PizzaCard = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [data, setData] = useState<any>('');
+  const [data, setData] = useState<any>(null);
 
   let { api_getHedroData, api_updateHeroData } = ProjectApiList();
 
@@ -110,32 +107,32 @@ const PizzaCard = () => {
         </Grid>
 
         <Grid item xs={12} sm={3} textAlign="center">
-          <Button variant="contained" onClick={() => setIsEditing(true)}>
+          <Button variant="contained" onClick={() => setIsEditing(true)}  sx={{
+              mt: { xs: 2, sm: 0 },
+            
+              backgroundColor: '#d3d3d3',
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'black', // light gray
+                color: 'white',
+              },
+            }}>
             Edit Content
           </Button>
         </Grid>
       </Grid>
 
-      <Dialog open={isEditing} onClose={() => setIsEditing(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Hero Section</DialogTitle>
-        <DialogContent>
-          <PizzaCardEdit
-            defaultValues={{
-              title: data?.hero_title_1,
-              subtitle: data?.hero_title_2,
-              description: data?.hero_title_3,
-              image: data?.hero_img,
-            }}
-            onSubmit={updateHeroContent}
-            onCancel={() => setIsEditing(false)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsEditing(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <PizzaCardEdit
+        open={isEditing}
+        onCancel={() => setIsEditing(false)}
+        defaultValues={{
+          title: data?.hero_title_1,
+          subtitle: data?.hero_title_2,
+          description: data?.hero_title_3,
+          image: data?.hero_img,
+        }}
+        onSubmit={updateHeroContent}
+      />
     </Card>
   );
 };

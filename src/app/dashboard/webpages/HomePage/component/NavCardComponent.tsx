@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardMedia,
-  Divider,
-  Grid,
-  Typography,
-} from '@mui/material';
-import axios from 'axios';
 import ProjectApiList from '@/app/api/ProjectApiList';
+import { Box, Button, Card, CardMedia, Divider, Grid, Typography } from '@mui/material';
+import axios from 'axios';
+
 import EditNavCardModal from '../formComponent/EditNavCardModal';
 
 const NavCardComponent = () => {
@@ -100,7 +93,16 @@ const NavCardComponent = () => {
             variant="contained"
             size="medium"
             onClick={() => setOpen(true)}
-            sx={{ mt: { xs: 2, sm: 0 } }}
+            sx={{
+              mt: { xs: 2, sm: 0 },
+              ml: 15,
+              backgroundColor: '#d3d3d3',
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'black', // light gray
+                color: 'white',
+              },
+            }}
           >
             Edit Navigation
           </Button>

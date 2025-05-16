@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Grid, TextField, Typography, Paper } from '@mui/material';
+import { Box, Button, Grid, Paper, TextField, Typography } from '@mui/material';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 
 interface WhyItem {
@@ -47,117 +47,152 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
         margin: '0 auto',
         padding: 3,
         backgroundColor: 'background.paper',
-        borderRadius: 2,
-        // boxShadow: 3,
+        // borderRadius: 2,
+        minHeight: '100vh', // make sure form is at least full viewport height
       }}
     >
-      <Typography variant="h5" align="center" sx={{ fontWeight: 'bold', marginBottom: 3 }}>
-        Edit Why Elfo Items
-      </Typography>
+      {/* The form content */}
+      <Box sx={{ flexGrow: 1 }}>
+        {fields.map((field, index) => (
+          <Paper key={field.id} sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ pb: 3 }}>
+              Item {index + 1}
+            </Typography>
 
-      {fields.map((field, index) => (
-        <Paper key={field.id} sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: 1 }}>
-          <Typography variant="h6" gutterBottom sx={{ pb: 3}}>
-            Item {index + 1}
-          </Typography>
-
-          <Controller
-            name={`list.${index}.title`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Title"
-                size="small"
-                fullWidth
-                variant="outlined"
-                sx={{ mb: 2 }}
-                {...field}
-              />
-            )}
-          />
-
-          <Controller
-            name={`list.${index}.description`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Description"
-                size="small"
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                sx={{ mb: 2 }}
-                {...field}
-              />
-            )}
-          />
-
-          {/* Image Upload Section */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Button
-              variant="contained"
-              component="label"
-              size="small"
-              sx={{
-                textTransform: 'none',
-                backgroundColor: 'primary.main',
-                '&:hover': { backgroundColor: 'primary.dark' },
-              }}
-            >
-              Upload Image {index + 1}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => handleImageChange(e, index)}
-              />
-            </Button>
-
-            {/* Image Preview */}
-            {watchedItems?.[index]?.image && (
-              <Box sx={{ width: 80, height: 80 }}>
-                <img
-                  src={
-                    typeof watchedItems[index].image === 'string'
-                      ? watchedItems[index].image
-                      : URL.createObjectURL(watchedItems[index].image)
-                  }
-                  alt="Preview"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                  }}
+            {/* Title Row */}
+            <Grid container alignItems="center" spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={4} sm={3} md={2}>
+                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                  Title
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9} md={10}>
+                <Controller
+                  name={`list.${index}.title`}
+                  control={control}
+                  render={({ field }) => <TextField size="small" fullWidth variant="outlined" {...field} />}
                 />
-              </Box>
-            )}
-          </Box>
-        </Paper>
-      ))}
+              </Grid>
+            </Grid>
 
-      <Grid container spacing={2} justifyContent="center">
-        <Grid item>
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            color="primary"
-            sx={{ fontWeight: 'bold', paddingX: 3 }}
-          >
-            Update
-          </Button>
-        </Grid>
+            {/* Description Row */}
+            <Grid container alignItems="center" spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={4} sm={3} md={2}>
+                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                  Description
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9} md={10}>
+                <Controller
+                  name={`list.${index}.description`}
+                  control={control}
+                  render={({ field }) => (
+                    <TextField size="small" fullWidth multiline rows={4} variant="outlined" {...field} />
+                  )}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Image Upload Row */}
+            <Grid container alignItems="center" spacing={2}>
+              <Grid item xs={4} sm={3} md={2}>
+                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                  Image
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9} md={10} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  sx={{
+                    width: 100,
+                    fontSize: '0.75rem',
+                    padding: '5px 10px',
+                    backgroundColor: '#fff',
+                    color: '#000',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: '#222',
+                      color: '#fff',
+                    },
+                  }}
+                >
+                  Choose File {index + 1}
+                  <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, index)} />
+                </Button>
+
+                {watchedItems?.[index]?.image && (
+                  <Box sx={{ width: 80, height: 80 }}>
+                    <img
+                      src={
+                        typeof watchedItems[index].image === 'string'
+                          ? watchedItems[index].image
+                          : URL.createObjectURL(watchedItems[index].image)
+                      }
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+          </Paper>
+        ))}
+      </Box>
+
+      {/* Footer */}
+      <Grid container spacing={2} justifyContent="flex-end" sx={{ marginTop: 'auto' }}>
         <Grid item>
           <Button
             onClick={onCancel}
             variant="outlined"
-            size="large"
-            color="secondary"
-            sx={{ fontWeight: 'bold', paddingX: 3 }}
+            size="small"
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#fff',
+              color: '#000',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              border: '1px solid #cccccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+              },
+            }}
           >
             Cancel
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            type="submit"
+            variant="contained"
+            size="small"
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            Update
           </Button>
         </Grid>
       </Grid>

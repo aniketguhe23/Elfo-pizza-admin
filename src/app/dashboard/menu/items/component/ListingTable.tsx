@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { IconButton } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -14,6 +15,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import dayjs from 'dayjs';
+import { Pencil, Trash2 } from 'lucide-react';
 
 const statusMap = {
   pending: { label: 'Pending', color: 'warning' },
@@ -38,7 +40,7 @@ export interface LatestOrdersProps {
 export function ListingTable({ data = [], onClick, sx }: LatestOrdersProps): React.JSX.Element {
   return (
     <Card sx={sx}>
-      <CardHeader title="Latest orders" />
+      {/* <CardHeader title="Latest orders" /> */}
       <Divider />
       <Box sx={{ overflowX: 'auto' }}>
         <Table sx={{ minWidth: 800 }}>
@@ -46,41 +48,34 @@ export function ListingTable({ data = [], onClick, sx }: LatestOrdersProps): Rea
             <TableRow>
               <TableCell>S. No</TableCell>
               <TableCell>Category Name</TableCell>
-              <TableCell>Created At</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Sub Category</TableCell>
+              <TableCell>isVegetarian</TableCell>
+              <TableCell>isAvailable</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((data: any, index: any) => {
+            {data?.map((data: any, index: any) => {
               // const { label, color } = statusMap[data.status] ?? { label: 'Unknown', color: 'default' };
 
               return (
                 <TableRow hover key={data.id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{data.name}</TableCell>
-                  <TableCell>{data?.created_at.split('T')[0] || '-'}</TableCell>
+                  <TableCell>{data?.description}</TableCell>
+                  <TableCell>{data?.subcategoryName || '-'}</TableCell>
+                  <TableCell>{data?.isVegetarian == 1 || data?.is_vegetarian ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{data?.isAvailable == 1 || data?.is_available ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
-                    <Button
-                      sx={{
-                        backgroundColor: '#fafafa',
-                        color: '#333',
-                        fontSize: '12px',
-                        padding: '6px 15px',
-                        minWidth: 'unset',
-                        borderRadius: '4px',
-                        textTransform: 'none',
-                        border: '1px solid #ccc',
-                        '&:hover': {
-                          backgroundColor: '#e0e0e0',
-                        },
-                        '&:focus': {
-                          outline: 'none',
-                        },
-                      }}
-                      onClick={() => onClick(data)}
-                    >
-                      Edit
-                    </Button>
+                    <TableCell>
+                      <IconButton onClick={() => onClick(data)}>
+                        <Pencil size={16} />
+                      </IconButton>
+                      <IconButton>
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
                   </TableCell>
                 </TableRow>
               );

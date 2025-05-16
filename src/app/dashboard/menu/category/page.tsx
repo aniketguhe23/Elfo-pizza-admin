@@ -9,6 +9,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
+  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -20,26 +22,24 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { Pencil, Plus } from 'lucide-react';
+import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { LatestOrders } from '@/components/dashboard/overview/latest-orders';
-import { ListingTable } from './component/ListingTable';
 
 interface Category {
   id: number;
   name: string;
+  status: 'active' | 'inactive';
+  itemsCount: number;
+  createdAt: string;
 }
 
 const CategoryComponent = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [search, setSearch] = useState('');
 
-  const {
-    api_getCategories,
-    api_createCategories,
-    api_updateCategories
-  } = ProjectApiList();
+  const { api_getCategories, api_createCategories, api_updateCategories } = ProjectApiList();
 
   const {
     register,
@@ -87,134 +87,159 @@ const CategoryComponent = () => {
     }
   };
 
+  const filteredCategories = categories.filter((cat) => cat.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight={600} color="text.primary">
+    <Box mt={5}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
+        <Typography variant="h4" fontWeight={700}>
           Categories
         </Typography>
-        <Button
-          sx={{
-            backgroundColor: '#635bff',
-            color: '#fff',
-            fontSize: '14px',
-            padding: '6px 16px',
-            minWidth: 'unset',
-            borderRadius: '4px',
-            textTransform: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            border: '1px solid #ccc',
-            '&:hover': {
-              backgroundColor: '#3d33ff',
-            },
-            '&:focus': {
-              outline: 'none',
-            },
-          }}
-          variant="contained"
-          onClick={() => handleDialogOpen()}
-        >
-          <Plus height={17} />
-          Add New
-        </Button>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TextField
+            size="small"
+            placeholder="Search Categories"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => handleDialogOpen()}
+            sx={{
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            Add New
+          </Button>
+        </Box>
       </Box>
 
-      {/* <TableContainer
-        component={Paper}
-        sx={{
-          border: '1px solid #ddd', // subtle border for a clean look
-          borderRadius: 1,
-          overflow: 'hidden', // keeps border clean around edges
-        }}
-      >
+      <Typography variant="subtitle1" gutterBottom>
+        You have {categories.length} total categories
+      </Typography>
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ padding: '16px', fontWeight: 600, color: '#555' }}>
-                <strong>S. No</strong>
-              </TableCell>
-              <TableCell sx={{ padding: '16px', fontWeight: 600, color: '#555' }}>
-                <strong>Category Name</strong>
-              </TableCell>
-              <TableCell sx={{ padding: '16px', fontWeight: 600, color: '#555' }}>
-                <strong>Created At</strong>
-              </TableCell>
-              <TableCell sx={{ padding: '16px', fontWeight: 600, color: '#555', textAlign: 'center' }}>
-                <strong>Actions</strong>
-              </TableCell>
+              <TableCell>S. No</TableCell>
+              <TableCell>Category Name</TableCell>
+              <TableCell>Created At</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {categories?.map((category: any, index) => (
+            {filteredCategories.map((category: any, index) => (
               <TableRow key={category.id}>
-                <TableCell sx={{ padding: '16px', fontWeight: 500, color: '#333' }}>{index + 1}</TableCell>
-                <TableCell sx={{ padding: '16px', fontWeight: 500, color: '#333' }}>{category?.name || '-'}</TableCell>
-                <TableCell sx={{ padding: '16px', fontWeight: 500, color: '#333' }}>
-                  {category?.created_at.split('T')[0] || '-'}
-                </TableCell>
-                <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
-                  <Button
-                    sx={{
-                      backgroundColor: '#fafafa',
-                      color: '#333',
-                      fontSize: '12px',
-                      padding: '6px 15px',
-                      minWidth: 'unset',
-                      borderRadius: '4px',
-                      textTransform: 'none',
-                      border: '1px solid #ccc',
-                      '&:hover': {
-                        backgroundColor: '#e0e0e0',
-                      },
-                      '&:focus': {
-                        outline: 'none',
-                      },
-                    }}
-                    onClick={() => handleDialogOpen(category)}
-                  >
-                    Edit
-                  </Button>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{category.name}</TableCell>
+                <TableCell>{category?.created_at.split('T')[0]}</TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleDialogOpen(category)}>
+                    <Pencil size={16} />
+                  </IconButton>
+                  <IconButton>
+                    <Trash2 size={16} />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </TableContainer> */}
-<ListingTable data={categories} onClick={handleDialogOpen} />
+      </TableContainer>
 
-      <Dialog open={open} onClose={handleDialogClose} fullWidth maxWidth="sm">
-        <DialogTitle fontWeight={600} color="text.primary">
-          {editingCategory ? 'Edit Category' : 'Add Category'}
-        </DialogTitle>
-
+      <Dialog
+        open={open}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="sm"
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(2px)',
+          },
+        }}
+      >
+        <DialogTitle>{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
         <DialogContent dividers>
           <Box
             component="form"
             id="category-form"
             onSubmit={handleSubmit(onSubmit)}
-            noValidate
             display="flex"
             flexDirection="column"
             gap={2}
+            mt={1}
           >
-            <TextField
-              label="Category Name"
-              fullWidth
-              {...register('name', { required: 'Category name is required' })}
-              error={!!errors.name}
-              helperText={errors.name?.message}
-              sx={{ marginBottom: '16px' }}
-            />
+            {/* Category Name */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Category Name</Box>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('name', { required: 'Category name is required' })}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            </Box>
           </Box>
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
+          <Button
+            onClick={handleDialogClose}
+            variant="outlined"
+            color="secondary"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              color: '#333', // dark gray text
+              borderColor: '#ccc', // light gray border
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#f2f2f2', // slightly darker gray on hover
+                color: '#000',
+                borderColor: '#bbb',
+              },
+            }}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="category-form" variant="contained">
+          <Button
+            type="submit"
+            form="category-form"
+            variant="contained"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
             {editingCategory ? 'Update' : 'Save'}
           </Button>
         </DialogActions>

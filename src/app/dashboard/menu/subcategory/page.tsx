@@ -9,6 +9,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
   Table,
@@ -21,7 +23,7 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 interface Category {
@@ -39,9 +41,11 @@ interface SubCategory {
 
 const SubCategoryComponent = () => {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { api_getSubCategories, api_createSubCategories, api_updateSubCategories, api_getCategories } =
     ProjectApiList();
@@ -50,26 +54,26 @@ const SubCategoryComponent = () => {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<{ name: string; category_id: number }>();
 
   const fetchSubCategories = async () => {
     try {
-      const response = await axios.get(api_getSubCategories);
-      setSubCategories(response.data?.data || []);
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
+      const res = await axios.get(api_getSubCategories);
+      const data = res.data?.data || [];
+      setSubCategories(data);
+      setFilteredSubCategories(data);
+    } catch (err) {
+      console.error('Error fetching subcategories:', err);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(api_getCategories);
-      const categoriesData = response.data?.data || [];
-      setCategories(categoriesData);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
+      const res = await axios.get(api_getCategories);
+      setCategories(res.data?.data || []);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
     }
   };
 
@@ -79,15 +83,11 @@ const SubCategoryComponent = () => {
   }, []);
 
   const handleDialogOpen = (subCategory?: SubCategory) => {
-
-    // console.log(subCategory,"subCategory----------->")
     setEditingSubCategory(subCategory || null);
-
     reset({
       name: subCategory?.name || '',
-      category_id: subCategory ? subCategory.category_id : undefined, // <--- No default on Add
+      category_id: subCategory?.category_id || undefined,
     });
-
     setOpen(true);
   };
 
@@ -106,84 +106,125 @@ const SubCategoryComponent = () => {
       }
       handleDialogClose();
       fetchSubCategories();
-    } catch (error) {
-      console.error('Error saving subcategory:', error);
+    } catch (err) {
+      console.error('Error saving subcategory:', err);
     }
   };
 
-  // console.log(editingSubCategory,"editingSubCategory")
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    const lowerTerm = term.toLowerCase();
+    const filtered = subCategories.filter(
+      (sub) => sub.name.toLowerCase().includes(lowerTerm) || sub.category_name?.toLowerCase().includes(lowerTerm)
+    );
+    setFilteredSubCategories(filtered);
+  };
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight={600}>
+    <Box mt={5}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
+        <Typography variant="h4" fontWeight={700}>
           Sub Categories
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => handleDialogOpen()}
-          sx={{
-            backgroundColor: '#635bff',
-            color: '#fff',
-            fontSize: '14px',
-            padding: '6px 16px',
-            borderRadius: '4px',
-            gap: '8px',
-            '&:hover': {
-              backgroundColor: '#3d33ff',
-            },
-          }}
-        >
-          <Plus height={17} />
-          Add New
-        </Button>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TextField
+            size="small"
+            placeholder="Search subcategories"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => handleDialogOpen()}
+            sx={{
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            Add New
+          </Button>
+        </Box>
       </Box>
+      <Typography variant="subtitle1" gutterBottom>
+        You have {subCategories.length} total categories
+      </Typography>
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #ddd', borderRadius: 1 }}>
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>
-                <strong>S. No</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Sub Category Name</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Category</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Created At</strong>
-              </TableCell>
-              <TableCell align="center">
-                <strong>Actions</strong>
-              </TableCell>
+              <TableCell>S. No</TableCell>
+              <TableCell>Subcategory Name</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Created At</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {subCategories.map((sub, index) => (
-              <TableRow key={sub.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{sub.name}</TableCell>
-                <TableCell>{sub.category_name || '-'}</TableCell>
-                <TableCell>{sub.created_at?.split('T')[0]}</TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleDialogOpen(sub)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Edit
-                  </Button>
+            {filteredSubCategories.length > 0 ? (
+              filteredSubCategories.map((sub, index) => (
+                <TableRow key={sub.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{sub.name}</TableCell>
+                  <TableCell>{sub.category_name}</TableCell>
+                  <TableCell>{sub.created_at?.split('T')[0]}</TableCell>
+                  {/* <TableCell>
+                    <Button onClick={() => handleDialogOpen(sub)} size="small">
+                      <Pencil size={16} />
+                    </Button>
+                    <Button size="small">
+                      <Trash2 size={16} />
+                    </Button>
+                  </TableCell> */}
+                  <TableCell>
+                    <IconButton onClick={() => handleDialogOpen(sub)}>
+                      <Pencil size={16} />
+                    </IconButton>
+                    <IconButton>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body2" color="textSecondary">
+                    No subcategories found.
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <Dialog open={open} onClose={handleDialogClose} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="sm"
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(2px)',
+          },
+        }}
+      >
         <DialogTitle>{editingSubCategory ? 'Edit Subcategory' : 'Add Subcategory'}</DialogTitle>
         <DialogContent dividers>
           <Box
@@ -193,37 +234,83 @@ const SubCategoryComponent = () => {
             display="flex"
             flexDirection="column"
             gap={2}
+            mt={1}
           >
-            <TextField
-              label="Subcategory Name"
-              fullWidth
-              {...register('name', { required: 'Subcategory name is required' })}
-              error={!!errors.name}
-              helperText={errors.name?.message}
-            />
-            <TextField
-              label="Select Category"
-              select
-              fullWidth
-              {...register('category_id', { required: 'Category is required' })}
-              error={!!errors.category_id}
-              helperText={errors.category_id?.message}
-            >
-              {categories?.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* Subcategory Name */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Subcategory Name</Box>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('name', { required: 'Subcategory name is required' })}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            </Box>
 
-            <Typography variant="caption">Selected category : {editingSubCategory?.category_name}</Typography>
+            {/* Select Category */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Category</Box>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                {...register('category_id', { required: 'Category is required' })}
+                error={!!errors.category_id}
+                helperText={errors.category_id?.message}
+              >
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
+
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
+          <Button
+            onClick={handleDialogClose}
+            variant="outlined"
+            color="secondary"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              color: '#333', // dark gray text
+              borderColor: '#ccc', // light gray border
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#f2f2f2', // slightly darker gray on hover
+                color: '#000',
+                borderColor: '#bbb',
+              },
+            }}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="subcategory-form" variant="contained">
+
+          <Button
+            type="submit"
+            form="subcategory-form"
+            variant="contained"
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
             {editingSubCategory ? 'Update' : 'Save'}
           </Button>
         </DialogActions>

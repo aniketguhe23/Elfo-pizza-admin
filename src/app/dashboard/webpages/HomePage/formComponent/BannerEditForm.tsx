@@ -1,23 +1,32 @@
 import React from 'react';
-import { Box, Button, Grid, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
 interface BannerFormData {
   hero2_title_1: string;
   hero2_title_2: string;
-  image1: File | null;
-  image2: File | null;
-  image3: File | null;
+  image1: File | null | string;
+  image2: File | null | string;
+  image3: File | null | string;
 }
 
 interface BannerEditFormProps {
+  open: boolean;
   defaultValues: BannerFormData;
   onSubmit: (data: BannerFormData) => void;
   onCancel: () => void;
 }
 
-const BannerEditForm: React.FC<BannerEditFormProps> = ({ defaultValues, onSubmit, onCancel }) => {
-  const { control, handleSubmit, setValue, watch } = useForm<BannerFormData>({ defaultValues });
+const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, onSubmit, onCancel }) => {
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<BannerFormData>({
+    defaultValues,
+  });
 
   const image1 = watch('image1');
   const image2 = watch('image2');
@@ -28,80 +37,147 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ defaultValues, onSubmit
     setValue(field, file, { shouldValidate: true });
   };
 
+  const getImageSrc = (img: File | string | null) => {
+    if (!img) return null;
+    return typeof img === 'string' ? img : URL.createObjectURL(img);
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={2}>
-        {[{ field: 'image1', value: image1 }, { field: 'image2', value: image2 }, { field: 'image3', value: image3 }].map(
-          (img:any, index) => (
-            <Grid item xs={12} sm={4} key={img.field}>
-              <Box sx={{ textAlign: 'center' }}>
-                {img.value && (
+    <Dialog open={open} onClose={onCancel} fullWidth maxWidth="md"  BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(3px)',
+        },
+      }}>
+      <DialogTitle textAlign="center" fontWeight={600}>
+        Edit Banner Section
+      </DialogTitle>
+
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Images section: label on left stacked, images + buttons all in one horizontal row on right */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              gap: 2,
+            }}
+          >
+            {[
+              { field: 'image1', value: image1 },
+              { field: 'image2', value: image2 },
+              { field: 'image3', value: image3 },
+            ].map(({ field, value }) => (
+              <Box
+                key={field}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  flex: 1,
+                  gap: 1,
+                }}
+              >
+                {value && (
                   <img
-                    src={img.value}
-                    // src={URL.createObjectURL(img.value) || img.value}
-                    alt={`Image ${index + 1}`}
+                    src={getImageSrc(value) || ''}
+                    alt={field}
                     width={100}
                     height={100}
-                    style={{ borderRadius: 8 }}
+                    style={{
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                    }}
                   />
                 )}
-                <Button variant="outlined" component="label" size="small" sx={{ mt: 1 }}>
-                  Upload Image {index + 1}
-                  <input type="file" accept="image/*" hidden onChange={handleImageUpload(img.field as keyof BannerFormData)} />
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  sx={{ textTransform: 'none', fontWeight: 500 }}
+                >
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleImageUpload(field as keyof BannerFormData)}
+                  />
                 </Button>
               </Box>
-            </Grid>
-          )
-        )}
-      </Grid>
+            ))}
+          </Box>
 
-      <Controller
-        name="hero2_title_1"
-        control={control}
-        rules={{ required: 'Title 1 is required' }}
-        render={({ field, fieldState }) => (
-          <TextField
-            label="Title 1"
-            fullWidth
-            size="small"
+          {/* Title 1 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ width: 120, fontWeight: 600 }}>Title 1</Box>
+            <Controller
+              name="hero2_title_1"
+              control={control}
+              rules={{ required: 'Title 1 is required' }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Box>
+
+          {/* Title 2 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ width: 120, fontWeight: 600 }}>Title 2</Box>
+            <Controller
+              name="hero2_title_2"
+              control={control}
+              rules={{ required: 'Title 2 is required' }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={onCancel}
             variant="outlined"
-            {...field}
-            error={!!fieldState.error}
-            helperText={fieldState.error?.message}
-          />
-        )}
-      />
-
-      <Controller
-        name="hero2_title_2"
-        control={control}
-        rules={{ required: 'Title 2 is required' }}
-        render={({ field, fieldState }) => (
-          <TextField
-            label="Title 2"
-            fullWidth
             size="small"
-            variant="outlined"
-            {...field}
-            error={!!fieldState.error}
-            helperText={fieldState.error?.message}
-          />
-        )}
-      />
-
-      <Grid container spacing={1} justifyContent="center">
-        <Grid item>
-          <Button type="submit" variant="contained" size="small">
-            Update
-          </Button>
-        </Grid>
-        <Grid item>
-          <Button variant="outlined" size="small" onClick={onCancel}>
+            sx={{ textTransform: 'none', minWidth: 80 }}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-        </Grid>
-      </Grid>
-    </Box>
+          <Button
+            type="submit"
+            variant="contained"
+            size="small"
+            disabled={isSubmitting}
+            sx={{
+              textTransform: 'none',
+              backgroundColor: '#000',
+              minWidth: 80,
+              '&:hover': { backgroundColor: '#222' },
+            }}
+          >
+            {isSubmitting ? 'Updating...' : 'Update'}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Grid, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
 interface FormData {
@@ -10,12 +10,13 @@ interface FormData {
 }
 
 interface PizzaCardEditProps {
+  open: boolean;
   defaultValues: FormData;
   onSubmit: (data: FormData) => void;
   onCancel: () => void;
 }
 
-const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ defaultValues, onSubmit, onCancel }) => {
+const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSubmit, onCancel }) => {
   const { handleSubmit, control, setValue, watch } = useForm<FormData>({
     defaultValues,
   });
@@ -27,76 +28,172 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ defaultValues, onSubmit, 
     setValue('image', file, { shouldValidate: true });
   };
 
+  const previewUrl = image instanceof File ? URL.createObjectURL(image) : typeof image === 'string' ? image : null;
+
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit(onSubmit)}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        position: 'relative',
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      maxWidth="sm"
+      fullWidth
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(3px)',
+        },
       }}
     >
-      {/* Image preview */}
-      {image && (
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <img src={image} alt="Pizza" width={100} height={100} style={{ borderRadius: 8 }} />
-        </Box>
-      )}
+      <DialogTitle textAlign="center" fontWeight={600}>
+        Edit Pizza Card
+      </DialogTitle>
 
-      {/* Upload button */}
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Button variant="outlined" component="label" size="small">
-          Upload Image
-          <input type="file" hidden onChange={handleFileChange} />
-        </Button>
-      </Box>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Title Field */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="label" htmlFor="title" sx={{ width: 120, fontWeight: 600 }}>
+              Title
+            </Typography>
+            <Controller
+              name="title"
+              control={control}
+              rules={{ required: 'Title is required' }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  id="title"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Box>
 
-      <Controller
-        name="title"
-        control={control}
-        rules={{ required: 'Title is required' }}
-        render={({ field, fieldState }) => (
-          <TextField
-            label="Title"
+          {/* Subtitle Field */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="label" htmlFor="subtitle" sx={{ width: 120, fontWeight: 600 }}>
+              Subtitle
+            </Typography>
+            <Controller
+              name="subtitle"
+              control={control}
+              render={({ field }) => <TextField id="subtitle" variant="outlined" size="small" fullWidth {...field} />}
+            />
+          </Box>
+
+          {/* Description Field */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+            <Typography component="label" htmlFor="description" sx={{ width: 120, fontWeight: 600, pt: '10px' }}>
+              Description
+            </Typography>
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <TextField id="description" variant="outlined" size="small" multiline rows={4} fullWidth {...field} />
+              )}
+            />
+          </Box>
+
+          {/* Image Upload Section at bottom */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="label" htmlFor="image-upload" sx={{ width: 120, fontWeight: 600 }}>
+              Image
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+              {/* Preview */}
+              {previewUrl && (
+                <Box>
+                  <img
+                    src={previewUrl}
+                    alt="Pizza Preview"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 12,
+                      objectFit: 'cover',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    }}
+                  />
+                </Box>
+              )}
+
+              {/* Upload Button */}
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+                 sx={{
+                width: 90,
+                fontSize: '0.75rem',
+                padding: '5px 10px',
+                backgroundColor: '#fff',
+                color: '#000',
+                textTransform: 'none',
+                fontWeight: 500,
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: '#222',
+                  color: '#fff',
+                },
+              }}
+              >
+                Choose File
+                <input id="image-upload" type="file" hidden accept="image/*" onChange={handleFileChange} />
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={onCancel}
             variant="outlined"
             size="small"
-            fullWidth
-            {...field}
-            error={!!fieldState.error}
-            helperText={fieldState.error?.message}
-          />
-        )}
-      />
-
-      <Controller
-        name="subtitle"
-        control={control}
-        render={({ field }) => <TextField label="Subtitle" variant="outlined" size="small" fullWidth {...field} />}
-      />
-
-      <Controller
-        name="description"
-        control={control}
-        render={({ field }) => (
-          <TextField label="Description" variant="outlined" size="small" multiline rows={4} fullWidth {...field} />
-        )}
-      />
-
-      <Grid container spacing={1} justifyContent="center">
-        <Grid item>
-          <Button type="submit" variant="contained" size="small">
-            Update
-          </Button>
-        </Grid>
-        <Grid item>
-          <Button variant="outlined" size="small" onClick={onCancel}>
+            sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#fff',
+            color: '#000',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            border: '1px solid #cccccc',
+            '&:hover': {
+              backgroundColor: '#f2f2f2',
+            },
+          }}
+          >
             Cancel
           </Button>
-        </Grid>
-      </Grid>
-    </Box>
+          <Button
+            type="submit"
+            variant="contained"
+            size="small"
+           sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#000',
+            color: '#fff',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: '#222',
+            },
+          }}
+          >
+            Update
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
 };
 

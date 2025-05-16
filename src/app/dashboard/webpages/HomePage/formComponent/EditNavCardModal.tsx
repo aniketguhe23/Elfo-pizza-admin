@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
   Box,
-  Typography,
-  TextField,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
   DialogTitle,
   IconButton,
+  TextField,
+  Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -20,11 +20,7 @@ interface EditNavModalProps {
     description: string;
     image1: string;
   };
-  onSave: (updatedData: {
-    title: string;
-    description: string;
-    image1: File | null;
-  }) => void;
+  onSave: (updatedData: { title: string; description: string; image1: File | null }) => void;
 }
 
 const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, onSave }) => {
@@ -56,91 +52,167 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
     });
   };
 
-  const preview = watch('image1')
-    ? URL.createObjectURL(watch('image1'))
-    : data.image1 || '/default-image.png';
+  const watchedImage: any = watch('image1');
+  const preview =
+    watchedImage instanceof File ? URL.createObjectURL(watchedImage) : data.image1 || '/default-image.png';
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
-        <Typography variant="h6" fontWeight="600" color="text.primary">Edit Navigation Data</Typography>
-        <IconButton onClick={onClose} sx={{ color: (theme) => theme.palette.grey[500] }}>
-          X
-        </IconButton>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(3px)',
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          px: 3,
+          py: 2,
+          borderBottom: '1px solid #e0e0e0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h6" fontWeight={600}>
+          Edit Navigation
+        </Typography>
+        <IconButton onClick={onClose}>{/* <Close /> */}</IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3, marginTop: 2 }}>
-        <Box component="form" onSubmit={handleSubmit(handleSave)} noValidate>
-          <Controller
-            name="title"
-            control={control}
-            rules={{ required: 'Logo text is required' }}
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Logo Text"
-                fullWidth
-                variant="outlined"
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-                sx={{ mb: 3 }}
-                InputLabelProps={{ shrink: true }}
-              />
-            )}
-          />
+      <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
+        <Box component="form" onSubmit={handleSubmit(handleSave)} display="flex" flexDirection="column" gap={3}>
+          {/* Title */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{ width: 140, fontWeight: 500 }}>Logo Text</Box>
+            <Controller
+              name="title"
+              control={control}
+              rules={{ required: 'Logo text is required' }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Box>
 
-          <Controller
-            name="description"
-            control={control}
-            rules={{ required: 'Background color is required' }}
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Background Color"
-                fullWidth
-                variant="outlined"
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-                sx={{ mb: 3 }}
-                InputLabelProps={{ shrink: true }}
-              />
-            )}
-          />
+          {/* Description */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{ width: 140, fontWeight: 500 }}>Background Color</Box>
+            <Controller
+              name="description"
+              control={control}
+              rules={{ required: 'Background color is required' }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Box>
 
-          <Box textAlign="center" mb={3}>
+          {/* Image Preview */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{ width: 140, fontWeight: 500 }}>Logo Preview</Box>
             <img
               src={preview}
-              alt="Logo Preview"
-              width={120}
-              height={120}
+              alt="Preview"
               style={{
-                borderRadius: '12px',
+                width: 100,
+                height: 100,
                 objectFit: 'cover',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                marginBottom: '1rem',
+                borderRadius: 10,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
               }}
             />
+          </Box>
+
+          {/* Upload Image */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{ width: 140, fontWeight: 500 }}>Upload Logo</Box>
             <Button
               variant="outlined"
               component="label"
-              size="large"
-              sx={{ borderRadius: '8px' }}
+              size="small"
+              sx={{
+                width: 90,
+                fontSize: '0.75rem',
+                padding: '5px 10px',
+                backgroundColor: '#fff',
+                color: '#000',
+                textTransform: 'none',
+                fontWeight: 500,
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: '#222',
+                  color: '#fff',
+                },
+              }}
             >
-              Upload New Logo
+              Choose File
               <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
             </Button>
           </Box>
-
-          <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
-            <Button variant="outlined" onClick={onClose} size="large" sx={{ borderRadius: '8px' }}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" size="large" sx={{ borderRadius: '8px' }}>
-              Save Changes
-            </Button>
-          </DialogActions>
         </Box>
       </DialogContent>
+
+      <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
+        <Button
+          onClick={onClose}
+          sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#fff',
+            color: '#000',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            border: '1px solid #cccccc',
+            '&:hover': {
+              backgroundColor: '#f2f2f2',
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={handleSubmit(handleSave)}
+          variant="contained"
+          sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#000',
+            color: '#fff',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: '#222',
+            },
+          }}
+        >
+          Save
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

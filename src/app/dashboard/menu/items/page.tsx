@@ -33,6 +33,8 @@ interface SubCategory {
   name: string;
 }
 
+// Interfacess
+
 interface Item {
   id: number;
   name: string;

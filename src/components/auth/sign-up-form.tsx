@@ -103,9 +103,9 @@ export function SignUpForm(): React.JSX.Element {
             underline="hover"
             variant="subtitle2"
             sx={{
-              color: '#de4a1c',
+              color: '#164e63',
               '&:hover': {
-                color: '#bf3e18',
+                color: '#164e63',
               },
             }}
           >
@@ -197,9 +197,9 @@ export function SignUpForm(): React.JSX.Element {
             type="submit"
             variant="contained"
             sx={{
-              backgroundColor: '#de4a1c',
+              backgroundColor: '#164e63',
               '&:hover': {
-                backgroundColor: '#bf3e18',
+                backgroundColor: '#083344',
               },
             }}
           >

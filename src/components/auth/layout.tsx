@@ -42,7 +42,7 @@ export function Layout({ children }: LayoutProps): React.JSX.Element {
           justifyContent: 'center',
           flexDirection: 'column',
           p: 4,
-          background: 'radial-gradient(50% 50% at 50% 50%, #ff7043 0%, #d84315 100%)',
+          background: 'radial-gradient(50% 50% at 50% 50%, #164e63 0%, #164e63 100%)',
           color: '#fff',
         }}
       >

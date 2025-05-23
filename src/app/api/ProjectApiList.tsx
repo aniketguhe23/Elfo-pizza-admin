@@ -43,6 +43,9 @@ export default function ProjectApiList() {
     api_getItemVariants: `${baseUrl}/api/menu/item-variants/get`,
     api_createItemVariant: `${baseUrl}/api/menu/item-variants/create`,
     api_updateItemVariant: `${baseUrl}/api/menu/item-variants/update`,
+    
+    api_getAllmenu: `${baseUrl}/api/allMenu/getAllmenu`,
+    api_updateHomeMenu: `${baseUrl}/api/allMenu/updateHomeSceenItems`,
   };
 
   return apiList;

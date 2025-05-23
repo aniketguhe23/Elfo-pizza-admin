@@ -11,6 +11,7 @@ export const paths = {
     subcategory: '/dashboard/menu/subcategory',
     items: '/dashboard/menu/items',
     itemVarient: '/dashboard/menu/itemVarients',
+    allitems: '/dashboard/allItems',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

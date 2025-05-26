@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -10,20 +11,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
-  IconButton,
   InputAdornment,
   MenuItem,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
-import { Pencil, Plus, Search, Table, Trash2 } from 'lucide-react';
+import axios from 'axios'; // Removed AxiosResponse import, only used as type
+import { Plus, Search } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 import { ListingTable } from './component/ListingTable';
@@ -32,8 +26,6 @@ interface SubCategory {
   id: number;
   name: string;
 }
-
-// Interfacess and their propertiess
 
 interface Item {
   id: number;
@@ -46,7 +38,16 @@ interface Item {
   subcategoryName?: string;
 }
 
-const ItemsComponent = () => {
+interface FormData {
+  name: string;
+  description: string;
+  subcategory_id: number;
+  is_vegetarian: number;
+  is_available: number;
+  image_url: FileList;
+}
+
+function ItemsComponent(): JSX.Element {
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
@@ -55,7 +56,7 @@ const ItemsComponent = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [search, setSearch] = useState('');
 
-  const { api_getItems, api_createItem, api_updateItem, api_getSubCategories } = ProjectApiList();
+  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories } = ProjectApiList();
 
   const {
     register,
@@ -64,39 +65,34 @@ const ItemsComponent = () => {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<{
-    name: string;
-    description: string;
-    subcategory_id: number;
-    is_vegetarian: number;
-    is_available: number;
-    image_url: any;
-  }>();
+  } = useForm<FormData>();
 
-  const fetchItems = async () => {
+  // Wrap fetch functions in useCallback to fix missing dependencies warning
+  const fetchItems = useCallback(async (): Promise<void> => {
     try {
-      const response = await axios.get(api_getItems);
-      const fetchedItems = response.data?.data || [];
+      const response = await axios.get<{ data: Item[] }>(apiGetItems);
+      const fetchedItems = response.data.data || [];
       setItems(fetchedItems);
       setFilteredItems(fetchedItems);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      // Optionally log to error tracking service
     }
-  };
+  }, [apiGetItems]);
 
-  const fetchSubCategories = async () => {
+  const fetchSubCategories = useCallback(async (): Promise<void> => {
     try {
-      const response = await axios.get(api_getSubCategories);
-      setSubCategories(response.data?.data || []);
+      const response = await axios.get<{ data: SubCategory[] }>(apiGetSubCategories);
+      const fetchedSubCategories = response.data.data || [];
+      setSubCategories(fetchedSubCategories);
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
+      // Optionally log to error tracking service
     }
-  };
+  }, [apiGetSubCategories]);
 
   useEffect(() => {
-    fetchItems();
-    fetchSubCategories();
-  }, []);
+    void fetchItems();
+    void fetchSubCategories();
+  }, [fetchItems, fetchSubCategories]);
 
   useEffect(() => {
     if (!search) {
@@ -110,27 +106,28 @@ const ItemsComponent = () => {
     setFilteredItems(filtered);
   }, [search, items]);
 
-  const handleDialogOpen = (item?: any) => {
+  const handleDialogOpen = (item?: Item): void => {
     setEditingItem(item || null);
     setImageFile(null);
     reset({
       name: item?.name || '',
       description: item?.description || '',
-      subcategory_id: item?.subcategory_id ?? undefined,
-      is_vegetarian: item?.is_vegetarian ?? false,
-      is_available: item?.is_available ?? true,
+      subcategory_id: item?.subcategory_id ?? 0,
+      is_vegetarian: item?.is_vegetarian ? 1 : 0,
+      is_available: item?.is_available ? 1 : 0,
+      image_url: undefined as unknown as FileList, // to satisfy TS, won't be used for reset
     });
     setOpen(true);
   };
 
-  const handleDialogClose = () => {
+  const handleDialogClose = (): void => {
     setOpen(false);
     setEditingItem(null);
     setImageFile(null);
     reset();
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData): Promise<void> => {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('description', data.description);
@@ -144,18 +141,18 @@ const ItemsComponent = () => {
 
     try {
       if (editingItem) {
-        await axios.put(`${api_updateItem}/${editingItem.id}`, formData, {
+        await axios.put(`${apiUpdateItem}/${editingItem.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        await axios.post(api_createItem, formData, {
+        await axios.post(apiCreateItem, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
       handleDialogClose();
-      fetchItems();
+      await fetchItems();
     } catch (error) {
-      console.error('Error saving item:', error);
+      // Optionally log to error tracking service
     }
   };
 
@@ -164,30 +161,6 @@ const ItemsComponent = () => {
 
   return (
     <Box mt={5}>
-      {/* <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
-        <Typography variant="h4" fontWeight={700}>
-          Items
-        </Typography>
-
-        <Button
-          variant="contained"
-          startIcon={<Plus size={18} />}
-          onClick={() => handleDialogOpen()}
-          sx={{
-            backgroundColor: '#000',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}
-        >
-          Add New
-        </Button>
-      </Box> */}
-
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
         <Typography variant="h4" fontWeight={700}>
           Items
@@ -197,7 +170,9 @@ const ItemsComponent = () => {
             size="small"
             placeholder="Search Items"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -209,16 +184,16 @@ const ItemsComponent = () => {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
               textTransform: 'none',
               fontWeight: 500,
               borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
+              '&:hover': { backgroundColor: '#222' },
             }}
           >
             Add New
@@ -230,8 +205,12 @@ const ItemsComponent = () => {
         You have {items.length} total categories
       </Typography>
 
-      {/* Pass filteredItems to ListingTable */}
-      <ListingTable data={filteredItems} onClick={handleDialogOpen} />
+      <ListingTable
+        data={filteredItems}
+        onClick={(item) => {
+          handleDialogOpen(item as Item);
+        }}
+      />
 
       <Dialog
         open={open}
@@ -246,7 +225,6 @@ const ItemsComponent = () => {
         }}
       >
         <DialogTitle>{editingItem ? 'Edit Item' : 'Add Item'}</DialogTitle>
-
         <DialogContent dividers>
           <Box
             component="form"
@@ -256,19 +234,17 @@ const ItemsComponent = () => {
             flexDirection="column"
             gap={2}
           >
-            {/* Item Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Item Name</Box>
               <TextField
                 fullWidth
                 size="small"
                 {...register('name', { required: 'Item name is required' })}
-                error={!!errors.name}
+                error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
             </Box>
 
-            {/* Description */}
             <Box display="flex" alignItems="flex-start" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500, mt: '6px' }}>Description</Box>
               <TextField
@@ -277,12 +253,11 @@ const ItemsComponent = () => {
                 rows={2}
                 size="small"
                 {...register('description', { required: 'Description is required' })}
-                error={!!errors.description}
+                error={Boolean(errors.description)}
                 helperText={errors.description?.message}
               />
             </Box>
 
-            {/* Select Subcategory */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Subcategory</Box>
               <TextField
@@ -290,7 +265,7 @@ const ItemsComponent = () => {
                 fullWidth
                 size="small"
                 {...register('subcategory_id', { required: 'Subcategory is required' })}
-                error={!!errors.subcategory_id}
+                error={Boolean(errors.subcategory_id)}
                 helperText={errors.subcategory_id?.message}
               >
                 {subCategories.map((sub) => (
@@ -301,8 +276,7 @@ const ItemsComponent = () => {
               </TextField>
             </Box>
 
-            {/* Image Preview */}
-            {imageFile && (
+            {imageFile instanceof File && (
               <Box display="flex" alignItems="center" gap={2}>
                 <Box sx={{ width: 140, fontWeight: 500 }}>Image Preview</Box>
                 <img
@@ -313,82 +287,54 @@ const ItemsComponent = () => {
               </Box>
             )}
 
-            {/* Upload Image */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
               <input
                 type="file"
                 accept="image/*"
+                {...register('image_url')}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) setImageFile(file);
+                  if (file) {
+                    setImageFile(file);
+                  }
                 }}
               />
             </Box>
 
-            {/* Is Vegetarian */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian</Box>
               <Checkbox
-                checked={!!isVegetarian}
-                onChange={(e) => setValue('is_vegetarian', e.target.checked ? 1 : 0)}
+                checked={Boolean(isVegetarian)}
+                onChange={(e) => {
+                  setValue('is_vegetarian', e.target.checked ? 1 : 0);
+                }}
               />
             </Box>
 
-            {/* Is Available */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Is Available</Box>
-              <Checkbox checked={!!isAvailable} onChange={(e) => setValue('is_available', e.target.checked ? 1 : 0)} />
+              <Checkbox
+                checked={Boolean(isAvailable)}
+                onChange={(e) => {
+                  setValue('is_available', e.target.checked ? 1 : 0);
+                }}
+              />
             </Box>
           </Box>
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
-          <Button
-            onClick={handleDialogClose}
-            variant="outlined"
-            color="secondary"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              backgroundColor: '#fff',
-              color: '#000',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-                color: '#fff',
-              },
-            }}
-          >
+          <Button onClick={handleDialogClose} variant="outlined" color="secondary">
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="item-form"
-            variant="contained"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
-            {editingItem ? 'Update' : 'Save'}
+          <Button type="submit" form="item-form" variant="contained" color="primary">
+            {editingItem ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
+}
 
 export default ItemsComponent;

@@ -9,7 +9,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
 
-
 import type { NavItemConfig } from '@/types/nav';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 
@@ -48,7 +47,7 @@ export function SideNav(): React.JSX.Element {
     >
       <Stack spacing={2} sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ color: 'white' }}>
-          ELFO'S PIZZA
+          ELFO&apos;S PIZZA
         </Typography>
       </Stack>
       <Divider sx={{ borderColor: 'var(--mui-palette-neutral-700)' }} />
@@ -63,18 +62,32 @@ export function SideNav(): React.JSX.Element {
 function renderNavItems({ items = [], pathname }: { items?: NavItemConfig[]; pathname: string }): React.JSX.Element {
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
-      {items?.map((item: any) => (
-        <NavItem key={item.key} {...item} pathname={pathname} />
-      ))}
+      {items.map((item: NavItemConfig) => {
+        const { key, ...itemProps } = item;
+        return <NavItem key={key} {...itemProps} pathname={pathname} />;
+      })}
     </Stack>
   );
 }
 
 interface NavItemProps extends Omit<NavItemConfig, 'items'> {
   pathname: string;
-  icon: any;
+  icon?: keyof typeof navIcons;
   items?: NavItemConfig[];
 }
+
+type ItemProps =
+  | {
+      component: React.ElementType;
+      href: string;
+      target?: string;
+      rel?: string;
+    }
+  | {
+      role: string;
+      onClick: () => void;
+      component?: undefined;
+    };
 
 function NavItem({ disabled, external, href, icon, matcher, pathname, title, items }: NavItemProps): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
@@ -82,11 +95,11 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title, ite
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
   const Icon = icon ? navIcons[icon] : null;
 
-  const toggleOpen = () => {
+  const toggleOpen = (): void => {
     if (hasChildren) setOpen((prev) => !prev);
   };
 
-  const itemProps =
+  const itemProps: ItemProps =
     href && !hasChildren
       ? {
           component: external ? 'a' : RouterLink,
@@ -103,6 +116,7 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title, ite
     <li>
       <Box
         {...itemProps}
+        component={itemProps.component ?? 'div'}
         sx={{
           alignItems: 'center',
           borderRadius: 1,
@@ -119,27 +133,27 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title, ite
           bgcolor: active ? 'var(--NavItem-active-background)' : 'transparent',
         }}
       >
-        {Icon && (
+        {typeof Icon === 'function' && (
           <Icon
             fill={active ? 'var(--NavItem-icon-active-color)' : 'var(--NavItem-icon-color)'}
             fontSize="var(--icon-fontSize-md)"
             weight={active ? 'fill' : undefined}
           />
         )}
-        <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>{title}</Typography>
-       {hasChildren && (
-  <Box sx={{ marginLeft: 'auto' }}>
-    {open ? (
-      <CaretUp fontSize="var(--icon-fontSize-md)" weight="bold" />
-    ) : (
-      <CaretDown fontSize="var(--icon-fontSize-md)" weight="bold" />
-    )}
-  </Box>
-)}
 
+        <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>{title}</Typography>
+        {hasChildren ? (
+          <Box sx={{ marginLeft: 'auto' }}>
+            {open ? (
+              <CaretUp fontSize="var(--icon-fontSize-md)" weight="bold" />
+            ) : (
+              <CaretDown fontSize="var(--icon-fontSize-md)" weight="bold" />
+            )}
+          </Box>
+        ) : null}
       </Box>
 
-      {hasChildren && open && <Box sx={{ ml: 4, mt: 1 }}>{renderNavItems({ items, pathname })}</Box>}
+      {hasChildren && open ? <Box sx={{ ml: 4, mt: 1 }}>{renderNavItems({ items, pathname })}</Box> : null}
     </li>
   );
 }

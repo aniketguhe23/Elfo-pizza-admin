@@ -43,11 +43,12 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
     }
   }, []);
 
-  React.useEffect(() => {
-    checkSession().catch((err: unknown) => {
-      logger.error(err);
-    });
-  }, []);
+React.useEffect(() => {
+  checkSession().catch((err: unknown) => {
+    logger.error(err);
+  });
+}, [checkSession]);
+
 
   return <UserContext.Provider value={{ ...state, checkSession }}>{children}</UserContext.Provider>;
 }

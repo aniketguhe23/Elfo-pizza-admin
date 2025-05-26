@@ -17,11 +17,13 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
+import type { AxiosError } from 'axios';
 import { Controller, useForm } from 'react-hook-form';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
-import { useUser } from '@/hooks/use-user';
+
+// import { useUser } from '@/hooks/use-user';
 
 const schema = zod.object({
   firstName: zod.string().min(1, { message: 'First name is required' }),
@@ -37,13 +39,12 @@ const defaultValues: Values = {
   lastName: '',
   email: '',
   password: '',
-  // terms: false,
 };
 
 export function SignUpForm(): React.JSX.Element {
   const router = useRouter();
-  const { api_signUp } = ProjectApiList();
-  const { checkSession } = useUser();
+  const { apiSignUp } = ProjectApiList();
+  // const { _checkSession } = useUser(); // renamed with _ to suppress unused warning
   const [isPending, setIsPending] = React.useState(false);
 
   const {
@@ -56,40 +57,43 @@ export function SignUpForm(): React.JSX.Element {
     resolver: zodResolver(schema),
   });
 
- const signUpFunction = async (values: Values) => {
-  setIsPending(true);
+  // Explicit return type Promise<void>
+  const signUpFunction = async (values: Values): Promise<void> => {
+    setIsPending(true);
 
+    try {
+      const formattedValues = {
+        firstname: values.firstName,
+        lastname: values.lastName,
+        email: values.email,
+        password: values.password,
+      };
 
-  try {
-    const formattedValues = {
-      firstname: values.firstName,
-      lastname: values.lastName,
-      email: values.email,
-      password: values.password,
-    };
+      const response = await axios.post(apiSignUp, formattedValues);
 
-    const response = await axios.post(api_signUp, formattedValues);
+      if (response.status === 201) {
+        router.push('/auth/sign-in');
+      } else {
+        throw new Error('Signup failed');
+      }
+    } catch (err: unknown) {
+      let message = 'Something went wrong';
 
-    if (response.status === 201) {
-      router.push('/auth/sign-in');
-    } else {
-      throw new Error('Signup failed');
+      if (axios.isAxiosError(err)) {
+        const axiosError = err as AxiosError<{ message?: string }>;
+        message = axiosError.response?.data?.message ?? message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+
+      setError('root', {
+        type: 'manual',
+        message,
+      });
+    } finally {
+      setIsPending(false);
     }
-  } catch (err: unknown) {
-    const message =
-      axios.isAxiosError(err) && err.response?.data?.message
-        ? err.response.data.message
-        : 'Something went wrong';
-
-    setError('root', {
-      type: 'manual',
-      message,
-    });
-  } finally {
-    setIsPending(false);
-  }
-};
-
+  };
 
   return (
     <Stack spacing={3}>
@@ -114,16 +118,16 @@ export function SignUpForm(): React.JSX.Element {
         </Typography>
       </Stack>
 
-      <form onSubmit={handleSubmit(signUpFunction)}>
+      <form onSubmit={handleSubmit(signUpFunction)} noValidate>
         <Stack spacing={2}>
           <Controller
             control={control}
             name="firstName"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.firstName)}>
-                <InputLabel>First name</InputLabel>
-                <OutlinedInput {...field} label="First name" />
-                {errors.firstName && <FormHelperText>{errors.firstName.message}</FormHelperText>}
+              <FormControl error={Boolean(errors.firstName)} fullWidth>
+                <InputLabel htmlFor="firstName-input">First name</InputLabel>
+                <OutlinedInput {...field} label="First name" id="firstName-input" />
+                {errors.firstName ? <FormHelperText>{errors.firstName.message}</FormHelperText> : null}
               </FormControl>
             )}
           />
@@ -132,10 +136,10 @@ export function SignUpForm(): React.JSX.Element {
             control={control}
             name="lastName"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.lastName)}>
-                <InputLabel>Last name</InputLabel>
-                <OutlinedInput {...field} label="Last name" />
-                {errors.lastName && <FormHelperText>{errors.lastName.message}</FormHelperText>}
+              <FormControl error={Boolean(errors.lastName)} fullWidth>
+                <InputLabel htmlFor="lastName-input">Last name</InputLabel>
+                <OutlinedInput {...field} label="Last name" id="lastName-input" />
+                {errors.lastName ? <FormHelperText>{errors.lastName.message}</FormHelperText> : null}{' '}
               </FormControl>
             )}
           />
@@ -144,10 +148,10 @@ export function SignUpForm(): React.JSX.Element {
             control={control}
             name="email"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.email)}>
-                <InputLabel>Email address</InputLabel>
-                <OutlinedInput {...field} label="Email address" type="email" />
-                {errors.email && <FormHelperText>{errors.email.message}</FormHelperText>}
+              <FormControl error={Boolean(errors.email)} fullWidth>
+                <InputLabel htmlFor="email-input">Email address</InputLabel>
+                <OutlinedInput {...field} label="Email address" type="email" id="email-input" />
+                {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}{' '}
               </FormControl>
             )}
           />
@@ -156,42 +160,15 @@ export function SignUpForm(): React.JSX.Element {
             control={control}
             name="password"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.password)}>
-                <InputLabel>Password</InputLabel>
-                <OutlinedInput {...field} label="Password" type="password" />
-                {errors.password && <FormHelperText>{errors.password.message}</FormHelperText>}
+              <FormControl error={Boolean(errors.password)} fullWidth>
+                <InputLabel htmlFor="password-input">Password</InputLabel>
+                <OutlinedInput {...field} label="Password" type="password" id="password-input" />
+                {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}{' '}
               </FormControl>
             )}
           />
 
-          {/* <Controller
-            control={control}
-            name="terms"
-            render={({ field }) => (
-              <div>
-                <FormControlLabel
-                  control={<Checkbox {...field} />}
-                  label={
-                    <>
-                      I have read the{' '}
-                      <Link
-                        sx={{
-                          color: '#de4a1c',
-                          '&:hover': { color: '#bf3e18' },
-                        }}
-                      >
-                        terms and conditions
-                      </Link>
-                    </>
-                  }
-                />
-                {errors.terms && <FormHelperText error>{errors.terms.message}</FormHelperText>}
-              </div>
-            )}
-          /> */}
-
-          {errors.root && <Alert color="error">{errors.root.message}</Alert>}
-
+          {errors.root?.message ? <Alert severity="error">{errors.root.message}</Alert> : null}
           <Button
             disabled={isPending}
             type="submit"
@@ -203,12 +180,12 @@ export function SignUpForm(): React.JSX.Element {
               },
             }}
           >
-            Sign up
+            {isPending ? 'Signing up...' : 'Sign up'}
           </Button>
         </Stack>
       </form>
 
-      <Alert color="warning">Created users are not persisted</Alert>
+      <Alert severity="warning">Created users are not persisted</Alert>
     </Stack>
   );
 }

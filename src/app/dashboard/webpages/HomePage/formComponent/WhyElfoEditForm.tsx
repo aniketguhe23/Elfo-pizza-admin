@@ -5,7 +5,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 interface WhyItem {
   title: string;
   description: string;
-  image: string | File;
+  image?: string | File | null;  // image is optional and can be null
 }
 
 interface WhyElfoEditFormProps {
@@ -16,7 +16,11 @@ interface WhyElfoEditFormProps {
   onCancel: () => void;
 }
 
-const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubmit, onCancel }) => {
+function WhyElfoEditForm({
+  defaultValues,
+  onSubmit,
+  onCancel,
+}: WhyElfoEditFormProps): React.JSX.Element {
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues,
   });
@@ -28,8 +32,8 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
 
   const watchedItems = watch('list');
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file: any = e.target.files?.[0];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number): void => {
+    const file: File | undefined = e.target.files?.[0];
     if (file) {
       setValue(`list.${index}.image`, file); // Store file directly
     }
@@ -47,8 +51,7 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
         margin: '0 auto',
         padding: 3,
         backgroundColor: 'background.paper',
-        // borderRadius: 2,
-        minHeight: '100vh', // make sure form is at least full viewport height
+        minHeight: '100vh',
       }}
     >
       {/* The form content */}
@@ -70,7 +73,9 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
                 <Controller
                   name={`list.${index}.title`}
                   control={control}
-                  render={({ field }) => <TextField size="small" fullWidth variant="outlined" {...field} />}
+                  render={({ field: controllerField }) => (
+                    <TextField size="small" fullWidth variant="outlined" {...controllerField} />
+                  )}
                 />
               </Grid>
             </Grid>
@@ -86,8 +91,15 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
                 <Controller
                   name={`list.${index}.description`}
                   control={control}
-                  render={({ field }) => (
-                    <TextField size="small" fullWidth multiline rows={4} variant="outlined" {...field} />
+                  render={({ field: controllerField }) => (
+                    <TextField
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={4}
+                      variant="outlined"
+                      {...controllerField}
+                    />
                   )}
                 />
               </Grid>
@@ -100,7 +112,13 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
                   Image
                 </Typography>
               </Grid>
-              <Grid item xs={8} sm={9} md={10} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Grid
+                item
+                xs={8}
+                sm={9}
+                md={10}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+              >
                 <Button
                   variant="outlined"
                   component="label"
@@ -121,7 +139,14 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
                   }}
                 >
                   Choose File {index + 1}
-                  <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, index)} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      handleImageChange(e, index);
+                    }}
+                  />
                 </Button>
 
                 {watchedItems?.[index]?.image && (
@@ -130,7 +155,9 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
                       src={
                         typeof watchedItems[index].image === 'string'
                           ? watchedItems[index].image
-                          : URL.createObjectURL(watchedItems[index].image)
+                          : watchedItems[index].image instanceof File
+                          ? URL.createObjectURL(watchedItems[index].image)
+                          : ''
                       }
                       alt="Preview"
                       style={{
@@ -152,7 +179,9 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
       <Grid container spacing={2} justifyContent="flex-end" sx={{ marginTop: 'auto' }}>
         <Grid item>
           <Button
-            onClick={onCancel}
+            onClick={() => {
+              onCancel();
+            }}
             variant="outlined"
             size="small"
             sx={{
@@ -198,6 +227,6 @@ const WhyElfoEditForm: React.FC<WhyElfoEditFormProps> = ({ defaultValues, onSubm
       </Grid>
     </Box>
   );
-};
+}
 
 export default WhyElfoEditForm;

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -21,14 +22,37 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
-const MenuItemsComponent = () => {
-  const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [open, setOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
+// Define a strict type for menu item
+interface MenuItem {
+  id: number;
+  name: string;
+  category: string;
+  price_small: number | null;
+  price_medium: number | null;
+  price_large: number | null;
+  image_url: string;
+}
+
+// Define form inputs type
+interface MenuItemFormInputs {
+  name: string;
+  category: string;
+  price_small: number | '';
+  price_medium: number | '';
+  price_large: number | '';
+  image_url: FileList | null;
+}
+
+function MenuItemsComponent(): JSX.Element {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { api_getMenuItemsData, api_addMenuItemsData, api_updateMenuItemsData } = ProjectApiList();
+  const { apiGetMenuItemsData, apiAddMenuItemsData, apiUpdateMenuItemsData } = ProjectApiList();
 
   const {
     register,
@@ -36,36 +60,40 @@ const MenuItemsComponent = () => {
     reset,
     setValue,
     formState: { errors },
-  } = useForm();
+  } = useForm<MenuItemFormInputs>();
 
-  const fetchMenuItems = async () => {
+  // Fetch menu items
+  const fetchMenuItems = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(api_getMenuItemsData);
-      setMenuItems(res?.data?.data || []);
+      const res = await axios.get<{ data: MenuItem[] }>(apiGetMenuItemsData);
+      setMenuItems(res.data.data || []);
     } catch (err) {
-      console.error('Error fetching menu items', err);
+      toast.error('Error fetching menu items');
     }
-  };
+  }, [apiGetMenuItemsData]);
 
+  // Run once on mount
   useEffect(() => {
-    fetchMenuItems();
-  }, []);
+    void fetchMenuItems();
+  }, [fetchMenuItems]);
 
-  const handleEdit = (item: any) => {
+  // Open edit dialog and populate form
+  const handleEdit = (item: MenuItem): void => {
     setEditingItem(item);
     reset({
       name: item.name,
       category: item.category,
-      price_small: item.price_small,
-      price_medium: item.price_medium,
-      price_large: item.price_large,
-      image_url: '',
+      price_small: item.price_small ?? '',
+      price_medium: item.price_medium ?? '',
+      price_large: item.price_large ?? '',
+      image_url: null,
     });
+    setImagePreview(item.image_url);
     setOpen(true);
-    setImagePreview(item.image_url); // Set the preview image when editing
   };
 
-  const handleAdd = () => {
+  // Open add dialog and reset form
+  const handleAdd = (): void => {
     setEditingItem(null);
     reset({
       name: '',
@@ -75,43 +103,48 @@ const MenuItemsComponent = () => {
       price_large: '',
       image_url: null,
     });
+    setImagePreview(null);
     setOpen(true);
-    setImagePreview(null); // Clear preview image when adding new item
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // Update image preview on file input change
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] ?? null;
+    setValue('image_url', e.target.files);
     if (file) {
-      setValue('image_url', file);
-      setImagePreview(URL.createObjectURL(file)); // Preview the image
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
     }
   };
 
-  const onSubmit = async (data: any) => {
+  // Submit handler for form
+  const onSubmit: SubmitHandler<MenuItemFormInputs> = async (data) => {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('category', data.category);
-    formData.append('price_small', data.price_small);
-    formData.append('price_medium', data.price_medium);
-    formData.append('price_large', data.price_large);
-    if (data.image_url?.[0]) {
+    formData.append('price_small', data.price_small.toString());
+    formData.append('price_medium', data.price_medium.toString());
+    formData.append('price_large', data.price_large.toString());
+
+    if (data.image_url && data.image_url.length > 0) {
       formData.append('file', data.image_url[0]);
     }
 
     try {
       if (editingItem) {
-        await axios.put(`${api_updateMenuItemsData}/${editingItem.id}`, formData, {
+        await axios.put(`${apiUpdateMenuItemsData}/${editingItem.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        await axios.post(api_addMenuItemsData, formData, {
+        await axios.post(apiAddMenuItemsData, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
       setOpen(false);
-      fetchMenuItems();
+      await fetchMenuItems();
     } catch (err) {
-      console.error('Error saving menu item', err);
+      toast.error('Error saving menu item');
     }
   };
 
@@ -169,53 +202,37 @@ const MenuItemsComponent = () => {
                     }}
                   />
                 </TableCell>
+                <TableCell>{item.name || <Typography color="textSecondary">-</Typography>}</TableCell>
+                <TableCell>{item.category || <Typography color="textSecondary">-</Typography>}</TableCell>
                 <TableCell>
-                  {item.name ? (
-                    item.name
-                  ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      -{' '}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.category ? (
-                    item.category
-                  ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      -{' '}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.price_small ? (
+                  {item.price_small !== null ? (
                     `₹${item.price_small}`
                   ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      -{' '}
-                    </Typography>
+                    <Typography color="textSecondary">-</Typography>
                   )}
                 </TableCell>
                 <TableCell>
-                  {item.price_medium ? (
+                  {item.price_medium !== null ? (
                     `₹${item.price_medium}`
                   ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      -{' '}
-                    </Typography>
+                    <Typography color="textSecondary">-</Typography>
                   )}
                 </TableCell>
                 <TableCell>
-                  {item.price_large ? (
+                  {item.price_large !== null ? (
                     `₹${item.price_large}`
                   ) : (
-                    <Typography variant="body2" color="textSecondary">
-                      -{' '}
-                    </Typography>
+                    <Typography color="textSecondary">-</Typography>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outlined" size="small" onClick={() => handleEdit(item)}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      handleEdit(item);
+                    }}
+                  >
                     Edit
                   </Button>
                 </TableCell>
@@ -225,8 +242,14 @@ const MenuItemsComponent = () => {
         </Table>
       </TableContainer>
 
-      {/* Dialog Form */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={() => {
+          setOpen(false);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle sx={{ fontWeight: 600 }}>{editingItem ? 'Edit Menu Item' : 'Add Menu Item'}</DialogTitle>
 
         <DialogContent dividers>
@@ -241,32 +264,49 @@ const MenuItemsComponent = () => {
               label="Name"
               fullWidth
               {...register('name', { required: 'Name is required' })}
-              error={!!errors.name}
+              error={Boolean(errors.name)}
+              helperText={errors.name?.message}
             />
 
             <TextField
               label="Category"
               fullWidth
               {...register('category', { required: 'Category is required' })}
-              error={!!errors.category}
+              error={Boolean(errors.category)}
+              helperText={errors.category?.message}
             />
 
-            <TextField label="Price (Small)" type="number" fullWidth {...register('price_small')} />
+            <TextField
+              label="Price (Small)"
+              type="number"
+              fullWidth
+              {...register('price_small', { valueAsNumber: true })}
+            />
 
-            <TextField label="Price (Medium)" type="number" fullWidth {...register('price_medium')} />
+            <TextField
+              label="Price (Medium)"
+              type="number"
+              fullWidth
+              {...register('price_medium', { valueAsNumber: true })}
+            />
 
-            <TextField label="Price (Large)" type="number" fullWidth {...register('price_large')} />
+            <TextField
+              label="Price (Large)"
+              type="number"
+              fullWidth
+              {...register('price_large', { valueAsNumber: true })}
+            />
 
             <Box>
               <Typography variant="body2" fontWeight={500} gutterBottom>
                 Upload Image
               </Typography>
               <input type="file" accept="image/*" {...register('image_url')} onChange={handleImageChange} />
-              {imagePreview && (
+              {Boolean(imagePreview) && (
                 <Box mt={2} textAlign="center">
                   <img
-                    src={imagePreview}
-                    alt="Image Preview"
+                    src={imagePreview ?? ''}
+                    alt="Preview"
                     style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
                   />
                 </Box>
@@ -276,7 +316,12 @@ const MenuItemsComponent = () => {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
+          <Button
+            onClick={() => {
+              setOpen(false);
+            }}
+            color="secondary"
+          >
             Cancel
           </Button>
           <Button type="submit" form="menu-item-form" variant="contained">
@@ -286,6 +331,6 @@ const MenuItemsComponent = () => {
       </Dialog>
     </Box>
   );
-};
+}
 
 export default MenuItemsComponent;

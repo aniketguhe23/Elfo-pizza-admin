@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -22,24 +23,29 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Category {
   id: number;
   name: string;
   status: 'active' | 'inactive';
   itemsCount: number;
-  createdAt: string;
+  created_at: string;
 }
 
-const CategoryComponent = () => {
+interface CategoryResponse {
+  data: Category[];
+}
+
+function CategoryComponent(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [search, setSearch] = useState('');
 
-  const { api_getCategories, api_createCategories, api_updateCategories } = ProjectApiList();
+  const { apiGetCategories, apiCreateCategories, apiUpdateCategories } = ProjectApiList();
 
   const {
     register,
@@ -48,42 +54,45 @@ const CategoryComponent = () => {
     formState: { errors },
   } = useForm<{ name: string }>();
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async (): Promise<void> => {
     try {
-      const response = await axios.get(api_getCategories);
-      setCategories(response.data?.data || []);
+      const response = await axios.get<CategoryResponse>(apiGetCategories);
+      const result = response.data?.data || [];
+      setCategories(result);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      toast.error('Error fetching categories'); // <-- replaced alert
     }
-  };
+  }, [apiGetCategories]);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    void (async () => {
+      await fetchCategories();
+    })();
+  }, [fetchCategories]);
 
-  const handleDialogOpen = (category?: Category) => {
+  const handleDialogOpen = (category?: Category): void => {
     setEditingCategory(category || null);
     reset({ name: category?.name || '' });
     setOpen(true);
   };
 
-  const handleDialogClose = () => {
+  const handleDialogClose = (): void => {
     setOpen(false);
     setEditingCategory(null);
     reset();
   };
 
-  const onSubmit = async (data: { name: string }) => {
+  const onSubmit = async (data: { name: string }): Promise<void> => {
     try {
       if (editingCategory) {
-        await axios.put(`${api_updateCategories}/${editingCategory.id}`, data);
+        await axios.put(`${apiUpdateCategories}/${editingCategory.id}`, data);
       } else {
-        await axios.post(api_createCategories, data);
+        await axios.post(apiCreateCategories, data);
       }
       handleDialogClose();
-      fetchCategories();
+      void fetchCategories();
     } catch (error) {
-      console.error('Error saving category:', error);
+      toast.error('Error saving category');
     }
   };
 
@@ -100,7 +109,9 @@ const CategoryComponent = () => {
             size="small"
             placeholder="Search Categories"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -112,7 +123,9 @@ const CategoryComponent = () => {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -132,6 +145,7 @@ const CategoryComponent = () => {
       <Typography variant="subtitle1" gutterBottom>
         You have {categories.length} total categories
       </Typography>
+
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
@@ -143,13 +157,19 @@ const CategoryComponent = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredCategories.map((category: any, index) => (
+            {filteredCategories.map((category, index) => (
               <TableRow key={category.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{category.name}</TableCell>
-                <TableCell>{category?.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleDialogOpen(category)}>
+                  {category.created_at ? new Date(category.created_at).toISOString().split('T')[0] : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    onClick={() => {
+                      handleDialogOpen(category);
+                    }}
+                  >
                     <Pencil size={16} />
                   </IconButton>
                   <IconButton>
@@ -185,20 +205,18 @@ const CategoryComponent = () => {
             gap={2}
             mt={1}
           >
-            {/* Category Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Category Name</Box>
               <TextField
                 fullWidth
                 size="small"
                 {...register('name', { required: 'Category name is required' })}
-                error={!!errors.name}
+                error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
             </Box>
           </Box>
         </DialogContent>
-
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
           <Button
             onClick={handleDialogClose}
@@ -208,13 +226,13 @@ const CategoryComponent = () => {
               width: 90,
               fontSize: '0.75rem',
               padding: '5px 10px',
-              color: '#333', // dark gray text
-              borderColor: '#ccc', // light gray border
+              color: '#333',
+              borderColor: '#ccc',
               textTransform: 'none',
               fontWeight: 500,
               borderRadius: 1,
               '&:hover': {
-                backgroundColor: '#f2f2f2', // slightly darker gray on hover
+                backgroundColor: '#f2f2f2',
                 color: '#000',
                 borderColor: '#bbb',
               },
@@ -246,6 +264,6 @@ const CategoryComponent = () => {
       </Dialog>
     </Box>
   );
-};
+}
 
 export default CategoryComponent;

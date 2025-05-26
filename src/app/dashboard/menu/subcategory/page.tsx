@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -25,6 +26,7 @@ import {
 import axios from 'axios';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Category {
   id: number;
@@ -39,7 +41,12 @@ interface SubCategory {
   category_name?: string;
 }
 
-const SubCategoryComponent = () => {
+interface SubCategoryForm {
+  name: string;
+  category_id: number;
+}
+
+function SubCategoryComponent(): JSX.Element {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,75 +54,80 @@ const SubCategoryComponent = () => {
   const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { api_getSubCategories, api_createSubCategories, api_updateSubCategories, api_getCategories } =
-    ProjectApiList();
+  const { apiGetSubCategories, apiCreateSubCategories, apiUpdateSubCategories, apiGetCategories } = ProjectApiList();
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ name: string; category_id: number }>();
+  } = useForm<SubCategoryForm>();
 
-  const fetchSubCategories = async () => {
+  // Wrap fetch functions with useCallback to avoid missing dependencies warning in useEffect
+  const fetchSubCategories = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(api_getSubCategories);
-      const data = res.data?.data || [];
+      const res = await axios.get<{ data: SubCategory[] }>(apiGetSubCategories);
+      const data = res.data.data || [];
       setSubCategories(data);
       setFilteredSubCategories(data);
     } catch (err) {
-      console.error('Error fetching subcategories:', err);
+      // Handle error appropriately in production
+      toast.error('Error fetching subcategories:');
     }
-  };
+  }, [apiGetSubCategories]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(api_getCategories);
-      setCategories(res.data?.data || []);
+      const res = await axios.get<{ data: Category[] }>(apiGetCategories);
+      const data = res.data.data || [];
+      setCategories(data);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      // Handle error appropriately in production
+      toast.error('Error fetching categories:');
     }
-  };
+  }, [apiGetCategories]);
 
   useEffect(() => {
-    fetchSubCategories();
-    fetchCategories();
-  }, []);
+    void fetchSubCategories();
+    void fetchCategories();
+  }, [fetchSubCategories, fetchCategories]);
 
-  const handleDialogOpen = (subCategory?: SubCategory) => {
+  const handleDialogOpen = (subCategory?: SubCategory): void => {
     setEditingSubCategory(subCategory || null);
     reset({
       name: subCategory?.name || '',
-      category_id: subCategory?.category_id || undefined,
+      category_id: subCategory?.category_id ?? undefined,
     });
     setOpen(true);
   };
 
-  const handleDialogClose = () => {
+  const handleDialogClose = (): void => {
     setOpen(false);
     setEditingSubCategory(null);
     reset();
   };
 
-  const onSubmit = async (data: { name: string; category_id: number }) => {
+  const onSubmit = async (data: SubCategoryForm): Promise<void> => {
     try {
       if (editingSubCategory) {
-        await axios.put(`${api_updateSubCategories}/${editingSubCategory.id}`, data);
+        await axios.put(`${apiUpdateSubCategories}/${editingSubCategory.id}`, data);
       } else {
-        await axios.post(api_createSubCategories, data);
+        await axios.post(apiCreateSubCategories, data);
       }
       handleDialogClose();
-      fetchSubCategories();
+      await fetchSubCategories();
     } catch (err) {
-      console.error('Error saving subcategory:', err);
+      // Handle error appropriately in production
+      toast.error('Error submitting subcategory:');
     }
   };
 
-  const handleSearch = (term: string) => {
+  const handleSearch = (term: string): void => {
     setSearchTerm(term);
     const lowerTerm = term.toLowerCase();
     const filtered = subCategories.filter(
-      (sub) => sub.name.toLowerCase().includes(lowerTerm) || sub.category_name?.toLowerCase().includes(lowerTerm)
+      (sub) =>
+        sub.name.toLowerCase().includes(lowerTerm) || (sub.category_name?.toLowerCase().includes(lowerTerm) ?? false)
     );
     setFilteredSubCategories(filtered);
   };
@@ -131,7 +143,9 @@ const SubCategoryComponent = () => {
             size="small"
             placeholder="Search subcategories"
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => {
+              handleSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -143,7 +157,9 @@ const SubCategoryComponent = () => {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -182,16 +198,12 @@ const SubCategoryComponent = () => {
                   <TableCell>{sub.name}</TableCell>
                   <TableCell>{sub.category_name}</TableCell>
                   <TableCell>{sub.created_at?.split('T')[0]}</TableCell>
-                  {/* <TableCell>
-                    <Button onClick={() => handleDialogOpen(sub)} size="small">
-                      <Pencil size={16} />
-                    </Button>
-                    <Button size="small">
-                      <Trash2 size={16} />
-                    </Button>
-                  </TableCell> */}
                   <TableCell>
-                    <IconButton onClick={() => handleDialogOpen(sub)}>
+                    <IconButton
+                      onClick={() => {
+                        handleDialogOpen(sub);
+                      }}
+                    >
                       <Pencil size={16} />
                     </IconButton>
                     <IconButton>
@@ -236,19 +248,17 @@ const SubCategoryComponent = () => {
             gap={2}
             mt={1}
           >
-            {/* Subcategory Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Subcategory Name</Box>
               <TextField
                 fullWidth
                 size="small"
                 {...register('name', { required: 'Subcategory name is required' })}
-                error={!!errors.name}
+                error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
             </Box>
 
-            {/* Select Category */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Category</Box>
               <TextField
@@ -256,7 +266,7 @@ const SubCategoryComponent = () => {
                 fullWidth
                 size="small"
                 {...register('category_id', { required: 'Category is required' })}
-                error={!!errors.category_id}
+                error={Boolean(errors.category_id)}
                 helperText={errors.category_id?.message}
               >
                 {categories.map((cat) => (
@@ -271,20 +281,22 @@ const SubCategoryComponent = () => {
 
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
           <Button
-            onClick={handleDialogClose}
+            onClick={() => {
+              handleDialogClose();
+            }}
             variant="outlined"
             color="secondary"
             sx={{
               width: 90,
               fontSize: '0.75rem',
               padding: '5px 10px',
-              color: '#333', // dark gray text
-              borderColor: '#ccc', // light gray border
+              color: '#333',
+              borderColor: '#ccc',
               textTransform: 'none',
               fontWeight: 500,
               borderRadius: 1,
               '&:hover': {
-                backgroundColor: '#f2f2f2', // slightly darker gray on hover
+                backgroundColor: '#f2f2f2',
                 color: '#000',
                 borderColor: '#bbb',
               },
@@ -317,6 +329,6 @@ const SubCategoryComponent = () => {
       </Dialog>
     </Box>
   );
-};
+}
 
 export default SubCategoryComponent;

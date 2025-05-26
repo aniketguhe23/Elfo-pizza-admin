@@ -1,4 +1,5 @@
 import React from 'react';
+import type { JSX } from 'react';
 import {
   Box,
   Button,
@@ -11,6 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
+
+import ImagePreview from './ImagePreview';
 
 interface Dish {
   title: string;
@@ -30,7 +33,8 @@ interface SpecialityFormProps {
   onCancel: () => void;
 }
 
-const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues, onSubmit, onCancel }) => {
+// Converted to function declaration with explicit return type
+function SpecialityEditForm({ open, defaultValues, onSubmit, onCancel }: SpecialityFormProps): JSX.Element {
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues,
   });
@@ -42,7 +46,7 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
 
   const watchedDishes = watch('dishes');
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number): void => {
     const file = e.target.files?.[0];
     if (!file) return;
     setValue(`dishes.${index}.image`, file);
@@ -76,6 +80,7 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
             backgroundColor: '#fff',
             borderRadius: 2,
           }}
+          onSubmit={handleSubmit(onSubmit)} // use handleSubmit here
         >
           <Grid container spacing={2}>
             {/* Title */}
@@ -96,14 +101,14 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
                   <Controller
                     name="title"
                     control={control}
-                    render={({ field }) => (
+                    render={({ field: controllerField }) => (
                       <TextField
                         id="main-title"
                         size="small"
                         fullWidth
                         variant="outlined"
                         InputProps={{ style: { fontSize: '0.875rem' } }}
-                        {...field}
+                        {...controllerField}
                       />
                     )}
                   />
@@ -123,14 +128,14 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
                   <Controller
                     name="subtitle"
                     control={control}
-                    render={({ field }) => (
+                    render={({ field: controllerField }) => (
                       <TextField
                         id="subtitle"
                         size="small"
                         fullWidth
                         variant="outlined"
                         InputProps={{ style: { fontSize: '0.875rem' } }}
-                        {...field}
+                        {...controllerField}
                       />
                     )}
                   />
@@ -184,39 +189,39 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
                     <Controller
                       name={`dishes.${index}.title`}
                       control={control}
-                      render={({ field }) => (
+                      render={({ field: dishTitleField }) => (
                         <TextField
                           size="small"
                           fullWidth
                           variant="outlined"
                           InputProps={{ style: { fontSize: '0.875rem' } }}
-                          {...field}
+                          {...dishTitleField}
                         />
                       )}
                     />
                     <Controller
                       name={`dishes.${index}.subtitle`}
                       control={control}
-                      render={({ field }) => (
+                      render={({ field: dishSubtitleField }) => (
                         <TextField
                           size="small"
                           fullWidth
                           variant="outlined"
                           InputProps={{ style: { fontSize: '0.875rem' } }}
-                          {...field}
+                          {...dishSubtitleField}
                         />
                       )}
                     />
                     <Controller
                       name={`dishes.${index}.button`}
                       control={control}
-                      render={({ field }) => (
+                      render={({ field: dishButtonField }) => (
                         <TextField
                           size="small"
                           fullWidth
                           variant="outlined"
                           InputProps={{ style: { fontSize: '0.875rem' } }}
-                          {...field}
+                          {...dishButtonField}
                         />
                       )}
                     />
@@ -244,34 +249,20 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
                     }}
                   >
                     Upload Image {index + 1}
-                    <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, index)} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        handleImageChange(e, index);
+                      }}
+                    />
                   </Button>
 
-                  {watchedDishes?.[index]?.image && (
-                    <Box
-                      sx={{
-                        width: 100,
-                        height: 100,
-                        p: 1,
-                        ml: 7.5,
-                      }}
-                    >
-                      <img
-                        src={
-                          watchedDishes[index].image instanceof File
-                            ? URL.createObjectURL(watchedDishes[index].image)
-                            : watchedDishes[index].image
-                        }
-                        alt="Preview"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
-                          borderRadius: '12px',
-                        }}
-                      />
-                    </Box>
-                  )}
+                  {watchedDishes?.[index]?.image &&
+                    (typeof watchedDishes[index].image === 'string' || watchedDishes[index].image instanceof File) && (
+                      <ImagePreview image={watchedDishes[index].image} />
+                    )}
                 </Box>
               </Grid>
             ))}
@@ -321,6 +312,6 @@ const SpecialityEditForm: React.FC<SpecialityFormProps> = ({ open, defaultValues
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default SpecialityEditForm;

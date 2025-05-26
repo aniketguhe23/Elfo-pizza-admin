@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Box,
   Button,
@@ -11,6 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
+
 
 interface EditNavModalProps {
   open: boolean;
@@ -23,8 +26,19 @@ interface EditNavModalProps {
   onSave: (updatedData: { title: string; description: string; image1: File | null }) => void;
 }
 
-const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, onSave }) => {
-  const { control, handleSubmit, setValue, watch } = useForm({
+interface FormValues {
+  title: string;
+  description: string;
+  image1: File | null;
+}
+
+function EditNavCardModal({
+  open,
+  onClose,
+  data,
+  onSave,
+}: EditNavModalProps): JSX.Element {
+  const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       title: '',
       description: '',
@@ -36,15 +50,16 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
     if (data) {
       setValue('title', data.title);
       setValue('description', data.description);
+      setValue('image1', null); // Reset image input when data changes
     }
   }, [data, setValue]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file: any = e.target.files?.[0] || null;
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] ?? null;
     setValue('image1', file, { shouldValidate: true });
   };
 
-  const handleSave = (formData: any) => {
+  const handleSave: SubmitHandler<FormValues> = (formData) => {
     onSave({
       title: formData.title,
       description: formData.description,
@@ -52,9 +67,11 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
     });
   };
 
-  const watchedImage: any = watch('image1');
+  const watchedImage = watch('image1');
   const preview =
-    watchedImage instanceof File ? URL.createObjectURL(watchedImage) : data.image1 || '/default-image.png';
+    watchedImage instanceof File
+      ? URL.createObjectURL(watchedImage)
+      : data.image1 || '/default-image.png';
 
   return (
     <Dialog
@@ -86,7 +103,13 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
       </DialogTitle>
 
       <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
-        <Box component="form" onSubmit={handleSubmit(handleSave)} display="flex" flexDirection="column" gap={3}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit(handleSave)}
+          display="flex"
+          flexDirection="column"
+          gap={3}
+        >
           {/* Title */}
           <Box display="flex" alignItems="center" gap={2}>
             <Box sx={{ width: 140, fontWeight: 500 }}>Logo Text</Box>
@@ -100,7 +123,7 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
                   size="small"
                   variant="outlined"
                   {...field}
-                  error={!!fieldState.error}
+                  error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message}
                 />
               )}
@@ -120,7 +143,7 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
                   size="small"
                   variant="outlined"
                   {...field}
-                  error={!!fieldState.error}
+                  error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message}
                 />
               )}
@@ -194,7 +217,6 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
         </Button>
         <Button
           type="submit"
-          onClick={handleSubmit(handleSave)}
           variant="contained"
           sx={{
             minWidth: 70,
@@ -209,12 +231,13 @@ const EditNavCardModal: React.FC<EditNavModalProps> = ({ open, onClose, data, on
               backgroundColor: '#222',
             },
           }}
+          onClick={handleSubmit(handleSave)}
         >
           Save
         </Button>
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default EditNavCardModal;

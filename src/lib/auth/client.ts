@@ -12,7 +12,7 @@ class AuthClient {
         return { data: null };
       }
 
-      const user: User = JSON.parse(storedUser);
+const user = JSON.parse(storedUser) as unknown as User;
       return { data: user };
     } catch (error) {
       return { data: null, error: 'Failed to parse user from localStorage' };

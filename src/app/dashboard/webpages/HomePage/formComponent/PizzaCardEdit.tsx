@@ -1,34 +1,40 @@
 import React from 'react';
+import type { JSX ,ChangeEvent} from 'react';
+
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
-interface FormData {
+interface FormDataProps {
   title: string;
   subtitle: string;
   description: string;
-  image: File | null | any;
+  image?: File | null ;
+  imageUrl?: string;
+  // file upload or existing image URL or null
 }
 
 interface PizzaCardEditProps {
   open: boolean;
-  defaultValues: FormData;
-  onSubmit: (data: FormData) => void;
+  defaultValues: FormDataProps;
+  onSubmit: (data: FormDataProps) => void;
   onCancel: () => void;
 }
 
-const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSubmit, onCancel }) => {
-  const { handleSubmit, control, setValue, watch } = useForm<FormData>({
+function PizzaCardEdit({ open, defaultValues, onSubmit, onCancel }: PizzaCardEditProps): JSX.Element {
+  const { handleSubmit, control, setValue, watch } = useForm<FormDataProps>({
     defaultValues,
   });
 
   const image = watch('image');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] ?? null;
     setValue('image', file, { shouldValidate: true });
   };
 
-  const previewUrl = image instanceof File ? URL.createObjectURL(image) : typeof image === 'string' ? image : null;
+  // Create preview URL only if image is a File
+  const previewUrl: string | null =
+    image instanceof File ? URL.createObjectURL(image) : typeof image === 'string' ? image : null;
 
   return (
     <Dialog
@@ -65,7 +71,7 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
                   size="small"
                   fullWidth
                   {...field}
-                  error={!!fieldState.error}
+                  error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message}
                 />
               )}
@@ -106,7 +112,7 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
 
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
               {/* Preview */}
-              {previewUrl && (
+              {previewUrl ? (
                 <Box>
                   <img
                     src={previewUrl}
@@ -120,27 +126,27 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
                     }}
                   />
                 </Box>
-              )}
+              ) : null}
 
               {/* Upload Button */}
               <Button
                 variant="outlined"
                 component="label"
                 size="small"
-                 sx={{
-                width: 90,
-                fontSize: '0.75rem',
-                padding: '5px 10px',
-                backgroundColor: '#fff',
-                color: '#000',
-                textTransform: 'none',
-                fontWeight: 500,
-                borderRadius: 1,
-                '&:hover': {
-                  backgroundColor: '#222',
-                  color: '#fff',
-                },
-              }}
+                sx={{
+                  width: 90,
+                  fontSize: '0.75rem',
+                  padding: '5px 10px',
+                  backgroundColor: '#fff',
+                  color: '#000',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: '#222',
+                    color: '#fff',
+                  },
+                }}
               >
                 Choose File
                 <input id="image-upload" type="file" hidden accept="image/*" onChange={handleFileChange} />
@@ -155,19 +161,19 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
             variant="outlined"
             size="small"
             sx={{
-            minWidth: 70,
-            fontSize: '0.75rem',
-            px: 2,
-            backgroundColor: '#fff',
-            color: '#000',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            border: '1px solid #cccccc',
-            '&:hover': {
-              backgroundColor: '#f2f2f2',
-            },
-          }}
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#fff',
+              color: '#000',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              border: '1px solid #cccccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+              },
+            }}
           >
             Cancel
           </Button>
@@ -175,19 +181,19 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
             type="submit"
             variant="contained"
             size="small"
-           sx={{
-            minWidth: 70,
-            fontSize: '0.75rem',
-            px: 2,
-            backgroundColor: '#000',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
           >
             Update
           </Button>
@@ -195,6 +201,6 @@ const PizzaCardEdit: React.FC<PizzaCardEditProps> = ({ open, defaultValues, onSu
       </Box>
     </Dialog>
   );
-};
+}
 
 export default PizzaCardEdit;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, type JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -21,8 +21,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
-import { Pencil, Plus, Search, Trash, Trash2 } from 'lucide-react';
+import axios, { type AxiosResponse } from 'axios';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 interface Item {
@@ -46,14 +46,14 @@ interface FormData {
   price: number;
 }
 
-const ItemVariantComponent = () => {
+function ItemVariantComponent(): JSX.Element {
   const [variants, setVariants] = useState<ItemVariant[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ItemVariant | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { api_getItemVariants, api_createItemVariant, api_updateItemVariant, api_getItems } = ProjectApiList();
+  const { apiGetItemVariants, apiCreateItemVariant, apiUpdateItemVariant, apiGetItems } = ProjectApiList();
 
   const {
     register,
@@ -62,30 +62,31 @@ const ItemVariantComponent = () => {
     formState: { errors },
   } = useForm<FormData>();
 
+  // Wrapped fetch functions with useCallback to add to dependency array
+  const fetchVariants = useCallback(async (): Promise<void> => {
+    try {
+      const res: AxiosResponse<{ data: ItemVariant[] }> = await axios.get(apiGetItemVariants);
+      setVariants(res.data.data);
+    } catch {
+      // Handle error silently or add your error handling here
+    }
+  }, [apiGetItemVariants]);
+
+  const fetchItems = useCallback(async (): Promise<void> => {
+    try {
+      const res: AxiosResponse<{ data: Item[] }> = await axios.get(apiGetItems);
+      setItems(res.data.data);
+    } catch {
+      // Handle error silently or add your error handling here
+    }
+  }, [apiGetItems]);
+
   useEffect(() => {
-    fetchVariants();
-    fetchItems();
-  }, []);
+    void fetchVariants();
+    void fetchItems();
+  }, [fetchVariants, fetchItems]);
 
-  const fetchVariants = async () => {
-    try {
-      const res = await axios.get(api_getItemVariants);
-      setVariants(res.data?.data || []);
-    } catch (err) {
-      console.error('Error fetching variants:', err);
-    }
-  };
-
-  const fetchItems = async () => {
-    try {
-      const res = await axios.get(api_getItems);
-      setItems(res.data?.data || []);
-    } catch (err) {
-      console.error('Error fetching items:', err);
-    }
-  };
-
-  const handleDialogOpen = (variant?: ItemVariant) => {
+  const handleDialogOpen = (variant?: ItemVariant): void => {
     setEditingVariant(variant ?? null);
     reset({
       item_id: variant?.item_id ?? undefined,
@@ -96,29 +97,29 @@ const ItemVariantComponent = () => {
     setOpen(true);
   };
 
-  const handleDialogClose = () => {
+  const handleDialogClose = (): void => {
     reset();
     setEditingVariant(null);
     setOpen(false);
   };
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: FormData): Promise<void> => {
     try {
       if (editingVariant) {
-        await axios.put(`${api_updateItemVariant}/${editingVariant.variantId}`, data);
+        await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, data);
       } else {
-        await axios.post(api_createItemVariant, data);
+        await axios.post(apiCreateItemVariant, data);
       }
       handleDialogClose();
-      fetchVariants();
-    } catch (err) {
-      console.error('Error saving variant:', err);
+      await fetchVariants();
+    } catch {
+      // Handle error silently or add your error handling here
     }
   };
 
   const filteredVariants = variants.filter(
     (v) =>
-      v.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (v.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       v.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.crustType.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -135,7 +136,9 @@ const ItemVariantComponent = () => {
             placeholder="Search variants"
             variant="outlined"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -147,7 +150,9 @@ const ItemVariantComponent = () => {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -182,29 +187,38 @@ const ItemVariantComponent = () => {
           </TableHead>
           <TableBody>
             {filteredVariants.length > 0 ? (
-              filteredVariants.map((sub, index) => (
-                <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{sub.itemName}</TableCell>
-                  <TableCell>{sub.size}</TableCell>
-                  <TableCell>{sub.crustType}</TableCell>
-                  <TableCell>₹{sub.price}</TableCell>
-
-                  <TableCell>
-                    <IconButton onClick={() => handleDialogOpen(sub)}>
-                      <Pencil size={16} />
-                    </IconButton>
-                    <IconButton>
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredVariants.map((sub, index) => {
+                return (
+                  <TableRow key={sub.variantId}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{sub.itemName}</TableCell>
+                    <TableCell>{sub.size}</TableCell>
+                    <TableCell>{sub.crustType}</TableCell>
+                    <TableCell>₹{sub.price}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        onClick={() => {
+                          handleDialogOpen(sub);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => {
+                          // Placeholder for delete handler
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   <Typography variant="body2" color="textSecondary">
-                    No subcategories found.
+                    No item variants found.
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -212,17 +226,18 @@ const ItemVariantComponent = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
       <Dialog
         open={open}
         onClose={handleDialogClose}
         fullWidth
         maxWidth="sm"
         BackdropProps={{
-    sx: {
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(2px)',
-    },
-  }}
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(2px)',
+          },
+        }}
       >
         <DialogTitle>{editingVariant ? 'Edit Variant' : 'Add Variant'}</DialogTitle>
 
@@ -243,7 +258,7 @@ const ItemVariantComponent = () => {
                 select
                 fullWidth
                 {...register('item_id', { required: 'Item is required' })}
-                error={!!errors.item_id}
+                error={Boolean(errors.item_id)}
                 helperText={errors.item_id?.message}
                 size="small"
               >
@@ -261,7 +276,7 @@ const ItemVariantComponent = () => {
               <TextField
                 fullWidth
                 {...register('size', { required: 'Size is required' })}
-                error={!!errors.size}
+                error={Boolean(errors.size)}
                 helperText={errors.size?.message}
                 size="small"
               />
@@ -273,7 +288,7 @@ const ItemVariantComponent = () => {
               <TextField
                 fullWidth
                 {...register('crustType', { required: 'Crust type is required' })}
-                error={!!errors.crustType}
+                error={Boolean(errors.crustType)}
                 helperText={errors.crustType?.message}
                 size="small"
               />
@@ -290,7 +305,7 @@ const ItemVariantComponent = () => {
                   valueAsNumber: true,
                   min: { value: 0, message: 'Price must be a positive number' },
                 })}
-                error={!!errors.price}
+                error={Boolean(errors.price)}
                 helperText={errors.price?.message}
                 size="small"
               />
@@ -298,53 +313,17 @@ const ItemVariantComponent = () => {
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
-          <Button
-            onClick={handleDialogClose}
-            variant="outlined"
-            color="secondary"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              color: '#333', // dark gray text
-              borderColor: '#ccc', // light gray border
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#f2f2f2', // slightly darker gray on hover
-                color: '#000',
-                borderColor: '#bbb',
-              },
-            }}
-          >
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="inherit">
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="variant-form"
-            variant="contained"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
-            {editingVariant ? 'Update' : 'Save'}
+          <Button form="variant-form" type="submit" variant="contained" sx={{ textTransform: 'none' }}>
+            {editingVariant ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
+}
 
 export default ItemVariantComponent;

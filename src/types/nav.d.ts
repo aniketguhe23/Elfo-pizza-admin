@@ -19,9 +19,9 @@ export interface NavItemConfig {
   key: string;
   title: string;
   href?: string;
-  icon?: keyof typeof navIcons;
+  icon?: string;
   external?: boolean;
   disabled?: boolean;
-  matcher?: (pathname: string) => boolean;
-  items?: NavItemConfig[]; // ✅ nested sub-items
+  matcher?: { type: 'startsWith' | 'equals'; href: string };
+  items?: NavItemConfig[];// ✅ nested sub-items
 }

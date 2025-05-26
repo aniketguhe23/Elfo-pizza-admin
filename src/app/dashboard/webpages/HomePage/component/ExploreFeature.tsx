@@ -1,9 +1,11 @@
 import React from 'react';
+import type { JSX } from 'react';
 import { Box, Button, Card, CardMedia, Divider, Typography } from '@mui/material';
 
-const ExploreFeature = () => {
+function ExploreFeature(): JSX.Element {
   const menuItems = [
     {
+      id: 'farmhouse-pizza',
       title: 'Farmhouse Pizza',
       prices: {
         small: '₹199',
@@ -13,6 +15,7 @@ const ExploreFeature = () => {
       image: '/images/ps1.png',
     },
     {
+      id: 'cheesy-burst',
       title: 'Cheesy Burst',
       prices: {
         small: '₹179',
@@ -22,6 +25,7 @@ const ExploreFeature = () => {
       image: '/images/ps1.png',
     },
     {
+      id: 'veg-supreme',
       title: 'Veg Supreme',
       prices: {
         small: '₹159',
@@ -43,9 +47,9 @@ const ExploreFeature = () => {
 
       {/* Menu List */}
       <Box>
-        {menuItems.map((item, index) => (
+        {menuItems.map((item) => (
           <Box
-            key={index}
+            key={item.id} // <-- Use stable unique key, not index
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -96,6 +100,6 @@ const ExploreFeature = () => {
       </Box>
     </Card>
   );
-};
+}
 
 export default ExploreFeature;

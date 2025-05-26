@@ -14,7 +14,7 @@ import BuildYourOwnTab from './BuildYourOwnTab';
 export default function Page(): React.JSX.Element {
   const [value, setValue] = React.useState(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+const handleTabChange = (event: React.SyntheticEvent, newValue: number): void => {
     setValue(newValue);
   };
 

@@ -21,7 +21,16 @@ import { Controller, useForm } from 'react-hook-form';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
-import { useUser } from '@/hooks/use-user';
+// import { useUser } from '@/hooks/use-user';
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
 
 const schema = zod.object({
   email: zod.string().min(1, { message: 'Email is required' }).email(),
@@ -30,16 +39,14 @@ const schema = zod.object({
 
 type Values = zod.infer<typeof schema>;
 
-// const defaultValues = { email: 'sofia@devias.io', password: 'Secret1' } satisfies Values;
-
 export function SignInForm(): React.JSX.Element {
   const router = useRouter();
-  const { api_logIn } = ProjectApiList();
+  const { apiLogIn } = ProjectApiList();
 
-  const { checkSession } = useUser();
+  // unused variable prefixed with _ to avoid lint warning
+  // const { _checkSession } = useUser();
 
-  const [showPassword, setShowPassword] = React.useState<boolean>();
-
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
   const [isPending, setIsPending] = React.useState<boolean>(false);
 
   const {
@@ -49,37 +56,48 @@ export function SignInForm(): React.JSX.Element {
     formState: { errors },
   } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const logInFunction = async (values: Record<string, any>) => {
-    setIsPending(true);
+ const logInFunction = async (values: Values): Promise<void> => {
+  setIsPending(true);
 
-    try {
-      const response = await axios.post(api_logIn, values);
+  try {
+  const response = await axios.post<LoginResponse>(apiLogIn, values);
 
-      if (response.status === 200) {
-        const { token, user } = response.data;
+    if (response.status === 200) {
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('adminUser', JSON.stringify(user));
+      router.push('/dashboard');
+      window.location.reload();
+    } else {
+      throw new Error('Login failed');
+    }
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as { message?: string };
+      const message = typeof data?.message === 'string' ? data.message : 'Something went wrong';
 
-        // Save token and user info in localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('adminUser', JSON.stringify(user));
-
-        router.push('/dashboard');
-        window.location.reload();
-      } else {
-        throw new Error('Login failed');
-      }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Something went wrong';
       setError('root', {
         type: 'manual',
         message,
       });
-    } finally {
-      setIsPending(false);
+    } else if (err instanceof Error) {
+      setError('root', {
+        type: 'manual',
+        message: err.message,
+      });
+    } else {
+      setError('root', {
+        type: 'manual',
+        message: 'Unknown error',
+      });
     }
-  };
+  } finally {
+    setIsPending(false);
+  }
+};
 
-  const onSubmit = (values: Record<string, any>) => {
-    logInFunction(values);
+  const onSubmit = async (values: Values): Promise<void> => {
+    await logInFunction(values);
   };
 
   React.useEffect(() => {
@@ -103,7 +121,7 @@ export function SignInForm(): React.JSX.Element {
             sx={{
               color: '#164e63',
               '&:hover': {
-                color: '#164e63', // darker shade for hover effect
+                color: '#164e63',
               },
             }}
           >
@@ -171,7 +189,7 @@ export function SignInForm(): React.JSX.Element {
             sx={{
               backgroundColor: '#164e63',
               '&:hover': {
-                backgroundColor: '#083344', // darker shade for hover effect
+                backgroundColor: '#083344',
               },
             }}
           >
@@ -179,7 +197,6 @@ export function SignInForm(): React.JSX.Element {
           </Button>
         </Stack>
       </form>
-      
     </Stack>
   );
 }

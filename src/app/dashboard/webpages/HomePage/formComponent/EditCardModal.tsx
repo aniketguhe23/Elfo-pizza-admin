@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
+
 import {
   Box,
   Button,
@@ -11,8 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
 
-// import CloseIcon from '@mui/icons-material/Close';
 
 interface EditCardModalProps {
   open: boolean;
@@ -23,11 +25,24 @@ interface EditCardModalProps {
     image1: string;
     image2: string;
   };
-  onSave: (updatedData: { title: string; description: string; image1: File | null; image2: File | null }) => void;
+  onSave: (updatedData: {
+    title: string;
+    description: string;
+    image1: File | null;
+    image2: File | null;
+  }) => void;
 }
 
-const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSave }) => {
-  const { control, handleSubmit, setValue, watch } = useForm({
+interface FormInputs {
+  title: string;
+  description: string;
+  image1: File | null;
+  image2: File | null;
+}
+
+// Use function declaration instead of arrow function for react/function-component-definition rule
+function EditCardModal({ open, onClose, data, onSave }: EditCardModalProps): JSX.Element {
+  const { control, handleSubmit, setValue, watch } = useForm<FormInputs>({
     defaultValues: {
       title: '',
       description: '',
@@ -43,18 +58,22 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
     }
   }, [data, setValue]);
 
-  const handleImageUpload = (field: 'image1' | 'image2') => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file: any = e.target.files?.[0] || null;
-    setValue(field, file, { shouldValidate: true });
-  };
+  // Return type added
+  const handleImageUpload =
+    (field: 'image1' | 'image2') =>
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const file = e.target.files?.[0] ?? null;
+      setValue(field, file, { shouldValidate: true });
+    };
 
-  const getPreview = (field: 'image1' | 'image2') => {
-    const file: any = watch(field);
+  // Return type added
+  const getPreview = (field: 'image1' | 'image2'): string => {
+    const file = watch(field);
     if (file instanceof File) return URL.createObjectURL(file);
     return data[field] || '/default-image.png';
   };
 
-  const handleSave = (formData: any) => {
+  const handleSave: SubmitHandler<FormInputs> = (formData): void => {
     onSave({
       title: formData.title,
       description: formData.description,
@@ -64,12 +83,18 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth  BackdropProps={{
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      BackdropProps={{
         sx: {
           backgroundColor: 'rgba(0,0,0,0.7)',
           backdropFilter: 'blur(3px)',
         },
-      }}>
+      }}
+    >
       <DialogContent sx={{ p: 4, position: 'relative' }}>
         {/* Close Button */}
         <IconButton
@@ -84,6 +109,7 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
           }}
         >
           {/* <CloseIcon /> */}
+          close
         </IconButton>
 
         <Typography variant="h5" sx={{ fontWeight: 600, textAlign: 'center', mb: 4 }}>
@@ -102,18 +128,18 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
                 </Grid>
                 <Grid item xs={12} sm={9}>
                   <Controller
-                    name={fieldConfig.name as 'title' | 'description'}
+                    name={fieldConfig.name as keyof FormInputs}
                     control={control}
                     rules={{ required: `${fieldConfig.label} is required` }}
                     render={({ field, fieldState }) => (
                       <TextField
                         fullWidth
                         size="small"
-                        multiline={!!fieldConfig.multiline}
+                        multiline={Boolean(fieldConfig.multiline)}
                         rows={fieldConfig.rows || 1}
                         variant="outlined"
                         {...field}
-                        error={!!fieldState.error}
+                        error={Boolean(fieldState.error)}
                         helperText={fieldState.error?.message}
                       />
                     )}
@@ -176,7 +202,7 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
           ))}
         </Grid>
 
-        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, }}>
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1 }}>
           <Button
             onClick={onClose}
             sx={{
@@ -220,6 +246,6 @@ const EditCardModal: React.FC<EditCardModalProps> = ({ open, onClose, data, onSa
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default EditCardModal;

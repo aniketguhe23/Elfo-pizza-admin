@@ -1,39 +1,47 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import {
-  Box,
-  Button,
-  Card,
-  CardMedia,
-  Divider,
-  Grid,
-  Typography,
-} from '@mui/material';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+
 import PizzaCardEdit from '../formComponent/PizzaCardEdit';
 
-// import EditPizzaCardModal from '../formComponent/EditPizzaCardModal';
+interface HeroData {
+  hero_title_1: string;
+  hero_title_2: string;
+  hero_title_3: string;
+  hero_img: string;
+}
 
-const PizzaCard = () => {
+interface FormDataProps {
+  title: string;
+  subtitle: string;
+  description: string;
+  image?: File | null;
+  imageUrl?: string;
+}
+
+function PizzaCard(): JSX.Element {
+  const [data, setData] = useState<HeroData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [data, setData] = useState<any>(null);
+  const { apiGetHedroData, apiUpdateHeroData } = ProjectApiList();
 
-  let { api_getHedroData, api_updateHeroData } = ProjectApiList();
-
-  const fetchPizzaData = async () => {
+  const fetchPizzaData = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(api_getHedroData);
-      setData(res.data.data);
+      const response = await axios.get<HeroData>(apiGetHedroData);
+      setData(response.data);
     } catch (error) {
-      console.error('Error fetching pizza data:', error);
+      toast.error('Error fetching hero data');
     }
-  };
+  }, [apiGetHedroData]);
 
   useEffect(() => {
-    fetchPizzaData();
-  }, []);
+    void fetchPizzaData();
+  }, [fetchPizzaData]);
 
-  const updateHeroContent = async (formData: any) => {
+  const updateHeroContent = async (formData: FormDataProps): Promise<void> => {
     try {
       const payload = new FormData();
       payload.append('hero_title_1', formData.title);
@@ -44,97 +52,56 @@ const PizzaCard = () => {
         payload.append('hero_img', formData.image);
       }
 
-      const response = await axios.put(api_updateHeroData, payload, {
+      const response = await axios.put(apiUpdateHeroData, payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      if (response.data.status === 'success') {
+      if ((response.data as { status: string }).status === 'success') {
         setIsEditing(false);
-        fetchPizzaData();
+        await fetchPizzaData();
       }
     } catch (error) {
-      console.error('Error updating hero content:', error);
+      toast.error('Error updating hero content');
     }
   };
 
-  if (!data) return null;
+  if (!data) return <div />;
 
   return (
-    <Card elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#fafafa' }}>
-      <Typography variant="h5" align="center" fontWeight={600} gutterBottom>
-        Hero Section
-      </Typography>
-      <Divider sx={{ my: 2 }} />
-
-      <Grid container spacing={3} alignItems="center">
-        <Grid item xs={12} sm={3} textAlign="center">
-          <CardMedia
-            component="img"
-            image={data?.hero_img}
-            alt="Pizza Image"
-            sx={{
-              width: 100,
-              height: 100,
-              borderRadius: 2,
-              mx: 'auto',
-              boxShadow: 3,
-              objectFit: 'cover',
-              backgroundColor: '#fff',
-              p: 1,
+    <div>
+      {!isEditing ? (
+        <div>
+          <h1>{data.hero_title_1}</h1>
+          <h2>{data.hero_title_2}</h2>
+          <p>{data.hero_title_3}</p>
+          <img src={data.hero_img} alt="Hero" style={{ width: '300px' }} />
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(true);
             }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Title
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            {data?.hero_title_1}
-          </Typography>
-
-          <Typography variant="subtitle1" fontWeight={600}>
-            Subtitle
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {data?.hero_title_2}
-          </Typography>
-
-          <Typography variant="subtitle1" fontWeight={600}>
-            Description
-          </Typography>
-          <Typography variant="body2">{data?.hero_title_3}</Typography>
-        </Grid>
-
-        <Grid item xs={12} sm={3} textAlign="center">
-          <Button variant="contained" onClick={() => setIsEditing(true)}  sx={{
-              mt: { xs: 2, sm: 0 },
-            
-              backgroundColor: '#d3d3d3',
-              color: 'black',
-              '&:hover': {
-                backgroundColor: 'black', // light gray
-                color: 'white',
-              },
-            }}>
-            Edit Content
-          </Button>
-        </Grid>
-      </Grid>
-
-      <PizzaCardEdit
-        open={isEditing}
-        onCancel={() => setIsEditing(false)}
-        defaultValues={{
-          title: data?.hero_title_1,
-          subtitle: data?.hero_title_2,
-          description: data?.hero_title_3,
-          image: data?.hero_img,
-        }}
-        onSubmit={updateHeroContent}
-      />
-    </Card>
+          >
+            Edit
+          </button>
+        </div>
+      ) : (
+        <PizzaCardEdit
+          open={isEditing}
+          onCancel={() => {
+            setIsEditing(false);
+          }}
+          defaultValues={{
+            title: data.hero_title_1,
+            subtitle: data.hero_title_2,
+            description: data.hero_title_3,
+            image: null,
+            imageUrl: data.hero_img,
+          }}
+          onSubmit={updateHeroContent}
+        />
+      )}
+    </div>
   );
-};
+}
 
 export default PizzaCard;

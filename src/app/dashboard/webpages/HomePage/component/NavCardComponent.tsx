@@ -1,30 +1,50 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import { Box, Button, Card, CardMedia, Divider, Grid, Typography } from '@mui/material';
+import { Button, Card, CardMedia, Divider, Grid, Typography } from '@mui/material';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 import EditNavCardModal from '../formComponent/EditNavCardModal';
 
-const NavCardComponent = () => {
-  const [open, setOpen] = useState(false);
-  const [navData, setNavData] = useState<any>(null);
+// Define type for navigation data returned from API
+interface NavData {
+  nav_logo_text: string;
+  nav_bg_color: string;
+  nav_logo_img: string;
+}
 
-  const { api_getNavigationContent, api_updateNavigationContent } = ProjectApiList();
+// Define type for form data passed to onSave
+interface UpdatedForm {
+  title: string;
+  description: string;
+  image1?: File | null;
+}
 
-  const fetchNavData = async () => {
-    try {
-      const res = await axios.get(api_getNavigationContent);
-      setNavData(res.data.data);
-    } catch (err) {
-      console.error('Error fetching navigation content:', err);
-    }
-  };
+function NavCardComponent(): JSX.Element {
+  const [open, setOpen] = useState<boolean>(false);
+  const [navData, setNavData] = useState<NavData | null>(null);
 
-  useEffect(() => {
-    fetchNavData();
-  }, []);
+  // Destructure API endpoints using camelCase names
+  const { apiGetNavigationContent, apiUpdateNavigationContent } = ProjectApiList();
 
-  const handleSave = async (updatedForm: any) => {
+  const fetchNavData = useCallback(async (): Promise<void> => {
+  try {
+    const res = await axios.get<{ data: NavData }>(apiGetNavigationContent);
+    setNavData(res.data.data);
+  } catch (err) {
+    toast.error("Error fetching navigation content");
+  }
+}, [apiGetNavigationContent]); // include only the stable dependency
+
+useEffect(() => {
+  void fetchNavData();
+}, [fetchNavData]);
+
+  // Handle save/update of navigation content
+  const handleSave = async (updatedForm: UpdatedForm): Promise<void> => {
     try {
       const payload = new FormData();
       payload.append('nav_logo_text', updatedForm.title);
@@ -33,20 +53,20 @@ const NavCardComponent = () => {
         payload.append('nav_logo_img', updatedForm.image1);
       }
 
-      const res = await axios.put(api_updateNavigationContent, payload, {
+      const res = await axios.put<{ status: string }>(apiUpdateNavigationContent, payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (res.data.status === 'success') {
-        fetchNavData();
+        await fetchNavData();
         setOpen(false);
       }
     } catch (err) {
-      console.error('Error updating navigation content:', err);
+      toast.error('Error updating navigation content:');
     }
   };
 
-  if (!navData) return null;
+  if (!navData) return <div> null</div>;
 
   return (
     <Card elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#fafafa' }}>
@@ -92,7 +112,7 @@ const NavCardComponent = () => {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               mt: { xs: 2, sm: 0 },
               ml: 15,
@@ -111,7 +131,7 @@ const NavCardComponent = () => {
 
       <EditNavCardModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           title: navData.nav_logo_text,
           description: navData.nav_bg_color,
@@ -121,6 +141,6 @@ const NavCardComponent = () => {
       />
     </Card>
   );
-};
+}
 
 export default NavCardComponent;

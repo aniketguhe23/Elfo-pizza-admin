@@ -1,5 +1,7 @@
 import React from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
+import type { JSX } from 'react';
+
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
 interface BannerFormData {
@@ -17,7 +19,7 @@ interface BannerEditFormProps {
   onCancel: () => void;
 }
 
-const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, onSubmit, onCancel }) => {
+function BannerEditForm({ open, defaultValues, onSubmit, onCancel }: BannerEditFormProps): JSX.Element {
   const {
     control,
     handleSubmit,
@@ -32,30 +34,29 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
   const image2 = watch('image2');
   const image3 = watch('image3');
 
-  const handleImageUpload = (field: keyof BannerFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (field: keyof BannerFormData): (e: React.ChangeEvent<HTMLInputElement>) => void => (e) => {
     const file = e.target.files?.[0] || null;
     setValue(field, file, { shouldValidate: true });
   };
 
-  const getImageSrc = (img: File | string | null) => {
+  const getImageSrc = (img: File | string | null): string | null => {
     if (!img) return null;
     return typeof img === 'string' ? img : URL.createObjectURL(img);
   };
 
   return (
-    <Dialog open={open} onClose={onCancel} fullWidth maxWidth="md"  BackdropProps={{
-        sx: {
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(3px)',
-        },
-      }}>
+    <Dialog open={open} onClose={onCancel} fullWidth maxWidth="md" BackdropProps={{
+      sx: {
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(3px)',
+      },
+    }}>
       <DialogTitle textAlign="center" fontWeight={600}>
         Edit Banner Section
       </DialogTitle>
 
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Images section: label on left stacked, images + buttons all in one horizontal row on right */}
           <Box
             sx={{
               display: 'flex',
@@ -79,9 +80,9 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
                   gap: 1,
                 }}
               >
-                {value && (
+                {getImageSrc(value) && (
                   <img
-                    src={getImageSrc(value) || ''}
+                    src={getImageSrc(value)!}
                     alt={field}
                     width={100}
                     height={100}
@@ -110,7 +111,6 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
             ))}
           </Box>
 
-          {/* Title 1 */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ width: 120, fontWeight: 600 }}>Title 1</Box>
             <Controller
@@ -123,14 +123,13 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
                   size="small"
                   variant="outlined"
                   {...field}
-                  error={!!fieldState.error}
+                  error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message}
                 />
               )}
             />
           </Box>
 
-          {/* Title 2 */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ width: 120, fontWeight: 600 }}>Title 2</Box>
             <Controller
@@ -143,7 +142,7 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
                   size="small"
                   variant="outlined"
                   {...field}
-                  error={!!fieldState.error}
+                  error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message}
                 />
               )}
@@ -179,6 +178,6 @@ const BannerEditForm: React.FC<BannerEditFormProps> = ({ open, defaultValues, on
       </Box>
     </Dialog>
   );
-};
+}
 
 export default BannerEditForm;

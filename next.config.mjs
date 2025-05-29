@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
-const config = {};
+const config = {
+  basePath: '/admin',
+  assetPrefix: '/admin',
+};
 
 export default config;

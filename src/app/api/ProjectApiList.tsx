@@ -25,12 +25,12 @@ export default function ProjectApiList(): Record<string, string> {
     apiAddMenuItemsData: `${baseUrl}/api/home/add-menu-item`,
     apiUpdateMenuItemsData: `${baseUrl}/api/home/update-menu-item`,
     
-    api_logIn: `${baseUrl}/api/auth/login`,
-    api_signUp: `${baseUrl}/api/auth/signup`,
+    apiLogIn: `${baseUrl}/api/auth/login`,
+    apiSignUp: `${baseUrl}/api/auth/signup`,
 
     apiGetCategories: `${baseUrl}/api/menu/categories/get`,
-    api_createCategories: `${baseUrl}/api/menu/categories/create`,
-    api_updateCategories: `${baseUrl}/api/menu/categories/update`,
+    apiCreateCategories: `${baseUrl}/api/menu/categories/create`,
+    apiUpdateCategories: `${baseUrl}/api/menu/categories/update`,
 
     apiGetSubCategories: `${baseUrl}/api/menu/subcategories/get`,
     apiCreateSubCategories: `${baseUrl}/api/menu/subcategories/create`,

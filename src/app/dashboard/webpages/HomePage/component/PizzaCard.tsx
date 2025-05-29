@@ -129,7 +129,7 @@ function PizzaCard(): JSX.Element {
         <Grid item xs={12} sm={3} textAlign="center">
           <Button
             variant="contained"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {setIsEditing(true)}}
             sx={{
               mt: { xs: 2, sm: 0 },
               backgroundColor: '#d3d3d3',
@@ -147,7 +147,7 @@ function PizzaCard(): JSX.Element {
 
       <PizzaCardEdit
         open={isEditing}
-        onCancel={() => setIsEditing(false)}
+        onCancel={() => {setIsEditing(false)}}
         defaultValues={{
           title: data.hero_title_1,
           subtitle: data.hero_title_2,

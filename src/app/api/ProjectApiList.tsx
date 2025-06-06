@@ -46,6 +46,29 @@ export default function ProjectApiList(): Record<string, string> {
     
     apiGetAllMenu: `${baseUrl}/api/allMenu/getAllmenu`,
     apiUpdateHomeMenu: `${baseUrl}/api/allMenu/updateHomeSceenItems`,
+    
+
+    // build your own
+    
+    apiGetValueHeroContent: `${baseUrl}/api/values/get-hero`,
+    apiUpdateValueHeroContent: `${baseUrl}/api/values/update-hero`,
+    
+    apiGetValueAboutContent: `${baseUrl}/api/values/get-about`,
+    apiUpdateValueAboutContent: `${baseUrl}/api/values/update-about`,
+    
+    apiGetValueBestPizzaContent: `${baseUrl}/api/values/get-best-pizza`,
+    apiUpdateValueBestPizzaContent: `${baseUrl}/api/values/update-best-pizza`,
+    
+    apiGetPizzaDeliveryContent: `${baseUrl}/api/values/get-delivery`,
+    apiUpdatePizzaDeliveryContent: `${baseUrl}/api/values/update-delivery`,
+    
+    apiGetNearestOutletContent: `${baseUrl}/api/values/get-nearest`,
+    apiUpdateNearestOutletContent: `${baseUrl}/api/values/update-nearest`,
+    
+    apiGetNeareMeContent: `${baseUrl}/api/values/get-near-me`,
+    apiUpdateNeareMeContent: `${baseUrl}/api/values/update-near-me`,
+
+
   };
 
   return apiList;

@@ -11,7 +11,7 @@ function HomeTab(): React.JSX.Element {
     <>
       <NavCardComponent />
       <PizzaCard />
-      <Banner />
+      {/* <Banner /> */}
       <SpecialityCard />
       {/* <ExploreFeature /> */}
       <WhyElfoPage />

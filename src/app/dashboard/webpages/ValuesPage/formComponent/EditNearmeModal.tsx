@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect,JSX } from 'react';
 import {
   Box,
   Button,
@@ -12,7 +12,8 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import type { Control, FieldValues, Path } from 'react-hook-form';
 
 interface EditNearmeModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ interface EditNearmeModalProps {
     nearme_icon1_desc: string;
     nearme_icon2: string;
     nearme_icon2_desc: string;
-    nearme_img: string ;
+    nearme_img: string;
   };
   onSave: (updatedData: {
     nearme_heading: string;
@@ -53,7 +54,7 @@ interface FormValues {
   nearme_icon2: File | null;
 }
 
-function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) {
+function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps): JSX.Element {
   const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       nearme_heading: '',
@@ -78,7 +79,7 @@ function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) 
       setValue('nearme_icon2_desc', data.nearme_icon2_desc);
       setValue('nearme_img', null);
       setValue('nearme_icon1', null);
-      setValue('nearme_icon2',null);
+      setValue('nearme_icon2', null);
     }
   }, [data, setValue]);
 
@@ -86,15 +87,16 @@ function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) 
   const watchIcon1 = watch('nearme_icon1');
   const watchIcon2 = watch('nearme_icon2');
 
-  const previewSrc = (file: File | null, fallback: string) =>
+  const previewSrc = (file: File | null, fallback: string): string =>
     file instanceof File ? URL.createObjectURL(file) : fallback || '/default-image.png';
 
-  const handleFileChange = (field: keyof FormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setValue(field, file, { shouldValidate: true });
-  };
+  const handleFileChange =
+    (field: keyof FormValues) => (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const file = e.target.files?.[0] ?? null;
+      setValue(field, file, { shouldValidate: true });
+    };
 
-  const onSubmit = (formData: FormValues) => {
+  const onSubmit = (formData: FormValues): void => {
     onSave({
       nearme_heading: formData.nearme_heading,
       nearme_subheading: formData.nearme_subheading,
@@ -136,15 +138,33 @@ function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) 
           }}
         >
           <Box display="flex" flexDirection="column" gap={3}>
-            <FormRow label="Heading" name="nearme_heading" control={control} />
-            <FormRow label="Subheading" name="nearme_subheading" control={control} />
-            <FormRow label="Title" name="nearme_title" control={control} />
-            <FormRow label="Description" name="nearme_desc" control={control} multiline rows={3} />
+            <FormRow<FormValues> label="Heading" name="nearme_heading" control={control} />
+            <FormRow<FormValues> label="Subheading" name="nearme_subheading" control={control} />
+            <FormRow<FormValues> label="Title" name="nearme_title" control={control} />
+            <FormRow<FormValues>
+              label="Description"
+              name="nearme_desc"
+              control={control}
+              multiline
+              rows={3}
+            />
 
             <Divider sx={{ my: 1 }} />
 
-            <FormRow label="Icon 1 Description" name="nearme_icon1_desc" control={control} multiline rows={2} />
-            <FormRow label="Icon 2 Description" name="nearme_icon2_desc" control={control} multiline rows={2} />
+            <FormRow<FormValues>
+              label="Icon 1 Description"
+              name="nearme_icon1_desc"
+              control={control}
+              multiline
+              rows={2}
+            />
+            <FormRow<FormValues>
+              label="Icon 2 Description"
+              name="nearme_icon2_desc"
+              control={control}
+              multiline
+              rows={2}
+            />
 
             <Divider sx={{ my: 1 }} />
 
@@ -166,7 +186,6 @@ function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) 
           </Box>
         </DialogContent>
 
-        {/* Sticky Action Bar */}
         <Box
           sx={{
             position: 'sticky',
@@ -221,8 +240,8 @@ function EditNearmeModal({ open, onClose, data, onSave }: EditNearmeModalProps) 
   );
 }
 
-// Reusable form row
-function FormRow({
+// ✅ Generic reusable FormRow
+function FormRow<T extends FieldValues>({
   label,
   name,
   control,
@@ -230,11 +249,11 @@ function FormRow({
   rows = 1,
 }: {
   label: string;
-  name: keyof FormValues;
-  control: any;
+  name: Path<T>;
+  control: Control<T>;
   multiline?: boolean;
   rows?: number;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems={multiline ? 'flex-start' : 'center'} gap={2}>
       <Typography sx={{ width: 140, fontWeight: 500, mt: multiline ? '6px' : 0 }}>{label}</Typography>
@@ -250,7 +269,7 @@ function FormRow({
             variant="outlined"
             multiline={multiline}
             rows={rows}
-            error={!!fieldState.error}
+            error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
           />
         )}
@@ -259,7 +278,7 @@ function FormRow({
   );
 }
 
-// Reusable image upload with preview
+// ✅ Reusable image upload with preview
 function ImageUpload({
   label,
   previewSrc,
@@ -268,7 +287,7 @@ function ImageUpload({
   label: string;
   previewSrc: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
       <Typography fontWeight={500}>{label}</Typography>
@@ -276,7 +295,7 @@ function ImageUpload({
         component="img"
         src={previewSrc}
         alt={`${label} Preview`}
-         sx={{
+        sx={{
           width: 140,
           height: 140,
           objectFit: 'cover',
@@ -289,7 +308,7 @@ function ImageUpload({
       <Button
         component="label"
         variant="outlined"
-          sx={{
+        sx={{
           px: 3,
           py: 1,
           borderRadius: 1,

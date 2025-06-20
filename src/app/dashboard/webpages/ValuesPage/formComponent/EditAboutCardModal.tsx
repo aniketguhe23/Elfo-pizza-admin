@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
-import type { SubmitHandler } from 'react-hook-form';
+import type { Control, FieldValues, Path, SubmitHandler } from 'react-hook-form';
 
 interface EditAboutCardModalProps {
   open: boolean;
@@ -111,13 +111,13 @@ function EditAboutCardModal({ open, onClose, data, onSave }: EditAboutCardModalP
       <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
         <Box component="form" onSubmit={handleSubmit(handleSave)} display="flex" flexDirection="column" gap={3}>
           {/* Heading */}
-          <FormRow label="Heading" name="heading" control={control} />
+          <FormRow<FormValues> label="Heading" name="heading" control={control} />
           {/* Title */}
-          <FormRow label="Title" name="title" control={control} />
+          <FormRow<FormValues> label="Title" name="title" control={control} />
           {/* Subtitle */}
-          <FormRow label="Subtitle" name="subtitle" control={control} />
-          {/* Text (textarea) */}
-          <FormRow label="Text" name="text" control={control} />
+          <FormRow<FormValues> label="Subtitle" name="subtitle" control={control} />
+          {/* Text */}
+          <FormRow<FormValues> label="Text" name="text" control={control} />
 
           {/* Image Preview */}
           <Box display="flex" alignItems="center" gap={2}>
@@ -209,8 +209,16 @@ function EditAboutCardModal({ open, onClose, data, onSave }: EditAboutCardModalP
   );
 }
 
-// ✅ Updated FormRow to support textarea for `text` field
-function FormRow({ label, name, control }: { label: string; name: keyof FormValues; control: any }) {
+// ✅ Reusable Form Row Component with proper types
+function FormRow<T extends FieldValues>({
+  label,
+  name,
+  control,
+}: {
+  label: string;
+  name: Path<T>;
+  control: Control<T>;
+}): JSX.Element {
   const isMultiline = name === 'text';
 
   return (

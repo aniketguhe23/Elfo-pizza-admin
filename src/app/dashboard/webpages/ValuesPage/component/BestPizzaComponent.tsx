@@ -161,7 +161,7 @@ function BestPizzaComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               backgroundColor: '#d3d3d3',
               color: 'black',
@@ -178,7 +178,7 @@ function BestPizzaComponent(): JSX.Element {
 
       <EditBestPizzaModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           heading: data.best_pizza_heading,
           heading2: data.best_pizza_heading2,

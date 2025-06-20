@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import type { JSX } from 'react';
 import {
@@ -11,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
-import type { SubmitHandler } from 'react-hook-form';
+import type { SubmitHandler, Control, FieldValues, Path } from 'react-hook-form';
 
 interface EditPizzaDeliveryModalProps {
   open: boolean;
@@ -107,9 +109,9 @@ function EditPizzaDeliveryModal({
 
         <DialogContent sx={{ px: 3, py: 3 }}>
           <Box display="flex" flexDirection="column" gap={3}>
-            <FormRow label="Heading" name="heading" control={control} />
-            <FormRow label="Title" name="title" control={control} />
-            <FormRow label="Description" name="description" control={control} multiline rows={3} />
+            <FormRow<FormValues> label="Heading" name="heading" control={control} />
+            <FormRow<FormValues> label="Title" name="title" control={control} />
+            <FormRow<FormValues> label="Description" name="description" control={control} multiline rows={3} />
 
             <Box display="flex" justifyContent="center">
               <ImageUpload label="Image" previewSrc={preview1} onFileChange={handleImage1Upload} />
@@ -163,7 +165,8 @@ function EditPizzaDeliveryModal({
   );
 }
 
-function FormRow({
+// ✅ Type-safe and reusable form row
+function FormRow<T extends FieldValues>({
   label,
   name,
   control,
@@ -171,11 +174,11 @@ function FormRow({
   rows = 1,
 }: {
   label: string;
-  name: keyof FormValues;
-  control: any;
+  name: Path<T>;
+  control: Control<T>;
   multiline?: boolean;
   rows?: number;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems={multiline ? 'flex-start' : 'center'} gap={2}>
       <Typography sx={{ width: 140, fontWeight: 500, mt: multiline ? '6px' : 0 }}>{label}</Typography>
@@ -200,6 +203,7 @@ function FormRow({
   );
 }
 
+// ✅ Image upload input with preview
 function ImageUpload({
   label,
   previewSrc,
@@ -208,7 +212,7 @@ function ImageUpload({
   label: string;
   previewSrc: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems="center" gap={2} flexDirection="column" sx={{ mt: 1 }}>
       <Typography sx={{ fontWeight: 500 }}>{label}</Typography>

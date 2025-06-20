@@ -1,8 +1,17 @@
 import React, { useEffect } from 'react';
 import type { JSX } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
-import type { SubmitHandler } from 'react-hook-form';
+import type { SubmitHandler, Control, FieldValues, Path } from 'react-hook-form';
 
 interface EditBestPizzaModalProps {
   open: boolean;
@@ -89,7 +98,6 @@ function EditBestPizzaModal({ open, onClose, data, onSave }: EditBestPizzaModalP
 
   const preview1 =
     watchedImage1 instanceof File ? URL.createObjectURL(watchedImage1) : data.image1 || '/default-image.png';
-
   const preview2 =
     watchedImage2 instanceof File ? URL.createObjectURL(watchedImage2) : data.image2 || '/default-image.png';
 
@@ -120,10 +128,10 @@ function EditBestPizzaModal({ open, onClose, data, onSave }: EditBestPizzaModalP
 
         <DialogContent sx={{ px: 3, py: 3 }}>
           <Box display="flex" flexDirection="column" gap={3}>
-            <FormRow label="Heading" name="heading" control={control} />
-            <FormRow label="Sub-heading" name="heading2" control={control} />
-            <FormRow label="Title" name="title" control={control} />
-            <FormRow label="Description" name="description" control={control} multiline rows={4} />
+            <FormRow<FormValues> label="Heading" name="heading" control={control} />
+            <FormRow<FormValues> label="Sub-heading" name="heading2" control={control} />
+            <FormRow<FormValues> label="Title" name="title" control={control} />
+            <FormRow<FormValues> label="Description" name="description" control={control} multiline rows={4} />
 
             {/* Image Uploads */}
             <Box display="flex" justifyContent="space-between" gap={2} mt={2} mb={3}>
@@ -200,7 +208,8 @@ function EditBestPizzaModal({ open, onClose, data, onSave }: EditBestPizzaModalP
   );
 }
 
-function FormRow({
+// ✅ Reusable Form Row component with full type safety
+function FormRow<T extends FieldValues>({
   label,
   name,
   control,
@@ -208,11 +217,11 @@ function FormRow({
   rows = 1,
 }: {
   label: string;
-  name: keyof FormValues;
-  control: any;
+  name: Path<T>;
+  control: Control<T>;
   multiline?: boolean;
   rows?: number;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems={multiline ? 'flex-start' : 'center'} gap={2}>
       <Typography sx={{ width: 140, fontWeight: 500, mt: multiline ? '6px' : 0 }}>{label}</Typography>
@@ -237,6 +246,7 @@ function FormRow({
   );
 }
 
+// ✅ Strongly typed image upload component
 function ImageUpload({
   label,
   previewSrc,
@@ -245,7 +255,7 @@ function ImageUpload({
   label: string;
   previewSrc: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems="center" gap={2} flexDirection="column" sx={{ mt: 1 }}>
       <Typography sx={{ fontWeight: 500 }}>{label}</Typography>

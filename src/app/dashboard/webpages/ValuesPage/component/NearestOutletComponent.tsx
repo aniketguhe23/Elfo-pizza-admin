@@ -133,28 +133,28 @@ function NearestOutletComponent(): JSX.Element {
           </Typography>
 
           <Typography variant="subtitle1" fontWeight={500}>
-            "Yes" Label
+            &quot;Yes&quot; Label
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
             {data.nearest_yes}
           </Typography>
 
           <Typography variant="subtitle1" fontWeight={500}>
-            "Yes" Description
+            &quot;Yes&quot; Description
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
             {data.nearest_yes_desc}
           </Typography>
 
           <Typography variant="subtitle1" fontWeight={500}>
-            "No" Label
+            &quot;No&quot; Label
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
             {data.nearest_no}
           </Typography>
 
           <Typography variant="subtitle1" fontWeight={500}>
-            "No" Description
+            &quot;No&quot; Description
           </Typography>
           <Typography variant="body1">
             {data.nearest_no_desc}
@@ -165,7 +165,7 @@ function NearestOutletComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               backgroundColor: '#d3d3d3',
               color: 'black',
@@ -182,7 +182,7 @@ function NearestOutletComponent(): JSX.Element {
 
       <EditNearestOutletModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           heading: data.nearest_heading,
           title: data.nearest_title,

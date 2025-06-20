@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect,JSX  } from 'react';
 import {
   Box,
   Button,
@@ -11,7 +11,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import type { SubmitHandler, Control, FieldValues, Path } from 'react-hook-form';
 
 interface EditNearestOutletModalProps {
   open: boolean;
@@ -54,7 +55,7 @@ function EditNearestOutletModal({
   onClose,
   data,
   onSave,
-}: EditNearestOutletModalProps) {
+}: EditNearestOutletModalProps): JSX.Element {
   const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       heading: '',
@@ -81,7 +82,7 @@ function EditNearestOutletModal({
     }
   }, [data, setValue]);
 
-  const handleImage1Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage1Upload = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0] ?? null;
     setValue('image1', file, { shouldValidate: true });
   };
@@ -130,13 +131,13 @@ function EditNearestOutletModal({
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent sx={{ px: 3, py: 3 }}>
           <Box display="flex" flexDirection="column" gap={3}>
-            <FormRow label="Heading" name="heading" control={control} />
-            <FormRow label="Title" name="title" control={control} />
-            <FormRow label="Subtitle" name="subtitle" control={control} />
-            <FormRow label="Yes" name="yes" control={control} />
-            <FormRow label="Yes Description" name="yes_desc" control={control} multiline rows={3} />
-            <FormRow label="No" name="no" control={control} />
-            <FormRow label="No Description" name="no_desc" control={control} multiline rows={3} />
+            <FormRow<FormValues> label="Heading" name="heading" control={control} />
+            <FormRow<FormValues> label="Title" name="title" control={control} />
+            <FormRow<FormValues> label="Subtitle" name="subtitle" control={control} />
+            <FormRow<FormValues> label="Yes" name="yes" control={control} />
+            <FormRow<FormValues> label="Yes Description" name="yes_desc" control={control} multiline rows={3} />
+            <FormRow<FormValues> label="No" name="no" control={control} />
+            <FormRow<FormValues> label="No Description" name="no_desc" control={control} multiline rows={3} />
 
             <Box mt={2}>
               <ImageUpload label="Image" previewSrc={preview1} onFileChange={handleImage1Upload} />
@@ -186,8 +187,8 @@ function EditNearestOutletModal({
   );
 }
 
-// Reusable FormRow
-function FormRow({
+// ✅ Generic and type-safe FormRow component
+function FormRow<T extends FieldValues>({
   label,
   name,
   control,
@@ -195,11 +196,11 @@ function FormRow({
   rows = 1,
 }: {
   label: string;
-  name: keyof FormValues;
-  control: any;
+  name: Path<T>;
+  control: Control<T>;
   multiline?: boolean;
   rows?: number;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems={multiline ? 'flex-start' : 'center'} gap={2}>
       <Typography sx={{ width: 140, fontWeight: 500, mt: multiline ? '6px' : 0 }}>{label}</Typography>
@@ -215,7 +216,7 @@ function FormRow({
             variant="outlined"
             multiline={multiline}
             rows={rows}
-            error={!!fieldState.error}
+            error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
           />
         )}
@@ -224,7 +225,7 @@ function FormRow({
   );
 }
 
-// Reusable ImageUpload
+// ✅ Reusable typed ImageUpload component
 function ImageUpload({
   label,
   previewSrc,
@@ -233,7 +234,7 @@ function ImageUpload({
   label: string;
   previewSrc: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+}): JSX.Element {
   return (
     <Box display="flex" alignItems="center" gap={2} flexDirection="column" sx={{ mt: 1 }}>
       <Typography sx={{ fontWeight: 500 }}>{label}</Typography>

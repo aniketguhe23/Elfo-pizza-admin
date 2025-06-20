@@ -127,7 +127,7 @@ function AboutCardComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               mt: { xs: 2, sm: 0 },
               ml: 15,
@@ -146,7 +146,7 @@ function AboutCardComponent(): JSX.Element {
 
       <EditAboutCardModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           heading: aboutData.about_heading,
           title: aboutData.about_title,

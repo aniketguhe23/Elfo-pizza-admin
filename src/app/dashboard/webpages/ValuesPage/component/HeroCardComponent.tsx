@@ -110,7 +110,7 @@ function HeroCardComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               mt: { xs: 2, sm: 0 },
               ml: 15,
@@ -129,7 +129,7 @@ function HeroCardComponent(): JSX.Element {
 
       <EditHeroCardModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           title: heroData.hero_title,
           description: heroData.hero_subtitle,

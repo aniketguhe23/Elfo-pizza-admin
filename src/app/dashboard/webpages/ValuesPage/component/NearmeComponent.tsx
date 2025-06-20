@@ -178,7 +178,7 @@ function NearmeComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               backgroundColor: '#d3d3d3',
               color: 'black',
@@ -195,7 +195,7 @@ function NearmeComponent(): JSX.Element {
 
       <EditNearmeModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={data}
         onSave={(updatedData) =>
           handleSave({

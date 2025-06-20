@@ -123,7 +123,7 @@ function PizzaDeliveryComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true)}}
             sx={{
               backgroundColor: '#d3d3d3',
               color: 'black',
@@ -140,7 +140,7 @@ function PizzaDeliveryComponent(): JSX.Element {
 
       <EditPizzaDeliveryModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {setOpen(false)}}
         data={{
           heading: data.pizza_delivery_heading,
           title: data.pizza_delivery_title,

@@ -84,7 +84,7 @@ function SpecialityEditForm({ open, defaultValues, onSubmit, onCancel }: Special
         >
           <Grid container spacing={2}>
             {/* Title */}
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <Grid container spacing={1} alignItems="center">
                 <Grid item xs={12} sm={3}>
                   <Typography
@@ -114,7 +114,7 @@ function SpecialityEditForm({ open, defaultValues, onSubmit, onCancel }: Special
                   />
                 </Grid>
               </Grid>
-            </Grid>
+            </Grid> */}
 
             {/* Subtitle */}
             <Grid item xs={12}>

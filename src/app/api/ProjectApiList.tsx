@@ -39,7 +39,7 @@ export default function ProjectApiList(): Record<string, string> {
     apiGetItems: `${baseUrl}/api/menu/items/get`,
     apiCreateItem: `${baseUrl}/api/menu/items/create`,
     apiUpdateItem: `${baseUrl}/api/menu/items/update`,
-
+    
     apiGetItemVariants: `${baseUrl}/api/menu/item-variants/get`,
     apiCreateItemVariant: `${baseUrl}/api/menu/item-variants/create`,
     apiUpdateItemVariant: `${baseUrl}/api/menu/item-variants/update`,
@@ -47,7 +47,7 @@ export default function ProjectApiList(): Record<string, string> {
     apiGetAllMenu: `${baseUrl}/api/allMenu/getAllmenu`,
     apiUpdateHomeMenu: `${baseUrl}/api/allMenu/updateHomeSceenItems`,
     
-
+    
     // build your own
     
     apiGetValueHeroContent: `${baseUrl}/api/values/get-hero`,
@@ -67,8 +67,44 @@ export default function ProjectApiList(): Record<string, string> {
     
     apiGetNeareMeContent: `${baseUrl}/api/values/get-near-me`,
     apiUpdateNeareMeContent: `${baseUrl}/api/values/update-near-me`,
+    
+    // build your own
+    
+    //bread
+    apiCreateBreadSize: `${baseUrl}/api/bread-size/create`,
+    apiGetBreadSize: `${baseUrl}/api/bread-size/get`,
+    apiUpdateBreadSize: `${baseUrl}/api/bread-size/update-by-id`,
+    
+    //Dough
+    apiGetDough: `${baseUrl}/api/dough-type/get`,
+    apiCreateDough: `${baseUrl}/api/dough-type/create`,
+    apiUpdateDough: `${baseUrl}/api/dough-type/update`,
+    
+    //Crust Types
+    apiGetCrustTypes: `${baseUrl}/api/crust-type/get`,
+    apiCreateCrustTypes: `${baseUrl}/api/crust-type/create`,
+    apiUpdateCrustTypes: `${baseUrl}/api/crust-type/update`,
+    
+    //Sauces
+    apiGetSauces: `${baseUrl}/api/sauce/get`,
+    apiCreateSauces: `${baseUrl}/api/sauce/create`,
+    apiUpdateSauces: `${baseUrl}/api/sauce/update`,
 
+    //Cheesse Options
+    apiGetCheeseOptions: `${baseUrl}/api/cheese-option/get`,
+    apiCreateCheeseOptions: `${baseUrl}/api/cheese-option/create`,
+    apiUpdateCheeseOptions: `${baseUrl}/api/cheese-option/update`,
 
+    //Toppings
+    apiGetToppings: `${baseUrl}/api/topping/get`,
+    apiCreateToppings: `${baseUrl}/api/topping/create`,
+    apiUpdateToppings: `${baseUrl}/api/topping/update`,
+  
+    //Extra Sauce
+    apiGetExtraSauce: `${baseUrl}/api/extra-sauce/get`,
+    apiCreateExtraSauce: `${baseUrl}/api/extra-sauce/create`,
+    apiUpdateExtraSauce: `${baseUrl}/api/extra-sauce/update`,
+    
   };
 
   return apiList;

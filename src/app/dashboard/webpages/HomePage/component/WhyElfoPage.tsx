@@ -108,7 +108,7 @@ function WhyElfoPage(): JSX.Element {
     <>
       <Card sx={{ p: 3, mb: 4, backgroundColor: '#fafafa' }}>
         <Typography variant="h5" align="center" fontWeight={600} gutterBottom>
-          Why Choose Elfo?
+          Why At Elfo?
         </Typography>
         <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
           A few reasons that make us stand out from the rest.

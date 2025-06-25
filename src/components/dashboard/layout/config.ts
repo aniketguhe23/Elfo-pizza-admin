@@ -39,6 +39,20 @@ export const navItems: NavItemConfig[] = [
     ],
   },
   {
+    key: 'pizzaCustomization',
+    title: 'Pizza Customization',
+    icon: 'plugs-connected',
+    items: [
+      { key: 'sizes', title: 'Sizes', href: paths.dashboard.sizes },
+      { key: 'doughTypes', title: 'Dough Types', href: paths.dashboard.doughTypes },
+      { key: 'crustTypes', title: 'Crust Types', href: paths.dashboard.crustTypes },
+      { key: 'sauces', title: 'Sauces', href: paths.dashboard.sauces },
+      { key: 'cheeseOptions', title: 'Cheese Options', href: paths.dashboard.cheeseOptions },
+      { key: 'toppings', title: 'Toppings', href: paths.dashboard.toppings },
+      { key: 'extraSauces', title: 'Extra Sauces', href: paths.dashboard.extraSauces },
+    ],
+  },
+  {
     key: 'allItems',
     title: 'All Items',
     href: paths.dashboard.allitems,

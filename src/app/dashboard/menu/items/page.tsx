@@ -25,6 +25,7 @@ import { ListingTable } from './component/ListingTable';
 interface SubCategory {
   id: number;
   name: string;
+  category_name: string;
 }
 
 interface Item {
@@ -270,7 +271,10 @@ function ItemsComponent(): JSX.Element {
               >
                 {subCategories.map((sub) => (
                   <MenuItem key={sub.id} value={sub.id}>
-                    {sub.name}
+                    {sub.name}{' '}
+                    <Typography component="span" fontSize="0.75rem" color="text.secondary" pl={1}>
+                      ({sub.category_name})
+                    </Typography>
                   </MenuItem>
                 ))}
               </TextField>

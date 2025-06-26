@@ -274,12 +274,19 @@ function ItemVariantComponent(): JSX.Element {
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Size</Box>
               <TextField
+                select
                 fullWidth
+                size="small"
                 {...register('size', { required: 'Size is required' })}
                 error={Boolean(errors.size)}
                 helperText={errors.size?.message}
-                size="small"
-              />
+              >
+                {['small', 'medium', 'large'].map((size) => (
+                  <MenuItem key={size} value={size}>
+                    {size.charAt(0).toUpperCase() + size.slice(1)}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
 
             {/* Crust Type */}

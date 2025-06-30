@@ -105,6 +105,27 @@ export default function ProjectApiList(): Record<string, string> {
     apiCreateExtraSauce: `${baseUrl}/api/extra-sauce/create`,
     apiUpdateExtraSauce: `${baseUrl}/api/extra-sauce/update`,
     
+    
+    // Footer APis
+    
+    // contact Info
+    apiGetFooterData: `${baseUrl}/api/footer/contect/get`,
+    apiCreateFooterData: `${baseUrl}/api/footer/contect/create`,
+    apiUpdateFooterData: `${baseUrl}/api/footer/contect/update`,
+
+    // contact Info
+    apiGetFooterQuicklinks: `${baseUrl}/api/footer/quicklinks/get`,
+    apiCreateFooterQuicklinks: `${baseUrl}/api/footer/quicklinks/create`,
+    apiUpdateFooterQuicklinks: `${baseUrl}/api/footer/quicklinks/update`,
+    
+    // Legal Info
+    apiGetLegalLinks: `${baseUrl}/api/footer/legal/get`,
+    apiUpdateLegalLinks: `${baseUrl}/api/footer/legal/update`,
+ 
+    // Socila Info
+    apiGetSocialLinks: `${baseUrl}/api/footer/social/get`,
+    apiUpdateSocialLinks: `${baseUrl}/api/footer/social/update`,
+    
   };
 
   return apiList;

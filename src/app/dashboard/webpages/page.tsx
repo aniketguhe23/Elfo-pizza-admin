@@ -5,13 +5,9 @@ import { Tab, Tabs } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-
-// Import the tab content components
 import HomeTab from './HomePage/page';
-import MenuTab from './MenuTab';
 import ValuesPage from './ValuesPage/page';
-// import BuildYourOwnTab from './BuildYourOwnPage/page';
-// import BuildYourOwnTab from './BuildYourOwnTab';
+import FooterTab from './FooterPage/page';
 
 export default function Page(): React.JSX.Element {
   const [value, setValue] = React.useState(0);
@@ -32,14 +28,14 @@ const handleTabChange = (event: React.SyntheticEvent, newValue: number): void =>
       <Tabs value={value} onChange={handleTabChange} aria-label="Tabs for integrations">
         <Tab label="Home" />
         <Tab label="Values" />
-        <Tab label="Menu" />
+        <Tab label="Footer" />
       </Tabs>
 
       {/* Tab Content */}
       <Box sx={{ p: 3 }}>
         {value === 0 && <HomeTab />}
         {value === 1 && <ValuesPage />}
-        {value === 2 && <MenuTab />}
+        {value === 2 && <FooterTab />}
       </Box>
     </Stack>
   );

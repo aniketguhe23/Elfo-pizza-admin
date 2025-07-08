@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -39,7 +42,12 @@ interface EditQuickLinksModalProps {
   onSave: (formData: QuickLinksFormValues) => void;
 }
 
-const EditQuickLinksModal = ({ open, onClose, data, onSave }: EditQuickLinksModalProps) => {
+function EditQuickLinksModal({
+  open,
+  onClose,
+  data,
+  onSave,
+}: EditQuickLinksModalProps): JSX.Element {
   const { control, handleSubmit, reset } = useForm<QuickLinksFormValues>({
     defaultValues: data,
   });
@@ -51,7 +59,7 @@ const EditQuickLinksModal = ({ open, onClose, data, onSave }: EditQuickLinksModa
   const renderTextField = (
     name: keyof QuickLinksFormValues,
     label: string
-  ) => (
+  ): JSX.Element => (
     <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems="center" gap={2}>
       <Box sx={{ width: { sm: 160 }, fontWeight: 500 }}>{label}</Box>
       <Controller
@@ -63,7 +71,7 @@ const EditQuickLinksModal = ({ open, onClose, data, onSave }: EditQuickLinksModa
             {...field}
             fullWidth
             size="small"
-            error={!!fieldState.error}
+            error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
           />
         )}
@@ -148,6 +156,6 @@ const EditQuickLinksModal = ({ open, onClose, data, onSave }: EditQuickLinksModa
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default EditQuickLinksModal;

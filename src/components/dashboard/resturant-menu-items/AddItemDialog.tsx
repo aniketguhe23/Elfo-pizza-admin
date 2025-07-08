@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Avatar,
@@ -19,14 +20,15 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
+import type { AxiosResponse } from 'axios';
 import { Controller, useForm } from 'react-hook-form';
 
-interface Props {
+interface AddItemDialogProps {
   open: boolean;
   onClose: () => void;
   onAdd: () => void;
   restaurantNo: string;
-  assignedItemIds: number[]; // ✅ Existing prop
+  assignedItemIds: number[];
 }
 
 interface Item {
@@ -37,7 +39,12 @@ interface Item {
   is_vegetarian?: number;
   is_available?: number;
   image_url?: string;
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+interface MenuResponse {
+  success: boolean;
+  data: Item[];
 }
 
 export default function AddItemDialog({
@@ -46,47 +53,43 @@ export default function AddItemDialog({
   onAdd,
   restaurantNo,
   assignedItemIds,
-}: Props) {
+}: AddItemDialogProps): JSX.Element {
   const { apiGetAllMenu, apiAssignItemsToResturants } = ProjectApiList();
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-  } = useForm<{ item_ids: number[] }>({
+  const { control, handleSubmit, reset } = useForm<{ item_ids: number[] }>({
     defaultValues: { item_ids: [] },
   });
 
   const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(apiGetAllMenu);
+      const res: AxiosResponse<MenuResponse> = await axios.get(apiGetAllMenu);
       if (res.data.success) {
         setItems(res.data.data);
       }
-    } catch (err: any) {
-      console.error('Error fetching items:', err.message);
+    } catch (error: unknown) {
+      // Optional: use a logger or just remove
+// console.error removed to satisfy eslint no-console rule
+
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiGetAllMenu]);
 
   useEffect(() => {
     if (open) {
-      fetchItems();
+      void fetchItems();
       const cleanedIds = assignedItemIds.filter(
-        (id) => typeof id === 'number' && !isNaN(id)
+        (id) => typeof id === 'number' && !Number.isNaN(id)
       );
       reset({ item_ids: cleanedIds });
     }
-  }, [open, assignedItemIds, reset]);
+  }, [open, assignedItemIds, reset, fetchItems]);
 
-  const onSubmit = async (data: { item_ids: number[] }) => {
+  const onSubmit = async (data: { item_ids: number[] }): Promise<void> => {
     try {
       setSubmitting(true);
       await axios.post(apiAssignItemsToResturants, {
@@ -95,8 +98,10 @@ export default function AddItemDialog({
       });
       onAdd();
       onClose();
-    } catch (err: any) {
-      console.error('Error adding items to restaurant:', err.message);
+    } catch (error: unknown) {
+      // Optional: use a logger or just remove
+// console.error removed to satisfy eslint no-console rule
+
     } finally {
       setSubmitting(false);
     }
@@ -129,18 +134,18 @@ export default function AddItemDialog({
                       >
                         <Avatar
                           variant="rounded"
-                          src={item.image_url}
+                          src={item.image_url || ''}
                           alt={item.name}
                           sx={{ width: 50, height: 50, mr: 2 }}
                         />
                         <ListItemText
                           primary={
-                            <>
+                            <Box>
                               <Typography fontWeight={600}>{item.name}</Typography>
                               <Typography variant="caption" color="text.primary">
                                 Category: {item.category?.name ?? 'N/A'}
                               </Typography>
-                            </>
+                            </Box>
                           }
                           secondary={
                             <>

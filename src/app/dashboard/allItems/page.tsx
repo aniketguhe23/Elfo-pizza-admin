@@ -60,7 +60,7 @@ function ItemVariantComponent(): React.ReactElement {
   }, [apiGetAllMenu]);
 
   useEffect(() => {
-    fetchVariants();
+    void fetchVariants(); // ✅ explicitly ignoring the promise
   }, [fetchVariants]);
 
   const handleToggle = async (
@@ -106,7 +106,7 @@ function ItemVariantComponent(): React.ReactElement {
           placeholder="Search item name"
           variant="outlined"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {setSearchTerm(e.target.value)}}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -158,7 +158,9 @@ function ItemVariantComponent(): React.ReactElement {
                     <TableCell>
                       <Switch
                         checked={item.on_homePage}
-                        onChange={async () => await handleToggle(item.id, item.on_homePage, 'on_homePage')}
+                        onChange={() => {
+                          void handleToggle(item.id, item.on_homePage, 'on_homePage');
+                        }}
                         disabled={loading}
                         color="success"
                       />
@@ -167,7 +169,9 @@ function ItemVariantComponent(): React.ReactElement {
                       {showSuggestionToggle ? (
                         <Switch
                           checked={item.on_suggestions}
-                          onChange={async () => await handleToggle(item.id, item.on_suggestions, 'on_suggestions')}
+                          onChange={() => {
+                            void handleToggle(item.id, item.on_suggestions, 'on_suggestions');
+                          }}
                           disabled={loading}
                           color="primary"
                         />

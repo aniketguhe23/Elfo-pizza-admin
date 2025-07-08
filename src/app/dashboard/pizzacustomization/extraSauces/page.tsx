@@ -56,11 +56,7 @@ function ExtraSauceComponent(): JSX.Element {
     handleSubmit,
     reset,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<SauceForm>();
-
-  const watchImage = watch('image');
 
   const fetchSauces = useCallback(async (): Promise<void> => {
     try {
@@ -74,7 +70,7 @@ function ExtraSauceComponent(): JSX.Element {
   }, [apiGetExtraSauce]);
 
   useEffect(() => {
-    void fetchSauces();
+   void fetchSauces();
   }, [fetchSauces]);
 
   const handleDialogOpen = (sauce?: Sauce): void => {
@@ -136,7 +132,9 @@ function ExtraSauceComponent(): JSX.Element {
             size="small"
             placeholder="Search sauces"
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => {
+              handleSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -148,7 +146,9 @@ function ExtraSauceComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -188,15 +188,21 @@ function ExtraSauceComponent(): JSX.Element {
                 <TableCell>{sauce.name}</TableCell>
                 <TableCell>₹{sauce.price}</TableCell>
                 <TableCell>
-                  <img
-                    src={sauce.image_url}
-                    alt={sauce.name}
-                    style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
-                  />
+                  {sauce.image_url && (
+                    <img
+                      src={sauce.image_url}
+                      alt={sauce.name}
+                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                    />
+                  )}
                 </TableCell>
                 <TableCell>{sauce.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleDialogOpen(sauce)}>
+                  <IconButton
+                    onClick={() => {
+                      handleDialogOpen(sauce);
+                    }}
+                  >
                     <Pencil size={16} />
                   </IconButton>
                   <IconButton>
@@ -211,170 +217,156 @@ function ExtraSauceComponent(): JSX.Element {
 
       {/* Dialog */}
       <Dialog
-  open={open}
-  onClose={handleDialogClose}
-  fullWidth
-  maxWidth="sm"
-  BackdropProps={{
-    sx: {
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      backdropFilter: 'blur(3px)',
-    },
-  }}
->
-  <DialogTitle
-    sx={{
-      px: 3,
-      py: 2,
-      borderBottom: '1px solid #e0e0e0',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    }}
-  >
-    <Typography variant="h6" fontWeight={600}>
-      {editingSauce ? 'Edit Sauce' : 'Add Sauce'}
-    </Typography>
-    <IconButton onClick={handleDialogClose} />
-  </DialogTitle>
-
-  <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
-    <Box
-      component="form"
-      id="sauce-form"
-      onSubmit={handleSubmit(onSubmit)}
-      display="flex"
-      flexDirection="column"
-      gap={3}
-    >
-      {/* Name */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Sauce Name</Box>
-        <TextField
-          fullWidth
-          size="small"
-          {...register('name', { required: 'Sauce name is required' })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
-      </Box>
-
-      {/* Price */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
-        <TextField
-          type="number"
-          fullWidth
-          size="small"
-          inputProps={{ min: 0, step: 0.01 }}
-          {...register('price', { required: 'Price is required' })}
-          error={!!errors.price}
-          helperText={errors.price?.message}
-        />
-      </Box>
-
-      {/* Existing Image Preview */}
-      {editingSauce && (
-        <Box display="flex" alignItems="center" gap={2}>
-          <Box sx={{ width: 140, fontWeight: 500 }}>Current Image</Box>
-          <img
-            src={editingSauce.image_url}
-            alt="Current Sauce"
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 6,
-              objectFit: 'cover',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            }}
-          />
-        </Box>
-      )}
-
-      {/* Optional Image URL */}
-      {/* <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Image URL</Box>
-        <TextField
-          fullWidth
-          size="small"
-          {...register('image_url')}
-          error={!!errors.image_url}
-          helperText={errors.image_url?.message}
-        />
-      </Box> */}
-
-      {/* Upload File */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
-        <Button
-          variant="outlined"
-          component="label"
-          size="small"
+        open={open}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="sm"
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(3px)',
+          },
+        }}
+      >
+        <DialogTitle
           sx={{
-            width: 110,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            backgroundColor: '#fff',
-            color: '#000',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-              color: '#fff',
-            },
+            px: 3,
+            py: 2,
+            borderBottom: '1px solid #e0e0e0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
-          Choose File
-          <input type="file" hidden accept="image/*" {...register('image')} />
-        </Button>
-      </Box>
-    </Box>
-  </DialogContent>
+          <Typography variant="h6" fontWeight={600}>
+            {editingSauce ? 'Edit Sauce' : 'Add Sauce'}
+          </Typography>
+        </DialogTitle>
 
-  <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
-    <Button
-      onClick={handleDialogClose}
-      sx={{
-        minWidth: 70,
-        fontSize: '0.75rem',
-        px: 2,
-        backgroundColor: '#fff',
-        color: '#000',
-        textTransform: 'none',
-        fontWeight: 500,
-        borderRadius: 1,
-        border: '1px solid #cccccc',
-        '&:hover': {
-          backgroundColor: '#f2f2f2',
-        },
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      type="submit"
-      form="sauce-form"
-      variant="contained"
-      sx={{
-        minWidth: 70,
-        fontSize: '0.75rem',
-        px: 2,
-        backgroundColor: '#000',
-        color: '#fff',
-        textTransform: 'none',
-        fontWeight: 500,
-        borderRadius: 1,
-        '&:hover': {
-          backgroundColor: '#222',
-        },
-      }}
-    >
-      {editingSauce ? 'Update' : 'Save'}
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
+          <Box
+            component="form"
+            id="sauce-form"
+            onSubmit={handleSubmit(onSubmit)}
+            display="flex"
+            flexDirection="column"
+            gap={3}
+          >
+            {/* Name */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Sauce Name</Box>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('name', { required: 'Sauce name is required' })}
+                error={Boolean(errors.name)}
+                helperText={errors.name?.message}
+              />
+            </Box>
 
+            {/* Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('price', { required: 'Price is required' })}
+                error={Boolean(errors.price)}
+                helperText={errors.price?.message}
+              />
+            </Box>
+
+            {/* Existing Image */}
+            {editingSauce?.image_url && (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Box sx={{ width: 140, fontWeight: 500 }}>Current Image</Box>
+                <img
+                  src={editingSauce.image_url}
+                  alt="Current Sauce"
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 6,
+                    objectFit: 'cover',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Upload File */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+                sx={{
+                  width: 110,
+                  fontSize: '0.75rem',
+                  padding: '5px 10px',
+                  backgroundColor: '#fff',
+                  color: '#000',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: '#222',
+                    color: '#fff',
+                  },
+                }}
+              >
+                Choose File
+                <input type="file" hidden accept="image/*" {...register('image')} />
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
+          <Button
+            onClick={handleDialogClose}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#fff',
+              color: '#000',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              border: '1px solid #cccccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="sauce-form"
+            variant="contained"
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            {editingSauce ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

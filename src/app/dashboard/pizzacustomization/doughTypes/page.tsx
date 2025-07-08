@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import {
   Box,
   Button,
@@ -22,6 +23,7 @@ import {
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import ProjectApiList from '@/app/api/ProjectApiList';
 
 interface DoughType {
@@ -55,13 +57,13 @@ function DoughComponent(): JSX.Element {
       const response = await axios.get<{ data: DoughType[] }>(apiGetDough);
       setDoughList(response.data.data);
     } catch (err) {
-      console.error(err);
+      toast.error('Failed to fetch dough types');
     }
   }, [apiGetDough]);
 
   useEffect(() => {
-    void fetchDough();
-  }, [fetchDough]);
+  void fetchDough();
+}, [fetchDough]);
 
   const handleDialogOpen = (item?: DoughType): void => {
     setEditingDough(item ?? null);
@@ -88,7 +90,7 @@ function DoughComponent(): JSX.Element {
       handleDialogClose();
       await fetchDough();
     } catch (err) {
-      console.error(err);
+      toast.error('Error saving dough type');
     }
   };
 
@@ -107,7 +109,9 @@ function DoughComponent(): JSX.Element {
             size="small"
             placeholder="Search Dough"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -119,7 +123,9 @@ function DoughComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -156,7 +162,11 @@ function DoughComponent(): JSX.Element {
                   <TableCell>{dough.name}</TableCell>
                   <TableCell>₹{dough.price}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => handleDialogOpen(dough)}>
+                    <IconButton
+                      onClick={() => {
+                        handleDialogOpen(dough);
+                      }}
+                    >
                       <Pencil size={16} />
                     </IconButton>
                     <IconButton>
@@ -225,7 +235,11 @@ function DoughComponent(): JSX.Element {
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
-          <Button onClick={handleDialogClose} variant="outlined" color="secondary" sx={{
+          <Button
+            onClick={handleDialogClose}
+            variant="outlined"
+            color="secondary"
+            sx={{
               width: 90,
               fontSize: '0.75rem',
               padding: '5px 10px',
@@ -239,10 +253,16 @@ function DoughComponent(): JSX.Element {
                 color: '#000',
                 borderColor: '#bbb',
               },
-            }}>
+            }}
+          >
             Cancel
           </Button>
-          <Button form="dough-form" type="submit" variant="contained" color="primary" sx={{
+          <Button
+            form="dough-form"
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{
               width: 90,
               fontSize: '0.75rem',
               padding: '5px 10px',
@@ -254,7 +274,8 @@ function DoughComponent(): JSX.Element {
               '&:hover': {
                 backgroundColor: '#222',
               },
-            }}>
+            }}
+          >
             {editingDough ? 'Update' : 'Save'}
           </Button>
         </DialogActions>

@@ -1,61 +1,63 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { JSX } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
+import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
 import {
   Box,
   Button,
-  Divider,
-  Grid,
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  IconButton,
+  Paper,
+  Tooltip,
+  Typography,
 } from '@mui/material';
-import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
 import axios from 'axios';
-import { Restaurant } from '@/types/resturentTypes';
-import ProjectApiList from '@/app/api/ProjectApiList';
 
-interface Props {
+import type { Restaurant } from '@/types/restaurant-types';
+import { toast } from 'react-toastify';
+
+interface RestaurantListProps {
   restaurants: Restaurant[];
   onSelect: (restaurant: Restaurant) => void;
   onDeleteSuccess?: () => void;
 }
 
-export default function RestaurantList({
-  restaurants,
-  onSelect,
-  onDeleteSuccess,
-}: Props) {
+function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantListProps): JSX.Element {
   const { apiRemoveRestaurant } = ProjectApiList();
+
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
 
-  const openConfirmDialog = (restaurant: Restaurant) => {
+  const openConfirmDialog = (restaurant: Restaurant): void => {
     setSelectedRestaurant(restaurant);
     setConfirmDialogOpen(true);
   };
 
-  const closeConfirmDialog = () => {
+  const closeConfirmDialog = (): void => {
     setSelectedRestaurant(null);
     setConfirmDialogOpen(false);
   };
 
-  const handleRemove = async () => {
+  const handleRemove = async (): Promise<void> => {
     if (!selectedRestaurant) return;
 
     try {
-      // setDeletingId(selectedRestaurant.restaurants_no);
+      setDeletingId(selectedRestaurant.id);
       await axios.delete(`${apiRemoveRestaurant}/${selectedRestaurant.restaurants_no}`);
       onDeleteSuccess?.();
-    } catch (error: any) {
-      console.error('Failed to delete restaurant:', error.message);
+    } catch (error: unknown) {
+      toast.error('Failed to delet. Please try again later.');
+      // Optional: use a logger or just remove
+      // console.error removed to satisfy eslint no-console rule
     } finally {
       setDeletingId(null);
       closeConfirmDialog();
@@ -83,7 +85,6 @@ export default function RestaurantList({
                 },
               }}
             >
-              {/* Header row */}
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Box>
                   <Typography variant="h6" fontWeight={600}>
@@ -97,7 +98,9 @@ export default function RestaurantList({
                 <Tooltip title="Delete Restaurant">
                   <span>
                     <IconButton
-                      onClick={() => openConfirmDialog(rest)}
+                      onClick={() => {
+                        openConfirmDialog(rest);
+                      }}
                       color="error"
                       disabled={deletingId === rest.id}
                     >
@@ -123,7 +126,9 @@ export default function RestaurantList({
               </Box>
 
               <Button
-                onClick={() => onSelect(rest)}
+                onClick={() => {
+                  onSelect(rest);
+                }}
                 variant="contained"
                 fullWidth
                 sx={{
@@ -148,24 +153,31 @@ export default function RestaurantList({
       </Grid>
 
       {/* Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={closeConfirmDialog}>
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => {
+          closeConfirmDialog();
+        }}
+      >
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to remove{' '}
-            {/* <strong>{selectedRestaurant?.address}</strong>? */}
-          </Typography>
-          <Typography>
-            {/* Are you sure you want to remove{' '} */}
-            <strong>{selectedRestaurant?.address}</strong>?
+            Are you sure you want to remove <strong>{selectedRestaurant?.address}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeConfirmDialog} color="inherit">
+          <Button
+            onClick={() => {
+              closeConfirmDialog();
+            }}
+            color="inherit"
+          >
             Cancel
           </Button>
           <Button
-            onClick={handleRemove}
+            onClick={async () => {
+              await handleRemove();
+            }}
             color="error"
             variant="contained"
             disabled={deletingId === selectedRestaurant?.id}
@@ -177,3 +189,5 @@ export default function RestaurantList({
     </>
   );
 }
+
+export default RestaurantList;

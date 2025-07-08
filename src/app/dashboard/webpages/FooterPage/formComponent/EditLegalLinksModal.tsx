@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -39,7 +42,12 @@ interface EditLegalLinksModalProps {
   onSave: (formData: LegalLinksFormValues) => void;
 }
 
-const EditLegalLinksModal = ({ open, onClose, data, onSave }: EditLegalLinksModalProps) => {
+function EditLegalLinksModal({
+  open,
+  onClose,
+  data,
+  onSave,
+}: EditLegalLinksModalProps): JSX.Element {
   const { control, handleSubmit, reset } = useForm<LegalLinksFormValues>({
     defaultValues: data,
   });
@@ -51,7 +59,7 @@ const EditLegalLinksModal = ({ open, onClose, data, onSave }: EditLegalLinksModa
   const renderTextField = (
     name: keyof LegalLinksFormValues,
     label: string
-  ) => (
+  ): JSX.Element => (
     <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems="center" gap={2}>
       <Box sx={{ width: { sm: 160 }, fontWeight: 500 }}>{label}</Box>
       <Controller
@@ -63,7 +71,7 @@ const EditLegalLinksModal = ({ open, onClose, data, onSave }: EditLegalLinksModa
             {...field}
             fullWidth
             size="small"
-            error={!!fieldState.error}
+            error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
           />
         )}
@@ -148,6 +156,6 @@ const EditLegalLinksModal = ({ open, onClose, data, onSave }: EditLegalLinksModa
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default EditLegalLinksModal;

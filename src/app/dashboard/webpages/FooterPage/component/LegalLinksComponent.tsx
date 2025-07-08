@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import {
   Box,
   Button,
@@ -12,31 +13,35 @@ import {
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import EditLegalLinksModal, { LegalLinksFormValues } from '../formComponent/EditLegalLinksModal';
+import EditLegalLinksModal from '../formComponent/EditLegalLinksModal';
+import type { LegalLinksFormValues } from '../formComponent/EditLegalLinksModal';
 
 interface LegalLinksApiData extends LegalLinksFormValues {}
 
-function LegalLinksComponent() {
-  const [open, setOpen] = useState(false);
+function LegalLinksComponent(): JSX.Element {
+  const [open, setOpen] = useState<boolean>(false);
   const [data, setData] = useState<LegalLinksApiData | null>(null);
   const { apiGetLegalLinks, apiUpdateLegalLinks } = ProjectApiList();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(apiGetLegalLinks);
+      const res = await axios.get<{ data: LegalLinksApiData }>(apiGetLegalLinks);
       setData(res.data.data);
     } catch {
       toast.error('Failed to fetch legal links');
     }
-  };
+  }, [apiGetLegalLinks]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [fetchData]);
 
-  const handleSave = async (updated: LegalLinksFormValues) => {
+  const handleSave = async (updated: LegalLinksFormValues): Promise<void> => {
     try {
-      const res = await axios.put(apiUpdateLegalLinks, updated);
+      const res = await axios.put<{ data: LegalLinksApiData }>(
+        apiUpdateLegalLinks,
+        updated
+      );
       setData(res.data.data);
       toast.success('Legal links updated successfully!');
       setOpen(false);
@@ -59,7 +64,10 @@ function LegalLinksComponent() {
   ];
 
   return (
-    <Card elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#fdfdfd' }}>
+    <Card
+      elevation={3}
+      sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#fdfdfd' }}
+    >
       <Typography variant="h5" align="center" fontWeight={600}>
         {data.legal_title_text}
       </Typography>
@@ -67,10 +75,12 @@ function LegalLinksComponent() {
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={2}>
-        {items.map((item, idx) => (
-          <Grid item xs={12} sm={6} key={idx}>
+        {items.map((item) => (
+          <Grid item xs={12} sm={6} key={item.label}>
             <Box display="flex">
-              <Typography sx={{ width: 180, fontWeight: 500 }}>{item.label}:</Typography>
+              <Typography sx={{ width: 180, fontWeight: 500 }}>
+                {item.label}:
+              </Typography>
               <Typography color="text.secondary">{item.url}</Typography>
             </Box>
           </Grid>
@@ -79,15 +89,27 @@ function LegalLinksComponent() {
         <Grid item xs={12} textAlign="right" mt={2}>
           <Button
             variant="contained"
-            onClick={() => setOpen(true)}
-            sx={{ backgroundColor: '#333', '&:hover': { backgroundColor: '#000' } }}
+            onClick={() => {
+              setOpen(true);
+            }}
+            sx={{
+              backgroundColor: '#333',
+              '&:hover': { backgroundColor: '#000' },
+            }}
           >
             Edit Legal Links
           </Button>
         </Grid>
       </Grid>
 
-      <EditLegalLinksModal open={open} onClose={() => setOpen(false)} data={data} onSave={handleSave} />
+      <EditLegalLinksModal
+        open={open}
+        onClose={() => {
+          setOpen(false);
+        }}
+        data={data}
+        onSave={handleSave}
+      />
     </Card>
   );
 }

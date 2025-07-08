@@ -21,6 +21,8 @@ export const paths = {
     sauces: '/dashboard/pizzacustomization/sauces',
     toppings: '/dashboard/pizzacustomization/toppings',
     sizes: '/dashboard/pizzacustomization/sizes',
+    //resturants
+    resturantMenuItems: '/dashboard/resturant-menu-items',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

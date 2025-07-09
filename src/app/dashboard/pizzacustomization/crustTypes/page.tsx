@@ -85,7 +85,7 @@ function CrustTypeComponent(): JSX.Element {
         await axios.post(apiCreateCrustTypes, data);
       }
       handleDialogClose();
-      void fetchCrustTypes();
+      await fetchCrustTypes();
     } catch (error) {
       toast.error('Error saving crust type');
     }
@@ -106,7 +106,7 @@ function CrustTypeComponent(): JSX.Element {
             size="small"
             placeholder="Search Crust"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {setSearch(e.target.value)}}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -118,7 +118,9 @@ function CrustTypeComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -158,7 +160,11 @@ function CrustTypeComponent(): JSX.Element {
                 <TableCell>₹{crust.price}</TableCell>
                 <TableCell>{crust.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleDialogOpen(crust)}>
+                  <IconButton
+                    onClick={() => {
+                      handleDialogOpen(crust);
+                    }}
+                  >
                     <Pencil size={16} />
                   </IconButton>
                   <IconButton>

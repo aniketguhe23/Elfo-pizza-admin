@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -41,7 +42,12 @@ interface EditSocialLinksModalProps {
   onSave: (formData: SocialLinksFormValues) => void;
 }
 
-const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksModalProps) => {
+function EditSocialLinksModal({
+  open,
+  onClose,
+  data,
+  onSave,
+}: EditSocialLinksModalProps): JSX.Element {
   const {
     control,
     handleSubmit,
@@ -72,24 +78,24 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
     }
   }, [open, data, reset]);
 
-  // Clean up blob URLs when component unmounts
   useEffect(() => {
     return () => {
       const values = watch();
       Object.values(values).forEach((val) => {
         if (val instanceof File) {
-          URL.revokeObjectURL(URL.createObjectURL(val));
+          const url = URL.createObjectURL(val);
+          URL.revokeObjectURL(url);
         }
       });
     };
-  }, []);
+  }, [watch]);
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     fieldName: keyof SocialLinksFormValues
-  ) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+  ): void => {
+    const file = e.target?.files?.[0];
+    if (file?.type?.startsWith('image/')) {
       setValue(fieldName, file, { shouldValidate: true });
     }
   };
@@ -98,7 +104,7 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
     name: keyof SocialLinksFormValues,
     label: string,
     defaultUrl: string
-  ) => {
+  ): JSX.Element => {
     const value = watch(name);
     const previewUrl = value instanceof File ? URL.createObjectURL(value) : defaultUrl;
 
@@ -124,7 +130,9 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
               type="file"
               accept="image/*"
               hidden
-              onChange={(e) => handleImageUpload(e, name)}
+              onChange={(e) => {
+                handleImageUpload(e, name);
+              }}
             />
           </Button>
         </Box>
@@ -132,7 +140,10 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
     );
   };
 
-  const renderField = (name: keyof SocialLinksFormValues, label: string) => (
+  const renderField = (
+    name: keyof SocialLinksFormValues,
+    label: string
+  ): JSX.Element => (
     <Controller
       name={name}
       control={control}
@@ -143,7 +154,7 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
           label={label}
           fullWidth
           size="small"
-          error={!!fieldState.error}
+          error={Boolean(fieldState.error)}
           helperText={fieldState.error?.message}
         />
       )}
@@ -158,7 +169,6 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
         {renderField('social_title_text', 'Social Section Title')}
 
         <Divider />
-
         <Typography variant="subtitle2" fontWeight={600}>Facebook</Typography>
         {renderField('facebook_url', 'Facebook URL')}
         {renderImageUpload('facebook_image', 'Facebook', data.facebook_image)}
@@ -210,6 +220,6 @@ const EditSocialLinksModal = ({ open, onClose, data, onSave }: EditSocialLinksMo
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default EditSocialLinksModal;

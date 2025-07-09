@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import {
   Box,
   Button,
@@ -12,49 +13,32 @@ import {
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import EditQuickLinksModal, { QuickLinksFormValues } from '../formComponent/EditQuickLinksModal';
+import EditQuickLinksModal from '../formComponent/EditQuickLinksModal';
+import type { QuickLinksFormValues } from '../formComponent/EditQuickLinksModal';
 
-interface QuickLinksApiData {
-  quick_link_text: string;
-  home_text: string;
-  home_url: string;
-  current_page_text: string;
-  current_page_url: string;
-  menu_text: string;
-  menu_url: string;
-  aboutus_text: string;
-  aboutus_url: string;
-  careers_text: string;
-  careers_url: string;
-  meet_out_team_text: string;
-  meet_out_team_url: string;
-  gift_card_text: string;
-  gift_card_url: string;
-  press_text: string;
-  press_url: string;
-}
+interface QuickLinksApiData extends QuickLinksFormValues {}
 
-function QuickLinksComponent() {
-  const [open, setOpen] = useState(false);
+function QuickLinksComponent(): JSX.Element {
+  const [open, setOpen] = useState<boolean>(false);
   const [data, setData] = useState<QuickLinksApiData | null>(null);
   const { apiGetFooterQuicklinks, apiUpdateFooterQuicklinks } = ProjectApiList();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get(apiGetFooterQuicklinks);
+      const res = await axios.get<{ data: QuickLinksApiData }>(apiGetFooterQuicklinks);
       setData(res.data.data);
     } catch {
       toast.error('Failed to fetch quick links');
     }
-  };
+  }, [apiGetFooterQuicklinks]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [fetchData]);
 
-  const handleSave = async (updated: QuickLinksFormValues) => {
+  const handleSave = async (updated: QuickLinksFormValues): Promise<void> => {
     try {
-      const res = await axios.put(apiUpdateFooterQuicklinks, updated);
+      const res = await axios.put<{ data: QuickLinksApiData }>(apiUpdateFooterQuicklinks, updated);
       setData(res.data.data);
       toast.success('Quick links updated successfully!');
       setOpen(false);
@@ -77,7 +61,10 @@ function QuickLinksComponent() {
   ];
 
   return (
-    <Card elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#f9f9f9' }}>
+    <Card
+      elevation={3}
+      sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: '#f9f9f9' }}
+    >
       <Typography variant="h5" align="center" fontWeight={600}>
         {data.quick_link_text}
       </Typography>
@@ -85,8 +72,8 @@ function QuickLinksComponent() {
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={2}>
-        {items.map((item, idx) => (
-          <Grid item xs={12} sm={6} key={idx}>
+        {items.map((item) => (
+          <Grid item xs={12} sm={6} key={item.label}>
             <Box display="flex">
               <Typography sx={{ width: 150, fontWeight: 500 }}>{item.label}:</Typography>
               <Typography color="text.secondary">{item.url}</Typography>
@@ -97,15 +84,27 @@ function QuickLinksComponent() {
         <Grid item xs={12} textAlign="right" mt={2}>
           <Button
             variant="contained"
-            onClick={() => setOpen(true)}
-            sx={{ backgroundColor: '#333', '&:hover': { backgroundColor: '#000' } }}
+            onClick={() => {
+              setOpen(true);
+            }}
+            sx={{
+              backgroundColor: '#333',
+              '&:hover': { backgroundColor: '#000' },
+            }}
           >
             Edit Quick Links
           </Button>
         </Grid>
       </Grid>
 
-      <EditQuickLinksModal open={open} onClose={() => setOpen(false)} data={data} onSave={handleSave} />
+      <EditQuickLinksModal
+        open={open}
+        onClose={() => {
+          setOpen(false);
+        }}
+        data={data}
+        onSave={handleSave}
+      />
     </Card>
   );
 }

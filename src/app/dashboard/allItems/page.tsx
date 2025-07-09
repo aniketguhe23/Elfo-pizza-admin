@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { Search } from 'lucide-react';
-import { ToastContainer, toast } from 'react-toastify';  // <-- Import react-toastify styles and toast
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 interface Variant {
@@ -37,8 +37,11 @@ interface MenuItem {
   is_vegetarian: number;
   is_available: number;
   on_homePage: boolean;
+  on_suggestions: boolean;
   variants: Variant[];
 }
+
+const SUGGESTION_CATEGORIES = ['Sides', 'Drinks', 'Desserts'];
 
 function ItemVariantComponent(): React.ReactElement {
   const [variants, setVariants] = useState<MenuItem[]>([]);
@@ -52,45 +55,46 @@ function ItemVariantComponent(): React.ReactElement {
       const res = await axios.get<{ data: MenuItem[] }>(apiGetAllMenu);
       setVariants(res.data.data || []);
     } catch (error) {
-      toast.error('Failed to fetch variants. Please try again later.');  // <-- replaced alert
+      toast.error('Failed to fetch variants. Please try again later.');
     }
   }, [apiGetAllMenu]);
 
   useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        await fetchVariants();
-      } catch (error) {
-        toast.error('Failed to fetch variants. Please try again later.');  // <-- replaced alert
-      }
-    };
-
-    void fetchData();
+    void fetchVariants(); // ✅ explicitly ignoring the promise
   }, [fetchVariants]);
 
-  const handleToggle = async (id: number, currentValue: boolean): Promise<void> => {
+  const handleToggle = async (
+    id: number,
+    currentValue: boolean,
+    field: 'on_homePage' | 'on_suggestions'
+  ): Promise<void> => {
     try {
       setLoading(true);
       const updatedValue = !currentValue;
 
       await axios.put(apiUpdateHomeMenu, {
         itemId: id,
-        onHomePage: updatedValue,
+        [field]: updatedValue,
       });
 
-      setVariants((prev) => prev.map((item) => (item.id === id ? { ...item, on_homePage: updatedValue } : item)));
+      setVariants((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, [field]: updatedValue } : item
+        )
+      );
     } catch (error) {
-      toast.error('Error updating homepage status');  // <-- replaced alert
+      toast.error(`Error updating ${field === 'on_suggestions' ? 'suggestions' : 'homepage'} status`);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredVariants = variants.filter((v) => v.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredVariants = variants.filter((v) =>
+    v.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Box mt={5}>
-      {/* Toast Container for notifications */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar closeOnClick pauseOnHover draggable />
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -102,9 +106,7 @@ function ItemVariantComponent(): React.ReactElement {
           placeholder="Search item name"
           variant="outlined"
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-          }}
+          onChange={(e) => {setSearchTerm(e.target.value)}}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -131,41 +133,60 @@ function ItemVariantComponent(): React.ReactElement {
               <TableCell>Is Available</TableCell>
               <TableCell>Variants</TableCell>
               <TableCell>On HomePage</TableCell>
+              <TableCell>On Suggestions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredVariants.length > 0 ? (
-              filteredVariants.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>{item.category.name}</TableCell>
-                  <TableCell>{item.is_vegetarian === 1 ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>{item.is_available === 1 ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>
-                    {item.variants.map((variant) => (
-                      <div key={`${item.id}-${variant.crust_type}`}>
-                        {variant.crust_type} - ₹{variant.price}
-                      </div>
-                    ))}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={item.on_homePage}
-                      onChange={async () => {
-                        await handleToggle(item.id, item.on_homePage);
-                      }}
-                      disabled={loading}
-                      color="success"
-                      inputProps={{ 'aria-label': 'toggle homepage visibility' }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredVariants.map((item, index) => {
+                const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item.category.name);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell>{item.category.name}</TableCell>
+                    <TableCell>{item.is_vegetarian === 1 ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{item.is_available === 1 ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>
+                      {item.variants.map((variant) => (
+                        <div key={`${item.id}-${variant.crust_type}`}>
+                          {variant.crust_type} - ₹{variant.price}
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={item.on_homePage}
+                        onChange={() => {
+                          void handleToggle(item.id, item.on_homePage, 'on_homePage');
+                        }}
+                        disabled={loading}
+                        color="success"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {showSuggestionToggle ? (
+                        <Switch
+                          checked={item.on_suggestions}
+                          onChange={() => {
+                            void handleToggle(item.id, item.on_suggestions, 'on_suggestions');
+                          }}
+                          disabled={loading}
+                          color="primary"
+                        />
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">
+                          --
+                        </Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   <Typography variant="body2" color="textSecondary">
                     No items found.
                   </Typography>

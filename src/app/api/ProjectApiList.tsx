@@ -125,6 +125,16 @@ export default function ProjectApiList(): Record<string, string> {
     // Socila Info
     apiGetSocialLinks: `${baseUrl}/api/footer/social/get`,
     apiUpdateSocialLinks: `${baseUrl}/api/footer/social/update`,
+ 
+ 
+    // Resturant
+    apiCreateReesturants: `${baseUrl}/api/restaurants/create`,
+    apiRemoveRestaurant: `${baseUrl}/api/restaurants/delete`,
+    apiGetResturants: `${baseUrl}/api/restaurants/get`,
+    apiGetResturantitems: `${baseUrl}/api/restaurant-items`,
+    apiAssignItemsToResturants: `${baseUrl}/api/restaurant-items/assign`,
+    apiRemoveItemFromResturant: `${baseUrl}/api/restaurant-items`,
+    // apiUpdateReesturants: `${baseUrl}/api/footer/social/update`,
     
   };
 

@@ -1,19 +1,20 @@
+'use client';
+
 import React, { useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
   TextField,
   Button,
   Box,
-  Typography,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 
 export interface FooterFormValues {
-  footer_logo: File | null; // This is what the user may upload
+  footer_logo: File | null;
   footer_title_1: string;
   address_title: string;
   address: string;
@@ -24,14 +25,11 @@ export interface FooterFormValues {
   company_title: string;
 }
 
-
 interface EditFooterCardModalProps {
   open: boolean;
   onClose: () => void;
-
-  // 👇 This is the prop you're passing in
   data: {
-    footer_logo: string; // ✅ This is a URL string
+    footer_logo: string;
     footer_title_1: string;
     address_title: string;
     address: string;
@@ -41,17 +39,15 @@ interface EditFooterCardModalProps {
     company_name: string;
     company_title: string;
   };
-
-  // 👇 This is what you'll get on form submit
   onSave: (formData: FooterFormValues) => void;
 }
 
-const EditFooterCardModal = ({
+function EditFooterCardModal({
   open,
   onClose,
   data,
   onSave,
-}: EditFooterCardModalProps) => {
+}: EditFooterCardModalProps): JSX.Element {
   const {
     control,
     handleSubmit,
@@ -76,12 +72,12 @@ const EditFooterCardModal = ({
     if (open) {
       reset({
         ...data,
-        footer_logo: null, // Do not preload as File
+        footer_logo: null,
       });
     }
   }, [open, data, reset]);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0] ?? null;
     setValue('footer_logo', file, { shouldValidate: true });
   };
@@ -95,7 +91,7 @@ const EditFooterCardModal = ({
     name: keyof FooterFormValues,
     label: string,
     multiline = false
-  ) => (
+  ): JSX.Element => (
     <Box display="flex" alignItems={multiline ? 'flex-start' : 'center'} gap={2}>
       <Box sx={{ width: 140, fontWeight: 500 }}>{label}</Box>
       <Controller
@@ -109,7 +105,7 @@ const EditFooterCardModal = ({
             size="small"
             multiline={multiline}
             rows={multiline ? 3 : 1}
-            error={!!fieldState.error}
+            error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
           />
         )}
@@ -178,13 +174,20 @@ const EditFooterCardModal = ({
               }}
             >
               Choose File
-              <input type="file" accept="image/*" hidden onChange={handleLogoUpload} />
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleLogoUpload}
+              />
             </Button>
           </Box>
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-end', gap: 1 }}>
+      <DialogActions
+        sx={{ px: 3, pb: 2, justifyContent: 'flex-end', gap: 1 }}
+      >
         <Button
           onClick={onClose}
           sx={{
@@ -219,6 +222,6 @@ const EditFooterCardModal = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default EditFooterCardModal;

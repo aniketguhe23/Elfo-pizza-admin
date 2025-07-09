@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
@@ -16,7 +17,7 @@ import {
 import axios from 'axios';
 import { Plus, Search } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-
+import { toast } from 'react-toastify';
 import { ListingTable } from './component/ListingTable';
 
 interface Size {
@@ -54,8 +55,8 @@ function SizeComponent(): JSX.Element {
       const fetched = response.data.data || [];
       setSizes(fetched);
       setFilteredSizes(fetched);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to fetch sizes');
     }
   }, [apiGetBreadSize]);
 
@@ -69,7 +70,8 @@ function SizeComponent(): JSX.Element {
     } else {
       const lower = search.toLowerCase();
       const filtered = sizes.filter(
-        (s) => s.name.toLowerCase().includes(lower) || s.size.toLowerCase().includes(lower)
+        (s) =>
+          s.name.toLowerCase().includes(lower) || s.size.toLowerCase().includes(lower)
       );
       setFilteredSizes(filtered);
     }
@@ -100,14 +102,21 @@ function SizeComponent(): JSX.Element {
       }
       handleDialogClose();
       await fetchSizes();
-    } catch (error) {
-      console.error(error);
+    } catch {
+      toast.error('Failed to save size');
     }
   };
 
   return (
     <Box mt={5}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={4}
+        flexWrap="wrap"
+        gap={2}
+      >
         <Typography variant="h4" fontWeight={700}>
           Pizza Sizes
         </Typography>
@@ -116,7 +125,7 @@ function SizeComponent(): JSX.Element {
             size="small"
             placeholder="Search Sizes"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {setSearch(e.target.value)}}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -128,7 +137,9 @@ function SizeComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -147,7 +158,12 @@ function SizeComponent(): JSX.Element {
         You have {sizes.length} total sizes
       </Typography>
 
-      <ListingTable data={filteredSizes} onClick={(item) => handleDialogOpen(item as Size)} />
+      <ListingTable
+        data={filteredSizes}
+        onClick={(item) => {
+          handleDialogOpen(item as Size);
+        }}
+      />
 
       <Dialog
         open={open}

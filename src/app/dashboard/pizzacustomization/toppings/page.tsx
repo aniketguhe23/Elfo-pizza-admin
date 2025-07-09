@@ -12,7 +12,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   Paper,
@@ -25,10 +24,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import axios from 'axios';
+import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 
 interface Topping {
   id: number;
@@ -41,6 +40,13 @@ interface Topping {
 
 interface ToppingResponse {
   data: Topping[];
+}
+
+interface ToppingFormData {
+  name: string;
+  price: string;
+  is_vegetarian: boolean;
+  image: FileList;
 }
 
 function ToppingsComponent(): JSX.Element {
@@ -57,16 +63,10 @@ function ToppingsComponent(): JSX.Element {
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
-  } = useForm<{
-    name: string;
-    price: string;
-    is_vegetarian: boolean;
-    image: FileList;
-  }>();
+  } = useForm<ToppingFormData>();
 
-  const fetchToppings = useCallback(async () => {
+  const fetchToppings = useCallback(async (): Promise<void> => {
     try {
       const response = await axios.get<ToppingResponse>(apiGetToppings);
       setToppings(response.data?.data || []);
@@ -76,10 +76,10 @@ function ToppingsComponent(): JSX.Element {
   }, [apiGetToppings]);
 
   useEffect(() => {
-    fetchToppings();
+    void fetchToppings();
   }, [fetchToppings]);
 
-  const handleDialogOpen = (topping?: Topping) => {
+  const handleDialogOpen = (topping?: Topping): void => {
     setEditing(topping || null);
     reset({
       name: topping?.name || '',
@@ -90,20 +90,19 @@ function ToppingsComponent(): JSX.Element {
     setOpen(true);
   };
 
-  const handleDialogClose = () => {
+  const handleDialogClose = (): void => {
     setOpen(false);
     setEditing(null);
     setPreviewImage(null);
     reset();
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ToppingFormData): Promise<void> => {
     try {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('price', data.price);
       formData.append('is_vegetarian', String(data.is_vegetarian));
-
       if (data.image && data.image.length > 0) {
         formData.append('image', data.image[0]);
       }
@@ -115,26 +114,28 @@ function ToppingsComponent(): JSX.Element {
       }
 
       handleDialogClose();
-      fetchToppings();
+      void fetchToppings();
     } catch {
       toast.error('Error saving topping');
     }
   };
 
-  const filtered = toppings.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = toppings.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} gap={2}>
-        <Typography variant="h4" fontWeight={700}>Toppings</Typography>
+        <Typography variant="h4" fontWeight={700}>
+          Toppings
+        </Typography>
         <Box display="flex" gap={2}>
           <TextField
             size="small"
             placeholder="Search Toppings"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -146,7 +147,9 @@ function ToppingsComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => handleDialogOpen()}
+            onClick={() => {
+              handleDialogOpen();
+            }}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -188,11 +191,13 @@ function ToppingsComponent(): JSX.Element {
                 <TableCell>{topping.name}</TableCell>
                 <TableCell>₹{topping.price}</TableCell>
                 <TableCell>{topping.is_vegetarian ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{new Date(topping.created_at).toISOString().split('T')[0]}</TableCell>
                 <TableCell>
-                  {new Date(topping.created_at).toISOString().split('T')[0]}
-                </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleDialogOpen(topping)}>
+                  <IconButton
+                    onClick={() => {
+                      handleDialogOpen(topping);
+                    }}
+                  >
                     <Pencil size={16} />
                   </IconButton>
                   <IconButton>
@@ -205,177 +210,176 @@ function ToppingsComponent(): JSX.Element {
         </Table>
       </TableContainer>
 
+      {/* Topping Dialog */}
       <Dialog
-  open={open}
-  onClose={handleDialogClose}
-  fullWidth
-  maxWidth="sm"
-  BackdropProps={{
-    sx: {
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      backdropFilter: 'blur(3px)',
-    },
-  }}
->
-  <DialogTitle
-    sx={{
-      px: 3,
-      py: 2,
-      borderBottom: '1px solid #e0e0e0',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    }}
-  >
-    <Typography variant="h6" fontWeight={600}>
-      {editing ? 'Edit Topping' : 'Add Topping'}
-    </Typography>
-    <IconButton onClick={handleDialogClose} />
-  </DialogTitle>
-
-  <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
-    <Box
-      component="form"
-      id="topping-form"
-      onSubmit={handleSubmit(onSubmit)}
-      display="flex"
-      flexDirection="column"
-      gap={3}
-    >
-      {/* Name */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Topping Name</Box>
-        <TextField
-          fullWidth
-          size="small"
-          {...register('name', { required: 'Name is required' })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
-      </Box>
-
-      {/* Price */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
-        <TextField
-          type="number"
-          fullWidth
-          size="small"
-          inputProps={{ min: 0, step: 0.01 }}
-          {...register('price', { required: 'Price is required' })}
-          error={!!errors.price}
-          helperText={errors.price?.message}
-        />
-      </Box>
-
-      {/* Vegetarian */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian?</Box>
-        <Checkbox {...register('is_vegetarian')} />
-      </Box>
-
-      {/* Image Preview */}
-      {previewImage && (
-        <Box display="flex" alignItems="center" gap={2}>
-          <Box sx={{ width: 140, fontWeight: 500 }}>Preview</Box>
-          <Avatar
-            src={previewImage}
-            alt="Preview"
-            sx={{
-              width: 70,
-              height: 70,
-              borderRadius: 2,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            }}
-            variant="rounded"
-          />
-        </Box>
-      )}
-
-      {/* Upload Image */}
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
-        <Button
-          variant="outlined"
-          component="label"
-          size="small"
+        open={open}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="sm"
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(3px)',
+          },
+        }}
+      >
+        <DialogTitle
           sx={{
-            width: 110,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            backgroundColor: '#fff',
-            color: '#000',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-              color: '#fff',
-            },
+            px: 3,
+            py: 2,
+            borderBottom: '1px solid #e0e0e0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
-          Choose File
-          <input
-            hidden
-            type="file"
-            accept="image/*"
-            {...register('image')}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                setPreviewImage(URL.createObjectURL(file));
-                setValue('image', e.target.files as any);
-              }
+          <Typography variant="h6" fontWeight={600}>
+            {editing ? 'Edit Topping' : 'Add Topping'}
+          </Typography>
+          <IconButton onClick={handleDialogClose}>
+            <X size={18} />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
+          <Box
+            component="form"
+            id="topping-form"
+            onSubmit={handleSubmit(onSubmit)}
+            display="flex"
+            flexDirection="column"
+            gap={3}
+          >
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Topping Name</Box>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('name', { required: 'Name is required' })}
+                error={Boolean(errors.name)}
+                helperText={errors.name?.message}
+              />
+            </Box>
+
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('price', { required: 'Price is required' })}
+                error={Boolean(errors.price)}
+                helperText={errors.price?.message}
+              />
+            </Box>
+
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian?</Box>
+              <Checkbox {...register('is_vegetarian')} />
+            </Box>
+
+            {previewImage && (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Box sx={{ width: 140, fontWeight: 500 }}>Preview</Box>
+                <Avatar
+                  src={previewImage}
+                  alt="Preview"
+                  sx={{
+                    width: 70,
+                    height: 70,
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  }}
+                  variant="rounded"
+                />
+              </Box>
+            )}
+
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+                sx={{
+                  width: 110,
+                  fontSize: '0.75rem',
+                  padding: '5px 10px',
+                  backgroundColor: '#fff',
+                  color: '#000',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: '#222',
+                    color: '#fff',
+                  },
+                }}
+              >
+                Choose File
+                <input
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  {...register('image')}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPreviewImage(URL.createObjectURL(file));
+                      if (e.target.files) {
+                        setValue('image', e.target.files);
+                      }
+                    }
+                  }}
+                />
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
+          <Button
+            onClick={handleDialogClose}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#fff',
+              color: '#000',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              border: '1px solid #cccccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+              },
             }}
-          />
-        </Button>
-      </Box>
-    </Box>
-  </DialogContent>
-
-  <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
-    <Button
-      onClick={handleDialogClose}
-      sx={{
-        minWidth: 70,
-        fontSize: '0.75rem',
-        px: 2,
-        backgroundColor: '#fff',
-        color: '#000',
-        textTransform: 'none',
-        fontWeight: 500,
-        borderRadius: 1,
-        border: '1px solid #cccccc',
-        '&:hover': {
-          backgroundColor: '#f2f2f2',
-        },
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      type="submit"
-      form="topping-form"
-      variant="contained"
-      sx={{
-        minWidth: 70,
-        fontSize: '0.75rem',
-        px: 2,
-        backgroundColor: '#000',
-        color: '#fff',
-        textTransform: 'none',
-        fontWeight: 500,
-        borderRadius: 1,
-        '&:hover': {
-          backgroundColor: '#222',
-        },
-      }}
-    >
-      {editing ? 'Update' : 'Save'}
-    </Button>
-  </DialogActions>
-</Dialog>
-
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="topping-form"
+            variant="contained"
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            {editing ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

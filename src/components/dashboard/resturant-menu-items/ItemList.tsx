@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import type { AxiosResponse } from 'axios';
 import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
@@ -11,15 +10,15 @@ import {
   CardContent,
   CardMedia,
   CircularProgress,
-  Grid,
-  Paper,
-  Typography,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Grid,
+  Typography,
 } from '@mui/material';
+import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 
 interface Item {
@@ -42,9 +41,7 @@ interface CategoryItemListProps {
   restaurantsNo: string;
 }
 
-export default function CategoryItemList({
-  restaurantsNo,
-}: CategoryItemListProps): JSX.Element {
+export default function CategoryItemList({ restaurantsNo }: CategoryItemListProps): JSX.Element {
   const { apiGetResturantitems, apiRemoveItemFromResturant } = ProjectApiList();
 
   const [data, setData] = useState<Record<string, Item[]>>({});
@@ -55,9 +52,7 @@ export default function CategoryItemList({
   const fetchData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const res: AxiosResponse<ApiData> = await axios.get(
-        `${apiGetResturantitems}/${restaurantsNo}/items`
-      );
+      const res: AxiosResponse<ApiData> = await axios.get(`${apiGetResturantitems}/${restaurantsNo}/items`);
       if (res.data && typeof res.data.data === 'object') {
         setData(res.data.data);
       }
@@ -72,9 +67,7 @@ export default function CategoryItemList({
     if (!selectedItem) return;
     try {
       setRemoving(true);
-      await axios.delete(
-        `${apiRemoveItemFromResturant}/${restaurantsNo}/item/${selectedItem.id}`
-      );
+      await axios.delete(`${apiRemoveItemFromResturant}/${restaurantsNo}/item/${selectedItem.id}`);
       await fetchData();
       setSelectedItem(null);
     } catch {
@@ -96,25 +89,28 @@ export default function CategoryItemList({
     );
   }
 
-  const noItems =
-    Object.keys(data).length === 0 ||
-    Object.values(data).every((items) => items.length === 0);
+  const noItems = Object.keys(data).length === 0 || Object.values(data).every((items) => items.length === 0);
 
   return (
     <Box mt={2}>
       {noItems ? (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          align="center"
-          mt={4}
-        >
+        <Typography variant="body2" color="text.secondary" align="center" mt={4}>
           No items found for this restaurant.
         </Typography>
       ) : (
         Object.entries(data).map(([category, items]) => (
-          <Paper key={category} sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+          <Box key={category} sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              gutterBottom
+              sx={{
+                my: 5, // margin-top
+                fontWeight: 600,
+                fontSize: '1.5rem', // custom font size
+                fontFamily: 'Roboto, sans-serif', // or your desired font
+              }}
+            >
               {category}
             </Typography>
             <Grid container spacing={1.5}>
@@ -139,11 +135,7 @@ export default function CategoryItemList({
                       <Typography variant="subtitle2" fontWeight={600} noWrap>
                         {item.name}
                       </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        lineHeight={1.5}
-                      >
+                      <Typography variant="caption" color="text.secondary" lineHeight={1.5}>
                         Small: ₹{item.prices.small ?? 'N/A'} <br />
                         Medium: ₹{item.prices.medium ?? 'N/A'} <br />
                         Large: ₹{item.prices.large ?? 'N/A'}
@@ -159,10 +151,17 @@ export default function CategoryItemList({
                           setSelectedItem(item);
                         }}
                         sx={{
+                          color: '#222',
                           textTransform: 'none',
-                          fontSize: '0.75rem',
                           fontWeight: 500,
-                          borderRadius: 1,
+                          borderRadius: '10px',
+                          backgroundColor: '#e6e6e6',
+                          border: '1px solid #ccc',
+                          '&:hover': {
+                            backgroundColor: '#222',
+                            color: '#ffffff',
+                            border: '1px solid #000',
+                          },
                         }}
                       >
                         Remove
@@ -172,7 +171,7 @@ export default function CategoryItemList({
                 </Grid>
               ))}
             </Grid>
-          </Paper>
+          </Box>
         ))
       )}
 
@@ -186,8 +185,7 @@ export default function CategoryItemList({
         <DialogTitle>Confirm Removal</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to remove{' '}
-            <strong>{selectedItem?.name}</strong> from this restaurant?
+            Are you sure you want to remove <strong>{selectedItem?.name}</strong> from this restaurant?
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -196,7 +194,21 @@ export default function CategoryItemList({
               setSelectedItem(null);
             }}
             disabled={removing}
-            sx={{ textTransform: 'none' }}
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              color: '#333',
+              borderColor: '#ccc',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+                color: '#000',
+                borderColor: '#bbb',
+              },
+            }}
           >
             Cancel
           </Button>
@@ -207,7 +219,19 @@ export default function CategoryItemList({
             variant="contained"
             color="error"
             disabled={removing}
-            sx={{ textTransform: 'none' }}
+            sx={{
+              width: 110,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
           >
             {removing ? 'Removing...' : 'Yes, Remove'}
           </Button>

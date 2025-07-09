@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
@@ -22,6 +22,7 @@ import {
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import { Controller, useForm } from 'react-hook-form';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface AddItemDialogProps {
   open: boolean;
@@ -72,8 +73,7 @@ export default function AddItemDialog({
       }
     } catch (error: unknown) {
       // Optional: use a logger or just remove
-// console.error removed to satisfy eslint no-console rule
-
+      // console.error removed to satisfy eslint no-console rule
     } finally {
       setLoading(false);
     }
@@ -82,9 +82,7 @@ export default function AddItemDialog({
   useEffect(() => {
     if (open) {
       void fetchItems();
-      const cleanedIds = assignedItemIds.filter(
-        (id) => typeof id === 'number' && !Number.isNaN(id)
-      );
+      const cleanedIds = assignedItemIds.filter((id) => typeof id === 'number' && !Number.isNaN(id));
       reset({ item_ids: cleanedIds });
     }
   }, [open, assignedItemIds, reset, fetchItems]);
@@ -100,8 +98,7 @@ export default function AddItemDialog({
       onClose();
     } catch (error: unknown) {
       // Optional: use a logger or just remove
-// console.error removed to satisfy eslint no-console rule
-
+      // console.error removed to satisfy eslint no-console rule
     } finally {
       setSubmitting(false);
     }
@@ -126,12 +123,7 @@ export default function AddItemDialog({
                   {items.map((item) => {
                     const isChecked = field.value.includes(item.id);
                     return (
-                      <ListItem
-                        key={item.id}
-                        alignItems="flex-start"
-                        divider
-                        sx={{ px: 1.5, py: 1 }}
-                      >
+                      <ListItem key={item.id} alignItems="flex-start" divider sx={{ px: 1.5, py: 1 }}>
                         <Avatar
                           variant="rounded"
                           src={item.image_url || ''}
@@ -150,12 +142,7 @@ export default function AddItemDialog({
                           secondary={
                             <>
                               {item.description && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  display="block"
-                                  sx={{ pr: 5 }}
-                                >
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ pr: 5 }}>
                                   {item.description}
                                 </Typography>
                               )}
@@ -170,17 +157,23 @@ export default function AddItemDialog({
                           }
                         />
                         <ListItemSecondaryAction>
-                          <Checkbox
-                            edge="end"
-                            size="small"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              const updated = e.target.checked
-                                ? [...field.value, item.id]
-                                : field.value.filter((id) => id !== item.id);
-                              field.onChange(updated);
-                            }}
-                          />
+                          {assignedItemIds.includes(item.id) ? (
+                            <Typography variant="caption" color="green" fontWeight={600}>
+                              <CheckCircleIcon/>
+                            </Typography>
+                          ) : (
+                            <Checkbox
+                              edge="end"
+                              size="small"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const updated = e.target.checked
+                                  ? [...field.value, item.id]
+                                  : field.value.filter((id) => id !== item.id);
+                                field.onChange(updated);
+                              }}
+                            />
+                          )}
                         </ListItemSecondaryAction>
                       </ListItem>
                     );

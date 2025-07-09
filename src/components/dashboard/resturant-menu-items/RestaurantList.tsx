@@ -170,7 +170,21 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
             onClick={() => {
               closeConfirmDialog();
             }}
-            color="inherit"
+            sx={{
+            width: 90,
+            fontSize: '0.75rem',
+            padding: '5px 10px',
+            color: '#333',
+            borderColor: '#ccc',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: '#f2f2f2',
+              color: '#000',
+              borderColor: '#bbb',
+            },
+          }}
           >
             Cancel
           </Button>
@@ -181,6 +195,19 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
             color="error"
             variant="contained"
             disabled={deletingId === selectedRestaurant?.id}
+             sx={{
+            width: 90,
+            fontSize: '0.75rem',
+            padding: '5px 10px',
+            backgroundColor: '#000',
+            color: '#fff',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: '#222',
+            },
+          }}
           >
             {deletingId === selectedRestaurant?.id ? 'Removing...' : 'Remove'}
           </Button>

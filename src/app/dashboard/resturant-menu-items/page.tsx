@@ -1,15 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Container, Typography } from '@mui/material';
 import axios from 'axios';
 
 import type { Restaurant } from '@/types/restaurant-types';
@@ -36,8 +30,8 @@ export default function RestaurantMenuItems(): JSX.Element {
         setRestaurants(res.data.data);
       }
     } catch (err) {
-     // Optional: use a logger or just remove
-// console.error removed to satisfy eslint no-console rule
+      // Optional: use a logger or just remove
+      // console.error removed to satisfy eslint no-console rule
     } finally {
       setLoading(false);
     }
@@ -54,8 +48,8 @@ export default function RestaurantMenuItems(): JSX.Element {
         .map((item) => item.id);
       setAssignedItemIds(itemIds);
     } catch (err) {
-     // Optional: use a logger or just remove
-// console.error removed to satisfy eslint no-console rule
+      // Optional: use a logger or just remove
+      // console.error removed to satisfy eslint no-console rule
 
       setAssignedItemIds([]);
     }

@@ -20,12 +20,14 @@ import {
 } from '@mui/material';
 import type { AxiosResponse } from 'axios';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface Item {
   id: number;
   name: string;
   image: string;
   category: string;
+  is_available?: any; // ✅ Added
   prices: {
     small: number | null;
     medium: number | null;
@@ -42,7 +44,7 @@ interface CategoryItemListProps {
 }
 
 export default function CategoryItemList({ restaurantsNo }: CategoryItemListProps): JSX.Element {
-  const { apiGetResturantitems, apiRemoveItemFromResturant } = ProjectApiList();
+  const { apiGetResturantitems, apiRemoveItemFromResturant, apiUpdateRestaurant } = ProjectApiList();
 
   const [data, setData] = useState<Record<string, Item[]>>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,7 +59,7 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
         setData(res.data.data);
       }
     } catch {
-      // handled silently
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -71,9 +73,24 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
       await fetchData();
       setSelectedItem(null);
     } catch {
-      // handled silently
+      toast.error('Failed to remove item');
     } finally {
       setRemoving(false);
+    }
+  };
+
+  const updateItemAvailability = async (restaurantNo: string, itemId: number, currentAvailability: boolean) => {
+    try {
+      const newAvailability = !currentAvailability; // toggle value
+
+      await axios.put(`${apiUpdateRestaurant}/${restaurantNo}/item/${itemId}`, {
+        is_available: newAvailability,
+      });
+
+      toast.success(`Item marked as ${newAvailability ? 'Available' : 'Unavailable'}`);
+      await fetchData(); // Refresh the updated list
+    } catch (error) {
+      toast.error('Failed to update item availability');
     }
   };
 
@@ -105,10 +122,10 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
               fontWeight={600}
               gutterBottom
               sx={{
-                my: 5, // margin-top
+                my: 5,
                 fontWeight: 600,
-                fontSize: '1.5rem', // custom font size
-                fontFamily: 'Roboto, sans-serif', // or your desired font
+                fontSize: '1.5rem',
+                fontFamily: 'Roboto, sans-serif',
               }}
             >
               {category}
@@ -166,6 +183,27 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
                       >
                         Remove
                       </Button>
+
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        onClick={() => updateItemAvailability(restaurantsNo, item.id, !!item.is_available)}
+                        sx={{
+                          mt: 1,
+                          textTransform: 'none',
+                          borderRadius: '10px',
+                          backgroundColor: item.is_available ? '#4caf50' : '#9e9e9e', // Green or Gray
+                          color: '#fff',
+                          border: 'none',
+                          fontWeight: 500,
+                          '&:hover': {
+                            backgroundColor: item.is_available ? '#388e3c' : '#757575',
+                          },
+                        }}
+                      >
+                        {item.is_available ? 'Available' : 'Unavailable'}
+                      </Button>
                     </Box>
                   </Card>
                 </Grid>
@@ -176,12 +214,7 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
       )}
 
       {/* Confirm Delete Modal */}
-      <Dialog
-        open={Boolean(selectedItem)}
-        onClose={() => {
-          setSelectedItem(null);
-        }}
-      >
+      <Dialog open={Boolean(selectedItem)} onClose={() => setSelectedItem(null)}>
         <DialogTitle>Confirm Removal</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -190,9 +223,7 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
-            onClick={() => {
-              setSelectedItem(null);
-            }}
+            onClick={() => setSelectedItem(null)}
             disabled={removing}
             sx={{
               width: 90,
@@ -213,9 +244,7 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
             Cancel
           </Button>
           <Button
-            onClick={async () => {
-              await confirmRemove();
-            }}
+            onClick={confirmRemove}
             variant="contained"
             color="error"
             disabled={removing}

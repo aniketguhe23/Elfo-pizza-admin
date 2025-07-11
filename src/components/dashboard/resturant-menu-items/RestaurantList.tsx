@@ -64,6 +64,9 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
     }
   };
 
+
+
+
   return (
     <>
       <Grid container spacing={3}>

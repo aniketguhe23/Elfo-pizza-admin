@@ -130,6 +130,7 @@ export default function ProjectApiList(): Record<string, string> {
     // Resturant
     apiCreateReesturants: `${baseUrl}/api/restaurants/create`,
     apiRemoveRestaurant: `${baseUrl}/api/restaurants/delete`,
+    apiUpdateRestaurant: `${baseUrl}/api/restaurant-items`,
     apiGetResturants: `${baseUrl}/api/restaurants/get`,
     apiGetResturantitems: `${baseUrl}/api/restaurant-items`,
     apiAssignItemsToResturants: `${baseUrl}/api/restaurant-items/assign`,

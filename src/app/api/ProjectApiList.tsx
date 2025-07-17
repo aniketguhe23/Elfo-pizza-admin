@@ -137,6 +137,11 @@ export default function ProjectApiList(): Record<string, string> {
     apiRemoveItemFromResturant: `${baseUrl}/api/restaurant-items`,
     // apiUpdateReesturants: `${baseUrl}/api/footer/social/update`,
     
+    // Orders
+    apiGetAllOrders: `${baseUrl}/api/reports/orders`,
+    apiGetOrdersById: `${baseUrl}/api/reports/orders-by-id`,
+    apiUpdateStatusOrdersById: `${baseUrl}/api/reports/update-orders-status`,
+    
   };
 
   return apiList;

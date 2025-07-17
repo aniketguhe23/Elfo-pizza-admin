@@ -64,4 +64,10 @@ export const navItems: NavItemConfig[] = [
     href: paths.dashboard.resturantMenuItems,
     icon: 'chart-pie',
   },
+  {
+    key: 'allOrders',
+    title: 'Orders',
+    href: paths.dashboard.allOrders,
+    icon: 'chart-pie',
+  },
 ];

@@ -23,6 +23,8 @@ export const paths = {
     sizes: '/dashboard/pizzacustomization/sizes',
     //resturants
     resturantMenuItems: '/dashboard/resturant-menu-items',
+    //orders
+    allOrders: '/dashboard/allOrders',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

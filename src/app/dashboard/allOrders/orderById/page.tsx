@@ -123,7 +123,7 @@ export default function OrderDetailPage() {
 
         <Grid item xs={12} md={4}>
           <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
-            <Button
+            {/* <Button
               variant="contained"
               sx={{
                 backgroundColor: '#3366ff',
@@ -143,8 +143,8 @@ export default function OrderDetailPage() {
               }}
             >
               Print Invoice
-            </Button>
-
+            </Button> */}
+{/* 
             <Button
               onClick={() => setOpen(true)}
               variant="outlined"
@@ -160,7 +160,7 @@ export default function OrderDetailPage() {
               }}
             >
               Update Status
-            </Button>
+            </Button> */}
           </Box>
         </Grid>
       </Grid>

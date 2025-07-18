@@ -4,7 +4,6 @@ export const paths = {
   dashboard: {
     overview: '/dashboard',
     account: '/dashboard/account',
-    customers: '/dashboard/customers',
     webpages: '/dashboard/webpages',
     settings: '/dashboard/settings',
     // menu
@@ -25,6 +24,9 @@ export const paths = {
     resturantMenuItems: '/dashboard/resturant-menu-items',
     //orders
     allOrders: '/dashboard/allOrders',
+    locationSetup: '/dashboard/locationSetup',
+    customers: '/dashboard/customers',
+    coupons: '/dashboard/coupons',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

@@ -35,6 +35,7 @@ function ItemVariantComponent(): React.ReactElement {
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const { apiGetAllOrders } = ProjectApiList();
+  
 
   const fetchAllOrders = useCallback(async (): Promise<void> => {
     try {

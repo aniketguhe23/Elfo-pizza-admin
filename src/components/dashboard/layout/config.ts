@@ -70,4 +70,22 @@ export const navItems: NavItemConfig[] = [
     href: paths.dashboard.allOrders,
     icon: 'chart-pie',
   },
+  {
+    key: 'locationSetup',
+    title: 'Location Setup',
+    href: paths.dashboard.locationSetup,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'customer',
+    title: 'Customers',
+    href: paths.dashboard.customers,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'coupons',
+    title: 'Coupons',
+    href: paths.dashboard.coupons,
+    icon: 'chart-pie',
+  },
 ];

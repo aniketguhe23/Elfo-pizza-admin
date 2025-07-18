@@ -77,7 +77,25 @@ export default function RestaurantMenuItems(): JSX.Element {
           Restaurant & Items
         </Typography>
 
-        {selectedRestaurant ? (
+        {!selectedRestaurant && 
+          <Button
+            variant="contained"
+            onClick={() => {
+              setOpenDialog(true);
+            }}
+            sx={{
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': { backgroundColor: '#222' },
+            }}
+          >
+            Add Restaurant
+          </Button>
+        }
+        {/* {selectedRestaurant ? (
           <Button
             variant="contained"
             onClick={() => {
@@ -111,7 +129,7 @@ export default function RestaurantMenuItems(): JSX.Element {
           >
             Add Restaurant
           </Button>
-        )}
+        )} */}
       </Box>
 
       <AddRestaurantDialog

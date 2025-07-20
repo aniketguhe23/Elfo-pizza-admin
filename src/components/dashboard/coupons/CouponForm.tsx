@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Button,
   DialogActions,
@@ -13,7 +14,6 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import ProjectApiList from '@/app/api/ProjectApiList';
 
 type CouponFormFields = {
   name: string;
@@ -22,7 +22,7 @@ type CouponFormFields = {
   discountAmount: string;
   discountPercent: string;
   minOrderAmount: string;
-  expiresAt: string; // Plain string, no ISO conversion
+  expiresAt: string;
   isActive: boolean;
   image: FileList | null;
 };
@@ -30,6 +30,7 @@ type CouponFormFields = {
 interface CouponFormProps {
   defaultValues?: Partial<CouponFormFields> & { id?: string };
   onSuccess: () => void;
+  existingImageUrl?: string;
 }
 
 const Label = ({ children }: { children: React.ReactNode }) => (
@@ -64,38 +65,40 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
 
   useEffect(() => {
     if (defaultValues) {
-      // Ensure expiresAt stays in string format (not ISO)
-      const data = {
+      reset({
         ...defaultValues,
-        expiresAt: defaultValues.expiresAt ?? '', // leave as-is
-      };
-      reset(data);
+        expiresAt: defaultValues.expiresAt,
+      });
     }
-  }, [defaultValues]);
-
-  const fields = [
-    { label: 'Name', field: 'name', required: true },
-    { label: 'Code', field: 'code', required: true },
-    { label: 'Description', field: 'description', multiline: true },
-    { label: 'Flat Discount (₹)', field: 'discountAmount', type: 'number' },
-    { label: 'Percent Discount (%)', field: 'discountPercent', type: 'number' },
-    { label: 'Minimum Order (₹)', field: 'minOrderAmount', type: 'number' },
-    { label: 'Expiry Date', field: 'expiresAt', type: 'date' }, // Keep as string
-  ] as const;
+  }, [defaultValues, reset]);
 
   const onSubmit = async (data: CouponFormFields) => {
     try {
       const formData = new FormData();
 
-      for (const key in data) {
-        const value = data[key as keyof CouponFormFields];
-
-        if (key === 'image' && value && (value as FileList)[0]) {
-          formData.append('image', (value as FileList)[0]);
-        } else {
-          formData.append(key, typeof value === 'boolean' ? String(value) : value || '');
-        }
+      // Append image separately
+      if (data.image && data.image instanceof FileList && data.image.length > 0) {
+        formData.append('image', data.image[0]);
       }
+
+      // Append all other fields individually
+      formData.append('name', data.name || '');
+      formData.append('code', data.code || '');
+      formData.append('description', data.description || '');
+
+      if (data.discountAmount) {
+        formData.append('discountAmount', data.discountAmount.toString());
+      }
+
+      if (data.discountPercent) {
+        formData.append('discountPercent', data.discountPercent.toString());
+      }
+
+      if (data.expiresAt) {
+        formData.append('expiresAt', data.expiresAt); // Keep it as plain text string (as you said)
+      }
+
+      formData.append('isActive', data.isActive ? 'true' : 'false');
 
       if (defaultValues?.id) {
         await axios.put(`${apiUpdateCoupons}/${defaultValues.id}`, formData);
@@ -113,28 +116,90 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
     <form onSubmit={handleSubmit(onSubmit)}>
       <DialogContent dividers>
         <Grid container spacing={1}>
-          {fields.map(({ label, field, type, multiline, required }:any) => (
-            <Grid item xs={12} container key={field} alignItems="center" spacing={1}>
-              <Grid item xs={3}>
-                <Label>{label}</Label>
-              </Grid>
-              <Grid item xs={9}>
-                <TextField
-                  size="small"
-                  type={type || 'text'}
-                  fullWidth
-                  multiline={multiline}
-                  rows={multiline ? 2 : 1}
-                  {...register(field, required ? { required: `${label} is required` } : {})}
-                  error={!!errors[field]}
-                  helperText={errors[field]?.message}
-                />
-              </Grid>
+          {/* Name */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Name</Label>
             </Grid>
-          ))}
+            <Grid item xs={9}>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('name', { required: 'Name is required' })}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            </Grid>
+          </Grid>
 
-          {/* Image upload */}
-          <Grid item xs={12} container alignItems="center" spacing={1}>
+          {/* Code */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Code</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField
+                fullWidth
+                size="small"
+                {...register('code', { required: 'Code is required' })}
+                error={!!errors.code}
+                helperText={errors.code?.message}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Description */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Description</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField fullWidth size="small" multiline rows={2} {...register('description')} />
+            </Grid>
+          </Grid>
+
+          {/* Flat Discount */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Flat Discount (₹)</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField fullWidth size="small" type="number" {...register('discountAmount')} />
+            </Grid>
+          </Grid>
+
+          {/* Percent Discount */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Percent Discount (%)</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField fullWidth size="small" type="number" {...register('discountPercent')} />
+            </Grid>
+          </Grid>
+
+          {/* Minimum Order */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Minimum Order (₹)</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField fullWidth size="small" type="number" {...register('minOrderAmount')} />
+            </Grid>
+          </Grid>
+
+          {/* Expiry Date */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Expiry Date</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <TextField fullWidth size="small" type="date" {...register('expiresAt')} />
+            </Grid>
+          </Grid>
+
+          {/* Image Upload */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
             <Grid item xs={3}>
               <Label>Upload Image</Label>
             </Grid>
@@ -143,19 +208,16 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
             </Grid>
           </Grid>
 
-          {/* Active status toggle */}
+          {/* Active Toggle */}
           {defaultValues && (
-            <Grid item xs={12} container alignItems="center" spacing={1}>
+            <Grid item xs={12} container spacing={1} alignItems="center">
               <Grid item xs={3}>
                 <Label>Is Active?</Label>
               </Grid>
               <Grid item xs={9}>
                 <FormControlLabel
                   control={
-                    <Switch
-                      checked={watch('isActive')}
-                      onChange={(e) => setValue('isActive', e.target.checked)}
-                    />
+                    <Switch checked={watch('isActive')} onChange={(e) => setValue('isActive', e.target.checked)} />
                   }
                   label=""
                 />
@@ -164,6 +226,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
           )}
         </Grid>
       </DialogContent>
+
       <DialogActions>
         <Button
           onClick={onSuccess}

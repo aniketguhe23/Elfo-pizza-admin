@@ -1,28 +1,29 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import ProjectApiList from '@/app/api/ProjectApiList';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
-  Typography,
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import axios from 'axios';
 import dayjs from 'dayjs';
+
 import CouponForm from '@/components/dashboard/coupons/CouponForm';
-import ProjectApiList from '@/app/api/ProjectApiList';
 
 interface Coupon {
   id: string;
@@ -39,10 +40,11 @@ interface Coupon {
 }
 
 const CouponsPage = () => {
-    const { apiGetCoupons,apiDeleteCoupons } = ProjectApiList();
+  const { apiGetCoupons, apiDeleteCoupons } = ProjectApiList();
 
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [selected, setSelected] = useState<Coupon | null>(null);
+  const [selected, setSelected] = useState<Coupon | undefined>(undefined);
+
   const [open, setOpen] = useState(false);
 
   const fetchCoupons = async () => {
@@ -65,7 +67,7 @@ const CouponsPage = () => {
 
   const handleClose = () => {
     setOpen(false);
-    setSelected(null);
+    setSelected(undefined);
   };
 
   const handleDelete = async (id: string) => {
@@ -103,9 +105,7 @@ const CouponsPage = () => {
             <TableRow key={c.id}>
               <TableCell>{c.name}</TableCell>
               <TableCell>{c.code}</TableCell>
-              <TableCell>
-                {c.discountAmount ? `₹${c.discountAmount}` : `${c.discountPercent}%`}
-              </TableCell>
+              <TableCell>{c.discountAmount ? `₹${c.discountAmount}` : `${c.discountPercent}%`}</TableCell>
               <TableCell>{c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}</TableCell>
               <TableCell>{dayjs(c.expiresAt).format('DD MMM YYYY')}</TableCell>
               <TableCell>{c.isActive ? '✅' : '❌'}</TableCell>
@@ -125,7 +125,18 @@ const CouponsPage = () => {
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>{selected ? 'Edit Coupon' : 'Create Coupon'}</DialogTitle>
         <CouponForm
-          defaultValues={selected}
+          defaultValues={{
+            id: selected?.id,
+            name: selected?.name,
+            code: selected?.code,
+            description: selected?.description,
+            discountAmount: selected?.discountAmount ?? undefined,
+            discountPercent: selected?.discountPercent ?? undefined,
+            minOrderAmount: selected?.minOrderAmount ?? undefined,
+            isActive: selected?.isActive,
+            expiresAt: selected?.expiresAt,
+          }}
+          existingImageUrl={selected?.image ?? undefined}
           onSuccess={() => {
             handleClose();
             fetchCoupons();

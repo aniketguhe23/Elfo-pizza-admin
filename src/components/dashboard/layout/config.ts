@@ -88,4 +88,14 @@ export const navItems: NavItemConfig[] = [
     href: paths.dashboard.coupons,
     icon: 'chart-pie',
   },
+
+  {
+    key: 'reports',
+    title: 'Reports',
+    icon: 'plugs-connected',
+    items: [
+      { key: 'transactionReports', title: 'Transaction Reports', href: paths.dashboard.transactionReports },
+     
+    ],
+  },
 ];

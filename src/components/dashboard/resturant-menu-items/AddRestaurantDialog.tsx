@@ -380,7 +380,7 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
             </Grid>
 
             {/* Opening Time */}
-            <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
               <Controller
                 name="opening_time"
                 control={control}
@@ -408,10 +408,10 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                   </>
                 )}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Closing Time */}
-            <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
               <Controller
                 name="closing_time"
                 control={control}
@@ -439,7 +439,7 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                   </>
                 )}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Password */}
             <Grid item xs={12} sm={6}>

@@ -27,6 +27,7 @@ export const paths = {
     locationSetup: '/dashboard/locationSetup',
     customers: '/dashboard/customers',
     coupons: '/dashboard/coupons',
+    transactionReports: '/dashboard/transaction-reports',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

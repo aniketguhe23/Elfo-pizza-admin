@@ -28,6 +28,9 @@ export const paths = {
     customers: '/dashboard/customers',
     coupons: '/dashboard/coupons',
     transactionReports: '/dashboard/transaction-reports',
+    orderReports: '/dashboard/order-reports',
+    campaignReports: '/dashboard/campaign-reports',
+    foodReports: '/dashboard/food-reports',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

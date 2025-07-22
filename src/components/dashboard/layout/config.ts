@@ -95,6 +95,9 @@ export const navItems: NavItemConfig[] = [
     icon: 'plugs-connected',
     items: [
       { key: 'transactionReports', title: 'Transaction Reports', href: paths.dashboard.transactionReports },
+      { key: 'orderReports', title: 'Order Reports', href: paths.dashboard.orderReports },
+      { key: 'campaignReports', title: 'Campaign Reports', href: paths.dashboard.campaignReports },
+      { key: 'foodReports', title: 'Food Reports', href: paths.dashboard.foodReports },
      
     ],
   },

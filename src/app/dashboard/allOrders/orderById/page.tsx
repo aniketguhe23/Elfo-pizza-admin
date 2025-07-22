@@ -144,7 +144,7 @@ export default function OrderDetailPage() {
             >
               Print Invoice
             </Button> */}
-{/* 
+            {/* 
             <Button
               onClick={() => setOpen(true)}
               variant="outlined"
@@ -173,17 +173,52 @@ export default function OrderDetailPage() {
           </Typography>
           <Stack spacing={2}>
             {order?.items?.map((item: any, idx: number) => (
-              <Paper key={idx} elevation={2} sx={{ p: 2 }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  {item.name}
-                </Typography>
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
-                  ₹{item.price} × {item.quantity}
-                </Typography>
-                {item.size && <Typography variant="body2">Size: {item.size}</Typography>}
-                {item.crust && <Typography variant="body2">Crust: {item.crust}</Typography>}
-                {item.toppings?.length > 0 && (
-                  <Typography variant="body2">Toppings: {item.toppings.join(', ')}</Typography>
+              <Paper key={idx} elevation={2} sx={{ p: 2, width: '100%' }}>
+                {/* Preset item */}
+                {item.type === 'preset' ? (
+                  <>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {item.name}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+                      ₹{item.price} × {item.quantity}
+                    </Typography>
+                    {item.size && <Typography variant="body2">Size: {item.size}</Typography>}
+                    {item.dough && <Typography variant="body2">Dough: {item.dough}</Typography>}
+                    {item.crust && <Typography variant="body2">Crust: {item.crust}</Typography>}
+                    {item.toppings?.length > 0 && (
+                      <Typography variant="body2">Toppings: {item.toppings.join(', ')}</Typography>
+                    )}
+                  </>
+                ) : (
+                  // Custom item
+                  <>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Custom Pizza
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+                      Quantity: {item.quantity}
+                    </Typography>
+
+                    {Object.entries(item.selections || {}).map(([category, data]: any) => (
+                      <Box key={category} mt={1}>
+                        <Typography variant="body2" fontWeight={600} sx={{ textTransform: 'capitalize' }}>
+                          {category.replace(/([A-Z])/g, ' $1')}
+                        </Typography>
+                        {Array.isArray(data) ? (
+                          data.map((subItem, i) => (
+                            <Typography variant="body2" key={i}>
+                              {subItem.name} - ₹{subItem.price}
+                            </Typography>
+                          ))
+                        ) : (
+                          <Typography variant="body2">
+                            {data.name} - ₹{data.price}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </>
                 )}
               </Paper>
             ))}

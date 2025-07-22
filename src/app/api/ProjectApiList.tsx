@@ -158,6 +158,10 @@ export default function ProjectApiList(): Record<string, string> {
     //Reports
      apiGetAllOrdersForResturant: `${baseUrl}/api/reports/orders/get-all-for-admin`,
      apiTransactionReportofResturant: `${baseUrl}/api/reports/admin-getTransactionReport`,
+     apiOrderReportofResturant: `${baseUrl}/api/restaurants/admin-getOrderStatusCounts`,
+     apiGetAllOrdersbyResturant: `${baseUrl}/api/reports/orders/admin-restaurantOrders`,
+     apiGetFoodReport: `${baseUrl}/api/reports/getFoodReport`,
+     
 
   };
 

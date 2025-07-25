@@ -85,7 +85,6 @@ export default function TransactionReportsPage() {
     order.Order_no?.toLowerCase().includes(searchOrderNo.toLowerCase())
   );
 
-
   return (
     <Box sx={{ mt: 2 }}>
       {/* Header */}
@@ -200,10 +199,10 @@ export default function TransactionReportsPage() {
               return (
                 <Card key={key} sx={{ flex: 1, bgcolor: bg, borderRadius: 2 }}>
                   <CardContent>
-                    <Typography variant="subtitle1" align="center"  sx={{ pb: 1 }}>
+                    <Typography variant="subtitle1" align="center" sx={{ pb: 1 }}>
                       {label}
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} align="center" sx={{ color: 'primary.main',pb: 1  }}>
+                    <Typography variant="h6" fontWeight={700} align="center" sx={{ color: 'primary.main', pb: 1 }}>
                       ₹{transactionReport?.[key]?.totalAmount || '0.00'}
                     </Typography>
                     <Typography variant="body2" align="center">

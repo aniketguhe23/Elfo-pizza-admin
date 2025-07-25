@@ -163,6 +163,15 @@ export default function ProjectApiList(): Record<string, string> {
      apiGetFoodReport: `${baseUrl}/api/reports/getFoodReport`,
      
 
+     //Dashboard
+    apigetTotalSalesChart: `${baseUrl}/api/dashboard/getTotalSalesChart`,
+    apigetTopSellingItems: `${baseUrl}/api/dashboard/getTopSellingItems`,
+    apigetAverageOrderValue: `${baseUrl}/api/dashboard/getAverageOrderValue`,
+    apigetTopRestaurantsByOrders: `${baseUrl}/api/dashboard/getTopRestaurantsByOrders`,
+    apigetTotalCustomers: `${baseUrl}/api/dashboard/getTotalCustomers`,
+    apigetSalesTypePieChart: `${baseUrl}/api/dashboard/getSalesTypePieChart`,
+
+
   };
 
   return apiList;

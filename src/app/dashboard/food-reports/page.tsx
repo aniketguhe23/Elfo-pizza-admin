@@ -89,6 +89,8 @@ export default function FoodReportPage() {
     fetchFoodReport();
   }, [filters]);
 
+  console.log(restaurants)
+
   return (
     <Box sx={{ pt: 2, maxWidth: 1200, mx: 'auto' }}>
       {/* Page Header */}

@@ -132,6 +132,8 @@ function SubCategoryComponent(): JSX.Element {
     setFilteredSubCategories(filtered);
   };
 
+  const selectedCategoryName = categories.find((cat) => cat.id === editingSubCategory?.category_id)?.name;
+
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
@@ -276,6 +278,17 @@ function SubCategoryComponent(): JSX.Element {
                 ))}
               </TextField>
             </Box>
+
+            {editingSubCategory && (
+              <Box sx={{ display: 'flex', alignItems: 'end', mt: -2, ml: 16, mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: 'gray', fontSize: '0.8rem', mr: 1 }}>
+                  Selected Category:
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {categories.find((cat) => cat.id === editingSubCategory.category_id)?.name || 'Unknown'}
+                </Typography>
+              </Box>
+            )}
           </Box>
         </DialogContent>
 

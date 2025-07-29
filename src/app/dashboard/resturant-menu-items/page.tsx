@@ -11,6 +11,7 @@ import AddItemDialog from '@/components/dashboard/resturant-menu-items/AddItemDi
 import AddRestaurantDialog from '@/components/dashboard/resturant-menu-items/AddRestaurantDialog';
 import ItemList from '@/components/dashboard/resturant-menu-items/ItemList';
 import RestaurantList from '@/components/dashboard/resturant-menu-items/RestaurantList';
+import EditRestaurantDialog from '@/components/dashboard/resturant-menu-items/EditRestaurantDialog';
 
 export default function RestaurantMenuItems(): JSX.Element {
   const { apiGetResturants, apiGetResturantitems } = ProjectApiList();
@@ -21,6 +22,7 @@ export default function RestaurantMenuItems(): JSX.Element {
   const [openItemDialog, setOpenItemDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [assignedItemIds, setAssignedItemIds] = useState<number[]>([]);
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
 
   const fetchRestaurants = useCallback(async (): Promise<void> => {
     try {
@@ -77,7 +79,7 @@ export default function RestaurantMenuItems(): JSX.Element {
           Restaurant & Items
         </Typography>
 
-        {!selectedRestaurant && 
+        {!selectedRestaurant && (
           <Button
             variant="contained"
             onClick={() => {
@@ -94,7 +96,7 @@ export default function RestaurantMenuItems(): JSX.Element {
           >
             Add Restaurant
           </Button>
-        }
+        )}
         {/* {selectedRestaurant ? (
           <Button
             variant="contained"
@@ -139,6 +141,14 @@ export default function RestaurantMenuItems(): JSX.Element {
         }}
         onAdd={handleAddRestaurant}
       />
+      {editingRestaurant && (
+        <EditRestaurantDialog
+          open={!!editingRestaurant}
+          restaurantData={editingRestaurant}
+          onClose={() => setEditingRestaurant(null)}
+          onUpdate={fetchRestaurants}
+        />
+      )}
 
       {selectedRestaurant && (
         <AddItemDialog
@@ -194,6 +204,7 @@ export default function RestaurantMenuItems(): JSX.Element {
           onSelect={(r): void => {
             setSelectedRestaurant(r);
           }}
+          onEdit={(r) => setEditingRestaurant(r)}
         />
       )}
     </Container>

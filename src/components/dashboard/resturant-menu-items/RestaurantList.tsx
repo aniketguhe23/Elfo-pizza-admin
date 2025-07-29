@@ -20,17 +20,18 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 import type { Restaurant } from '@/types/restaurant-types';
-import { toast } from 'react-toastify';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
   onSelect: (restaurant: Restaurant) => void;
   onDeleteSuccess?: () => void;
+  onEdit: (restaurant: Restaurant) => void; // NEW
 }
 
-function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantListProps): JSX.Element {
+function RestaurantList({ restaurants, onSelect, onDeleteSuccess, onEdit }: RestaurantListProps): JSX.Element {
   const { apiRemoveRestaurant } = ProjectApiList();
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -63,9 +64,6 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
       closeConfirmDialog();
     }
   };
-
-
-
 
   return (
     <>
@@ -114,6 +112,26 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
                       )}
                     </IconButton>
                   </span>
+                </Tooltip>
+                <Tooltip title="Edit Restaurant">
+                  <IconButton
+                    onClick={() => {
+                      onEdit(rest);
+                    }}
+                    color="primary"
+                    sx={{ ml: 1 }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      fill="currentColor"
+                      className="bi bi-pencil"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M12.146.146a.5.5 0 0 1 .708 0l2.707 2.707a.5.5 0 0 1 0 .708l-9.146 9.146a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l9.146-9.146zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zM10.5 3.207 2 11.707V13h1.293l8.5-8.5-1.293-1.293z" />
+                    </svg>
+                  </IconButton>
                 </Tooltip>
               </Box>
 
@@ -174,20 +192,20 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
               closeConfirmDialog();
             }}
             sx={{
-            width: 90,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            color: '#333',
-            borderColor: '#ccc',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#f2f2f2',
-              color: '#000',
-              borderColor: '#bbb',
-            },
-          }}
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              color: '#333',
+              borderColor: '#ccc',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+                color: '#000',
+                borderColor: '#bbb',
+              },
+            }}
           >
             Cancel
           </Button>
@@ -198,19 +216,19 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess }: RestaurantLi
             color="error"
             variant="contained"
             disabled={deletingId === selectedRestaurant?.id}
-             sx={{
-            width: 90,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            backgroundColor: '#000',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}
+            sx={{
+              width: 90,
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
           >
             {deletingId === selectedRestaurant?.id ? 'Removing...' : 'Remove'}
           </Button>

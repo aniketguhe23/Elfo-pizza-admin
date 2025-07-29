@@ -49,6 +49,21 @@ interface AddRestaurantDialogProps {
   onAdd: (restaurant: unknown) => void;
 }
 
+const fields: {
+  name: keyof RestaurantFormData;
+  label: string;
+  type?: string;
+}[] = [
+  { name: 'name', label: 'Name' },
+  { name: 'address', label: 'Address' },
+  { name: 'city', label: 'City' },
+  { name: 'state', label: 'State' },
+  { name: 'pincode', label: 'Pincode', type: 'text' },
+  { name: 'contact_email', label: 'Contact Email' },
+  { name: 'contact_phone', label: 'Contact Phone' },
+];
+
+
 const schema = yup.object().shape({
   name: yup.string().max(150).required(),
   address: yup.string().required(),
@@ -154,390 +169,221 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(3px)',
+        },
+      }}
+    >
       <DialogTitle fontWeight={600}>Add Restaurant</DialogTitle>
       <DialogContent dividers>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
-            {/* Name */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Name
+            {/* Text Inputs */}
+          {fields.map(({ name, label, type }) => (
+              <Grid item xs={12} key={name}>
+                <Grid container alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography variant="body2" fontWeight={600} color="#444" textTransform="uppercase" sx={{ pr: 2 }}>
+                      {label}
                     </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter Name"
-                      error={!!errors.name}
-                      helperText={errors.name?.message}
-                      InputProps={{ sx: textFieldStyle }}
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Controller
+                      name={name}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          placeholder={`Enter ${label}`}
+                          error={!!errors[name as keyof typeof errors]}
+                          helperText={errors[name as keyof typeof errors]?.message}
+                          type={type || 'text'}
+                          inputProps={
+                            name === 'pincode'
+                              ? {
+                                  inputMode: 'numeric',
+                                  pattern: '[0-9]*',
+                                  maxLength: 6,
+                                }
+                              : undefined
+                          }
+                          onChange={(e) => {
+                            const value = name === 'pincode' ? e.target.value.replace(/\D/g, '') : e.target.value;
+                            field.onChange(value);
+                          }}
+                          InputProps={{ sx: textFieldStyle }}
+                        />
+                      )}
                     />
-                  </>
-                )}
-              />
-            </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            ))}
 
-            {/* Address */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="address"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Address
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter Address"
-                      error={!!errors.address}
-                      helperText={errors.address?.message}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* City */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="city"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      City
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter City"
-                      error={!!errors.city}
-                      helperText={errors.city?.message}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* State */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="state"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      State
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter State"
-                      error={!!errors.state}
-                      helperText={errors.state?.message}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* Pincode */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="pincode"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Pincode
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter Pincode"
-                      error={!!errors.pincode}
-                      helperText={errors.pincode?.message}
-                      type="text"
-                      inputProps={{
-                        inputMode: 'numeric', // shows numeric keyboard on mobile
-                        pattern: '[0-9]*', // restricts to digits
-                        maxLength: 6, // optional: restrict length if needed
-                      }}
-                      onChange={(e) => {
-                        const numericValue = e.target.value.replace(/\D/g, ''); // remove non-digits
-                        field.onChange(numericValue);
-                      }}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* Contact Email */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="contact_email"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Contact Email
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter Contact Email"
-                      error={!!errors.contact_email}
-                      helperText={errors.contact_email?.message}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* Contact Phone */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="contact_phone"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Contact Phone
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      placeholder="Enter Contact Phone"
-                      error={!!errors.contact_phone}
-                      helperText={errors.contact_phone?.message}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* Opening Time */}
-            {/* <Grid item xs={12} sm={6}>
-              <Controller
-                name="opening_time"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Opening Time
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      type="time"
-                      error={!!errors.opening_time}
-                      helperText={errors.opening_time?.message}
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid> */}
-
-            {/* Closing Time */}
-            {/* <Grid item xs={12} sm={6}>
-              <Controller
-                name="closing_time"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Closing Time
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      type="time"
-                      error={!!errors.closing_time}
-                      helperText={errors.closing_time?.message}
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{ sx: textFieldStyle }}
-                    />
-                  </>
-                )}
-              />
-            </Grid> */}
-
-            {/* Password */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="password"
-                control={control}
-                render={({ field }) => (
-                  <>
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color="#444"
-                      textTransform="uppercase"
-                      sx={{ mb: 0.5 }}
-                    >
-                      Password
-                    </Typography>
-                    <TextField
-                      {...field}
-                      fullWidth
-                      size="small"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter Password"
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      InputProps={{
-                        sx: textFieldStyle,
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={handleClickShowPassword}
-                              onMouseDown={handleMouseDownPassword}
-                              edge="end"
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </>
-                )}
-              />
-            </Grid>
-
-            {/* is_active */}
+            {/* Password Field */}
             <Grid item xs={12}>
-              <Controller
-                name="is_active"
-                control={control}
-                render={({ field }) => (
-                  <FormControlLabel control={<Checkbox {...field} checked={field.value} />} label="Active" />
-                )}
-              />
+              <Grid container alignItems="center">
+                <Grid item xs={4}>
+                  <Typography variant="body2" fontWeight={600} color="#444" textTransform="uppercase" sx={{ pr: 2 }}>
+                    Password
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Controller
+                    name="password"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        size="small"
+                        placeholder="Enter Password"
+                        type={showPassword ? 'text' : 'password'}
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                        InputProps={{
+                          sx: textFieldStyle,
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                                edge="end"
+                              >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Is Active Checkbox */}
+            <Grid item xs={12}>
+              <Grid container alignItems="center">
+                <Grid item xs={4}>
+                  <Typography variant="body2" fontWeight={600} color="#444" textTransform="uppercase" sx={{ pr: 2 }}>
+                    Status
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Controller
+                    name="is_active"
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Checkbox {...field} checked={field.value} />} label="Active" />
+                    )}
+                  />
+                </Grid>
+              </Grid>
             </Grid>
 
             {/* Logo Upload */}
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box
-                  sx={{ width: 160, fontWeight: 600, fontSize: '0.8rem', textTransform: 'uppercase', color: '#444' }}
-                >
-                  Logo
-                </Box>
-                <input
-                  type="file"
-                  name="logo"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && setLogo(e.target.files[0])}
-                />
-              </Box>
-            </Grid>
+            {/* <Grid item xs={12}>
+      <Grid container alignItems="center">
+        <Grid item xs={4}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            color="#444"
+            textTransform="uppercase"
+            sx={{ pr: 2 }}
+          >
+            Logo
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <input
+            type="file"
+            name="logo"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && setLogo(e.target.files[0])}
+          />
+        </Grid>
+      </Grid>
+    </Grid> */}
 
             {/* Banner Upload */}
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box
-                  sx={{ width: 160, fontWeight: 600, fontSize: '0.8rem', textTransform: 'uppercase', color: '#444' }}
-                >
-                  Banner
-                </Box>
-                <input
-                  type="file"
-                  name="banner"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && setBanner(e.target.files[0])}
-                />
-              </Box>
-            </Grid>
+            {/* <Grid item xs={12}>
+      <Grid container alignItems="center">
+        <Grid item xs={4}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            color="#444"
+            textTransform="uppercase"
+            sx={{ pr: 2 }}
+          >
+            Banner
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <input
+            type="file"
+            name="banner"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && setBanner(e.target.files[0])}
+          />
+        </Grid>
+      </Grid>
+    </Grid> */}
           </Grid>
         </form>
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="outlined" disabled={loading}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          disabled={loading}
+          sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#fff',
+            color: '#000',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            border: '1px solid #cccccc',
+            '&:hover': {
+              backgroundColor: '#f2f2f2',
+            },
+          }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={loading}>
+        <Button
+          onClick={handleSubmit(onSubmit)}
+          variant="contained"
+          disabled={loading}
+          sx={{
+            minWidth: 70,
+            fontSize: '0.75rem',
+            px: 2,
+            backgroundColor: '#000',
+            color: '#fff',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: '#222',
+            },
+          }}
+        >
           {loading ? 'Adding...' : 'Add'}
         </Button>
       </DialogActions>

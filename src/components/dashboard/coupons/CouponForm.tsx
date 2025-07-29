@@ -93,6 +93,9 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       if (data.discountPercent) {
         formData.append('discountPercent', data.discountPercent.toString());
       }
+      if (data.minOrderAmount) {
+        formData.append('minOrderAmount', data.minOrderAmount.toString());
+      }
 
       if (data.expiresAt) {
         formData.append('expiresAt', data.expiresAt); // Keep it as plain text string (as you said)
@@ -265,7 +268,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
             },
           }}
         >
-          {defaultValues ? 'Update' : 'Create'}
+          {defaultValues ? 'Save' : 'Create'}
         </Button>
       </DialogActions>
     </form>

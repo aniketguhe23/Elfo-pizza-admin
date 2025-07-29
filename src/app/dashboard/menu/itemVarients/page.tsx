@@ -28,6 +28,7 @@ import { useForm } from 'react-hook-form';
 interface Item {
   id: number;
   name: string;
+  itemName: string;
 }
 
 interface ItemVariant {
@@ -59,6 +60,7 @@ function ItemVariantComponent(): JSX.Element {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormData>();
 
@@ -92,7 +94,7 @@ function ItemVariantComponent(): JSX.Element {
       item_id: variant?.item_id ?? undefined,
       size: variant?.size ?? '',
       crustType: variant?.crustType ?? '',
-      price: variant?.price ?? undefined,
+      price: variant?.price ?? 0,
     });
     setOpen(true);
   };
@@ -104,9 +106,16 @@ function ItemVariantComponent(): JSX.Element {
   };
 
   const onSubmit = async (data: FormData): Promise<void> => {
+    console.log(data);
+    let payload = {
+      item_id: data?.item_id,
+      size: data?.size,
+      crust_type: data?.crustType,
+      price: data?.price,
+    };
     try {
       if (editingVariant) {
-        await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, data);
+        await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, payload);
       } else {
         await axios.post(apiCreateItemVariant, data);
       }
@@ -123,6 +132,15 @@ function ItemVariantComponent(): JSX.Element {
       v.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.crustType.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    if (editingVariant?.size) {
+      setValue('size', editingVariant.size);
+    }
+  }, [editingVariant, setValue]);
+
+  // console.log(items);
+  // console.log(editingVariant);
 
   return (
     <Box mt={5}>
@@ -270,6 +288,17 @@ function ItemVariantComponent(): JSX.Element {
               </TextField>
             </Box>
 
+            {editingVariant && (
+              <Box mb={2} sx={{ ml: 16 }}>
+                <Typography variant="body2" component="span" color="textSecondary">
+                  Selected Item:{' '}
+                </Typography>
+                <Typography component="span" fontWeight={600}>
+                  {editingVariant.itemName}
+                </Typography>
+              </Box>
+            )}
+
             {/* Size */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Size</Box>
@@ -288,6 +317,18 @@ function ItemVariantComponent(): JSX.Element {
                 ))}
               </TextField>
             </Box>
+
+             {editingVariant && (
+              <Box mb={2} sx={{ ml: 16 }}>
+                <Typography variant="body2" component="span" color="textSecondary">
+                  Selected Size:{' '}
+                </Typography>
+                <Typography component="span" fontWeight={600}>
+                  {editingVariant.size}
+                </Typography>
+              </Box>
+            )}
+
 
             {/* Crust Type */}
             <Box display="flex" alignItems="center" gap={2}>

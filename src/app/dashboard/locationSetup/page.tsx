@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
-import { Visibility } from '@mui/icons-material';
-import SearchIcon from '@mui/icons-material/Search';
 import {
   Box,
   Button,
@@ -12,9 +10,8 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   Grid,
-  IconButton,
-  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
@@ -25,6 +22,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  Checkbox,
 } from '@mui/material';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -43,6 +41,7 @@ export default function LocationManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [typeToAdd, setTypeToAdd] = useState('state');
   const [newName, setNewName] = useState('');
+  const [newActive, setNewActive] = useState(true);
 
   const [editMode, setEditMode] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -78,42 +77,45 @@ export default function LocationManager() {
         return;
       }
 
+      const payload = {
+        name: newName,
+        active: newActive,
+      };
+
       if (editMode && editingItem) {
-        // Edit Mode
         const id = editingItem.id;
 
         if (typeToAdd === 'state') {
-          await axios.put(`${apiLocation}/updateState/${id}`, { name: newName });
+          await axios.put(`${apiLocation}/updateState/${id}`, payload);
           fetchStates();
         } else if (typeToAdd === 'city') {
           await axios.put(`${apiLocation}/updateCity/${id}`, {
-            name: newName,
+            ...payload,
             stateId: selectedState,
           });
           fetchCities(selectedState);
         } else if (typeToAdd === 'locality') {
           await axios.put(`${apiLocation}/updatelocality/${id}`, {
-            name: newName,
-            stateId: selectedCity,
+            ...payload,
+            cityId: selectedCity,
           });
           fetchLocalities(selectedCity);
         }
 
         toast.success('Updated successfully');
       } else {
-        // Add Mode
         if (typeToAdd === 'state') {
-          await axios.post(`${apiLocation}/createStates`, { name: newName });
+          await axios.post(`${apiLocation}/createStates`, payload);
           fetchStates();
         } else if (typeToAdd === 'city') {
           await axios.post(`${apiLocation}/createCities`, {
-            name: newName,
+            ...payload,
             stateId: selectedState,
           });
           fetchCities(selectedState);
         } else if (typeToAdd === 'locality') {
           await axios.post(`${apiLocation}/createlocality`, {
-            name: newName,
+            ...payload,
             stateId: selectedCity,
           });
           fetchLocalities(selectedCity);
@@ -122,9 +124,9 @@ export default function LocationManager() {
         toast.success('Created successfully');
       }
 
-      // Reset
       setDialogOpen(false);
       setNewName('');
+      setNewActive(true);
       setEditMode(false);
       setEditingItem(null);
     } catch (err) {
@@ -163,6 +165,15 @@ export default function LocationManager() {
     setDeleteDialogOpen(true);
   };
 
+  const openDialogFor = (type: string, item?: any) => {
+    setDialogOpen(true);
+    setTypeToAdd(type);
+    setEditMode(!!item);
+    setEditingItem(item || null);
+    setNewName(item?.name || '');
+    setNewActive(item?.active ?? true);
+  };
+
   return (
     <>
       <Box p={4}>
@@ -170,36 +181,31 @@ export default function LocationManager() {
           Location Manager
         </Typography>
 
-        {/* Top Controls */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Box display="flex" gap={2}>
-            <FormControl size="small">
-              <Select
-                value={selectedType}
-                onChange={async (e) => {
-                  const type = e.target.value;
-                  setSelectedType(type);
+          <FormControl size="small">
+            <Select
+              value={selectedType}
+              onChange={async (e) => {
+                const type = e.target.value;
+                setSelectedType(type);
 
-                  // Fetch required data on change
-                  if (type === 'city' && selectedState) {
-                    await fetchCities(selectedState);
-                  } else if (type === 'locality' && selectedCity) {
-                    await fetchLocalities(selectedCity);
-                  }
-                }}
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="state">State</MenuItem>
-                <MenuItem value="city">City</MenuItem>
-                <MenuItem value="locality">Locality</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+                if (type === 'city' && selectedState) {
+                  await fetchCities(selectedState);
+                } else if (type === 'locality' && selectedCity) {
+                  await fetchLocalities(selectedCity);
+                }
+              }}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="state">State</MenuItem>
+              <MenuItem value="city">City</MenuItem>
+              <MenuItem value="locality">Locality</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
 
-        {/* State / City Select */}
         <Grid container spacing={2} mb={2}>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
               <InputLabel>State</InputLabel>
               <Select
@@ -210,10 +216,6 @@ export default function LocationManager() {
                   setSelectedState(stateId);
                   setSelectedCity('');
                   await fetchCities(stateId);
-                  if (selectedType === 'city') {
-                    setCities([]);
-                    await fetchCities(stateId);
-                  }
                 }}
               >
                 {states.map((s: any) => (
@@ -225,7 +227,7 @@ export default function LocationManager() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth disabled={!selectedState}>
               <InputLabel>City</InputLabel>
               <Select
@@ -248,39 +250,28 @@ export default function LocationManager() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <Button
               fullWidth
               variant="contained"
-              onClick={() => {
-                setDialogOpen(true);
-                setTypeToAdd('locality');
-              }}
+              onClick={() => openDialogFor('locality')}
               disabled={!selectedCity}
-              sx={{
-                backgroundColor: '#000',
-                color: '#fff',
-                textTransform: 'none',
-                fontWeight: 500,
-                borderRadius: 1,
-                '&:hover': {
-                  backgroundColor: '#222',
-                },
-              }}
+              sx={{ backgroundColor: '#000', color: '#fff' }}
             >
               + Add Locality
             </Button>
           </Grid>
         </Grid>
 
-        {/* Render Table Based on selectedType */}
+        {/* Render Tables */}
         {selectedType === 'state' && (
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell>S. No</TableCell>
-                <TableCell>State Name</TableCell>
-                {/* <TableCell align="right">Action</TableCell> */}
+              <TableRow>
+                <TableCell>#</TableCell>
+                <TableCell>State</TableCell>
+                <TableCell>Active</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -288,18 +279,9 @@ export default function LocationManager() {
                 <TableRow key={s.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{s.name}</TableCell>
+                  <TableCell>{s.active ? 'Yes' : 'No'}</TableCell>
                   <TableCell align="right">
-                    <Button
-                      onClick={() => {
-                        setEditMode(true);
-                        setEditingItem(s);
-                        setTypeToAdd('state');
-                        setNewName(s.name);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    <Button onClick={() => openDialogFor('state', s)}>Edit</Button>
                     <Button color="error" onClick={() => confirmDelete(s, 'state')}>
                       Delete
                     </Button>
@@ -313,10 +295,11 @@ export default function LocationManager() {
         {selectedType === 'city' && (
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell>S. No</TableCell>
-                <TableCell>City Name</TableCell>
-                {/* <TableCell align="right">Action</TableCell> */}
+              <TableRow>
+                <TableCell>#</TableCell>
+                <TableCell>City</TableCell>
+                <TableCell>Active</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -324,11 +307,13 @@ export default function LocationManager() {
                 <TableRow key={c.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{c.name}</TableCell>
-                  {/* <TableCell align="right">
-                  <IconButton>
-                    <Visibility />
-                  </IconButton>
-                </TableCell> */}
+                  <TableCell>{c.active ? 'Yes' : 'No'}</TableCell>
+                  <TableCell align="right">
+                    <Button onClick={() => openDialogFor('city', c)}>Edit</Button>
+                    <Button color="error" onClick={() => confirmDelete(c, 'city')}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -338,10 +323,11 @@ export default function LocationManager() {
         {selectedType === 'locality' && (
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell>S. No</TableCell>
-                <TableCell>Locality Name</TableCell>
-                {/* <TableCell align="right">Action</TableCell> */}
+              <TableRow>
+                <TableCell>#</TableCell>
+                <TableCell>Locality</TableCell>
+                <TableCell>Active</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -349,11 +335,13 @@ export default function LocationManager() {
                 <TableRow key={l.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{l.name}</TableCell>
-                  {/* <TableCell align="right">
-                  <IconButton>
-                    <Visibility />
-                  </IconButton>
-                </TableCell> */}
+                  <TableCell>{l.active ? 'Yes' : 'No'}</TableCell>
+                  <TableCell align="right">
+                    <Button onClick={() => openDialogFor('locality', l)}>Edit</Button>
+                    <Button color="error" onClick={() => confirmDelete(l, 'locality')}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -362,30 +350,17 @@ export default function LocationManager() {
 
         {/* Add Buttons */}
         <Box mt={3} display="flex" gap={2}>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              setDialogOpen(true);
-              setTypeToAdd('state');
-            }}
-          >
+          <Button variant="outlined" onClick={() => openDialogFor('state')}>
             + Add State
           </Button>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              setDialogOpen(true);
-              setTypeToAdd('city');
-            }}
-            disabled={!selectedState}
-          >
+          <Button variant="outlined" onClick={() => openDialogFor('city')} disabled={!selectedState}>
             + Add City
           </Button>
         </Box>
 
         {/* Dialog */}
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-          <DialogTitle>Add {typeToAdd}</DialogTitle>
+          <DialogTitle>{editMode ? 'Edit' : 'Add'} {typeToAdd}</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
@@ -394,6 +369,10 @@ export default function LocationManager() {
               label={`Enter ${typeToAdd} name`}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
+            />
+            <FormControlLabel
+              control={<Checkbox checked={newActive} onChange={(e) => setNewActive(e.target.checked)} />}
+              label="Active"
             />
           </DialogContent>
           <DialogActions>

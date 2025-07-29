@@ -35,7 +35,7 @@ interface Item {
   subcategory_id: number;
   is_vegetarian: boolean;
   is_available: boolean;
-  image_url?: string;
+  imageUrl?: string;
   subcategoryName?: string;
 }
 
@@ -160,6 +160,8 @@ function ItemsComponent(): JSX.Element {
   const isVegetarian = watch('is_vegetarian');
   const isAvailable = watch('is_available');
 
+  // console.log(editingItem)
+
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
@@ -280,16 +282,32 @@ function ItemsComponent(): JSX.Element {
               </TextField>
             </Box>
 
-            {imageFile instanceof File && (
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box sx={{ width: 140, fontWeight: 500 }}>Image Preview</Box>
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Preview"
-                  style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
-                />
+            {editingItem && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: -2, ml: 16, mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: 'gray', fontSize: '0.8rem', mr: 1 }}>
+                  Selected Subcategory:
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {editingItem.subcategoryName || 'Unnamed'}
+                </Typography>
               </Box>
             )}
+
+           {(imageFile instanceof File || editingItem?.imageUrl) && (
+  <Box display="flex" alignItems="center" gap={2}>
+    <Box sx={{ width: 140, fontWeight: 500 }}>Image Preview</Box>
+    <img
+      src={
+        imageFile instanceof File
+          ? URL.createObjectURL(imageFile)
+          : editingItem?.imageUrl ?? ''
+      }
+      alt="Preview"
+      style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
+    />
+  </Box>
+)}
+
 
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>

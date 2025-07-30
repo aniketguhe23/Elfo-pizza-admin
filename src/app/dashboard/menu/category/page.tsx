@@ -44,8 +44,10 @@ function CategoryComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [search, setSearch] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  const { apiGetCategories, apiCreateCategories, apiUpdateCategories } = ProjectApiList();
+  const { apiGetCategories, apiCreateCategories, apiUpdateCategories,apiDeleteCategories } = ProjectApiList();
 
   const {
     register,
@@ -94,6 +96,30 @@ function CategoryComponent(): JSX.Element {
     } catch (error) {
       toast.error('Error saving category');
     }
+  };
+
+  const handleDeleteClick = (category: Category): void => {
+    setCategoryToDelete(category);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (!categoryToDelete) return;
+
+    try {
+      await axios.delete(`${apiDeleteCategories}/${categoryToDelete.id}`);
+      toast.success('Category deleted');
+      setDeleteConfirmOpen(false);
+      setCategoryToDelete(null);
+      void fetchCategories();
+    } catch (err) {
+      toast.error('Failed to delete category');
+    }
+  };
+
+  const handleDeleteCancel = (): void => {
+    setDeleteConfirmOpen(false);
+    setCategoryToDelete(null);
   };
 
   const filteredCategories = categories.filter((cat) => cat.name.toLowerCase().includes(search.toLowerCase()));
@@ -172,7 +198,7 @@ function CategoryComponent(): JSX.Element {
                   >
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={() => handleDeleteClick(category)}>
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>
@@ -259,6 +285,63 @@ function CategoryComponent(): JSX.Element {
             }}
           >
             {editingCategory ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete modal */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={handleDeleteCancel}
+        maxWidth="xs"
+        fullWidth
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(2px)',
+          },
+        }}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent dividers>
+          <Typography>
+            Are you sure you want to delete <strong>{categoryToDelete?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'flex-end', px: 3 }}>
+          <Button
+            onClick={handleDeleteCancel}
+            variant="outlined"
+            sx={{
+              textTransform: 'none',
+              borderRadius: 1,
+              fontWeight: 500,
+              color: '#333',
+              borderColor: '#ccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+                color: '#000',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            color="error"
+            sx={{
+              textTransform: 'none',
+              borderRadius: 1,
+              fontWeight: 500,
+              backgroundColor: '#d32f2f',
+              color: '#fff',
+              '&:hover': {
+                backgroundColor: '#b71c1c',
+              },
+            }}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

@@ -29,14 +29,11 @@ interface CategoryItem {
 interface LatestOrdersProps {
   data?: CategoryItem[];
   onClick?: (item: CategoryItem) => void;
+  onDelete?: (item: CategoryItem) => void;
   sx?: SxProps;
 }
 
-export function ListingTable({
-  data = [],
-  onClick,
-  sx,
-}: LatestOrdersProps): React.JSX.Element {
+export function ListingTable({ data = [], onClick, onDelete, sx }: LatestOrdersProps): React.JSX.Element {
   return (
     <Card sx={sx}>
       <Divider />
@@ -60,21 +57,13 @@ export function ListingTable({
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.description || '-'}</TableCell>
                 <TableCell>{item.subcategoryName || '-'}</TableCell>
-                <TableCell>
-                  {item.isVegetarian === 1 || item.is_vegetarian === true
-                    ? 'Yes'
-                    : 'No'}
-                </TableCell>
-                <TableCell>
-                  {item.isAvailable === 1 || item.is_available === true
-                    ? 'Yes'
-                    : 'No'}
-                </TableCell>
+                <TableCell>{item.isVegetarian === 1 || item.is_vegetarian === true ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{item.isAvailable === 1 || item.is_available === true ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => onClick?.(item)}>
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={() => onDelete?.(item)}>
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>

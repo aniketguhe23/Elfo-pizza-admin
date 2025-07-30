@@ -56,8 +56,10 @@ function ItemsComponent(): JSX.Element {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [search, setSearch] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<Item | null>(null);
 
-  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories } = ProjectApiList();
+  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories,apiDeleteItem } = ProjectApiList();
 
   const {
     register,
@@ -157,6 +159,30 @@ function ItemsComponent(): JSX.Element {
     }
   };
 
+  const handleDeleteClick = (item: Item): void => {
+    setDeletingItem(item);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteCancel = (): void => {
+    setDeleteConfirmOpen(false);
+    setDeletingItem(null);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (!deletingItem) return;
+
+    try {
+      await axios.delete(`${apiDeleteItem}/${deletingItem.id}`);
+      setDeleteConfirmOpen(false);
+      setDeletingItem(null);
+      await fetchItems();
+    } catch (err) {
+      // Optionally use toast or console
+      console.error('Failed to delete item:', err);
+    }
+  };
+
   const isVegetarian = watch('is_vegetarian');
   const isAvailable = watch('is_available');
 
@@ -210,9 +236,8 @@ function ItemsComponent(): JSX.Element {
 
       <ListingTable
         data={filteredItems}
-        onClick={(item) => {
-          handleDialogOpen(item as Item);
-        }}
+        onClick={(item) => handleDialogOpen(item as Item)}
+        onDelete={(item) => handleDeleteClick(item as Item)}
       />
 
       <Dialog
@@ -293,21 +318,16 @@ function ItemsComponent(): JSX.Element {
               </Box>
             )}
 
-           {(imageFile instanceof File || editingItem?.imageUrl) && (
-  <Box display="flex" alignItems="center" gap={2}>
-    <Box sx={{ width: 140, fontWeight: 500 }}>Image Preview</Box>
-    <img
-      src={
-        imageFile instanceof File
-          ? URL.createObjectURL(imageFile)
-          : editingItem?.imageUrl ?? ''
-      }
-      alt="Preview"
-      style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
-    />
-  </Box>
-)}
-
+            {(imageFile instanceof File || editingItem?.imageUrl) && (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Box sx={{ width: 140, fontWeight: 500 }}>Image Preview</Box>
+                <img
+                  src={imageFile instanceof File ? URL.createObjectURL(imageFile) : editingItem?.imageUrl ?? ''}
+                  alt="Preview"
+                  style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
+                />
+              </Box>
+            )}
 
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
@@ -352,6 +372,25 @@ function ItemsComponent(): JSX.Element {
           </Button>
           <Button type="submit" form="item-form" variant="contained" color="primary">
             {editingItem ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* dleete */}
+
+      <Dialog open={deleteConfirmOpen} onClose={handleDeleteCancel} fullWidth maxWidth="xs">
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent dividers>
+          <Typography>
+            Are you sure you want to delete item <strong>{deletingItem?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'flex-end', px: 3 }}>
+          <Button onClick={handleDeleteCancel} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

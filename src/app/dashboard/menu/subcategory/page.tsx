@@ -53,8 +53,16 @@ function SubCategoryComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingSubCategory, setDeletingSubCategory] = useState<SubCategory | null>(null);
 
-  const { apiGetSubCategories, apiCreateSubCategories, apiUpdateSubCategories, apiGetCategories } = ProjectApiList();
+  const {
+    apiGetSubCategories,
+    apiCreateSubCategories,
+    apiUpdateSubCategories,
+    apiGetCategories,
+    apiDeleteSubCategories,
+  } = ProjectApiList();
 
   const {
     register,
@@ -130,6 +138,30 @@ function SubCategoryComponent(): JSX.Element {
         sub.name.toLowerCase().includes(lowerTerm) || (sub.category_name?.toLowerCase().includes(lowerTerm) ?? false)
     );
     setFilteredSubCategories(filtered);
+  };
+
+  const handleDeleteClick = (sub: SubCategory): void => {
+    setDeletingSubCategory(sub);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteCancel = (): void => {
+    setDeleteConfirmOpen(false);
+    setDeletingSubCategory(null);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (!deletingSubCategory) return;
+
+    try {
+      await axios.delete(`${apiDeleteSubCategories}/${deletingSubCategory.id}`);
+      toast.success('Subcategory deleted successfully');
+      await fetchSubCategories();
+    } catch (err) {
+      toast.error('Failed to delete subcategory');
+    } finally {
+      handleDeleteCancel();
+    }
   };
 
   const selectedCategoryName = categories.find((cat) => cat.id === editingSubCategory?.category_id)?.name;
@@ -208,7 +240,7 @@ function SubCategoryComponent(): JSX.Element {
                     >
                       <Pencil size={16} />
                     </IconButton>
-                    <IconButton>
+                    <IconButton onClick={() => handleDeleteClick(sub)}>
                       <Trash2 size={16} />
                     </IconButton>
                   </TableCell>
@@ -337,6 +369,25 @@ function SubCategoryComponent(): JSX.Element {
             }}
           >
             {editingSubCategory ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* delete */}
+
+      <Dialog open={deleteConfirmOpen} onClose={handleDeleteCancel} fullWidth maxWidth="xs">
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent dividers>
+          <Typography>
+            Are you sure you want to delete subcategory <strong>{deletingSubCategory?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'flex-end', px: 3 }}>
+          <Button onClick={handleDeleteCancel} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

@@ -24,6 +24,8 @@ import {
 import axios from 'axios';
 import { BarChart2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Pagination } from '@mui/material';
+
 
 export default function FoodReportPage() {
   const { apiGetFoodReport, apiGetResturants, apiGetAllMenu } = ProjectApiList();
@@ -40,6 +42,10 @@ export default function FoodReportPage() {
     startDate: '',
     endDate: '',
   });
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(5);
+const [totalPages, setTotalPages] = useState(1);
+
 
   const fetchVariants = useCallback(async () => {
     try {
@@ -61,33 +67,39 @@ export default function FoodReportPage() {
     }
   }, [apiGetResturants]);
 
-  const fetchFoodReport = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(apiGetFoodReport, {
-        params: {
-          restaurant: filters.restaurant || undefined,
-          item: filters.item || undefined,
-          startDate: filters.startDate || undefined,
-          endDate: filters.endDate || undefined,
-        },
-      });
-      setFoodReport(res.data.data || []);
-    } catch (err) {
-      setError('Failed to load food report.');
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchFoodReport = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(apiGetFoodReport, {
+      params: {
+        restaurant: filters.restaurant || undefined,
+        item: filters.item || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        page,
+        limit,
+      },
+    });
+
+    setFoodReport(res.data.data || []);
+    setTotalPages(res.data.totalPages || 1);
+  } catch (err) {
+    setError('Failed to load food report.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchVariants();
     fetchRestaurants();
   }, [fetchVariants, fetchRestaurants]);
 
-  useEffect(() => {
-    fetchFoodReport();
-  }, [filters]);
+useEffect(() => {
+  fetchFoodReport();
+}, [filters, page, limit]);
+
 
   console.log(restaurants)
 
@@ -231,6 +243,15 @@ export default function FoodReportPage() {
               </TableBody>
             </Table>
           </TableContainer>
+             <Box display="flex" justifyContent="center" mt={2}>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(_, value) => setPage(value)}
+                    color="primary"
+                    shape="rounded"
+                  />
+                </Box>
         </Paper>
       )}
     </Box>

@@ -11,6 +11,7 @@ import {
   CircularProgress,
   FormControl,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -40,6 +41,10 @@ export default function TransactionReportsPage() {
   const [searchOrderNo, setSearchOrderNo] = useState('');
   const [restaurantFilter, setRestaurantFilter] = useState('');
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5); // Default items per page
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchResturants = async () => {
     try {
       const res = await axios.get(`${apiGetResturants}`);
@@ -51,9 +56,10 @@ export default function TransactionReportsPage() {
   const fetchTotalOrders = async () => {
     try {
       const res = await axios.get(
-        `${apiGetAllOrdersForResturant}?restaurant_name=${restaurantFilter}&time=${timeFilter}`
+        `${apiGetAllOrdersForResturant}?restaurant_name=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
       );
       setTotalOrders(res.data.data || []);
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       setError('Failed to load orders.');
     }
@@ -79,7 +85,11 @@ export default function TransactionReportsPage() {
   useEffect(() => {
     fetchTotalOrders();
     fetchTransactionReport();
-  }, [restaurantLoading, restaurantFilter, timeFilter]);
+  }, [restaurantLoading, restaurantFilter, timeFilter, page]);
+
+  useEffect(() => {
+    setPage(1); // Reset pagination when filters change
+  }, [restaurantFilter, timeFilter]);
 
   const filteredOrders = totalOrders.filter((order) =>
     order.Order_no?.toLowerCase().includes(searchOrderNo.toLowerCase())
@@ -268,6 +278,9 @@ export default function TransactionReportsPage() {
               </TableBody>
             </Table>
           </TableContainer>
+          <Box display="flex" justifyContent="center" mt={3}>
+            <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} color="primary" />
+          </Box>
         </>
       )}
     </Box>

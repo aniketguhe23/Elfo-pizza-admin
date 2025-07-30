@@ -6,18 +6,18 @@ import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   AccessTime,
   Cancel,
+  CheckCircle,
   DeliveryDining,
+  ErrorOutline,
+  Fastfood,
+  HourglassBottom,
   InsertChart,
   LocalDining,
   LocalShipping,
-  Visibility,
-  CheckCircle,
-  Fastfood,
-  QueryBuilder,
   MonetizationOn,
   Payment,
-  HourglassBottom,
-  ErrorOutline,
+  QueryBuilder,
+  Visibility,
 } from '@mui/icons-material';
 import {
   Box,
@@ -29,6 +29,7 @@ import {
   Grid,
   IconButton,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -54,6 +55,9 @@ export default function CampaignReportsPage() {
   const [searchOrderNo, setSearchOrderNo] = useState('');
   const [restaurantFilter, setRestaurantFilter] = useState('');
   const [restaurants, setResturant] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5); // you can adjust default
+  const [totalPages, setTotalPages] = useState(0);
 
   const fetchResturants = async () => {
     try {
@@ -81,9 +85,10 @@ export default function CampaignReportsPage() {
   const fetchTotalOrders = async () => {
     try {
       const response = await axios.get(
-        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}`
+        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
       );
       setTotalOrders(response.data.data || []);
+      setTotalPages(response.data.totalPages || 1); // Ensure your API returns totalPages
     } catch (err) {
       setError('Failed to load total orders.');
     }
@@ -96,7 +101,7 @@ export default function CampaignReportsPage() {
   useEffect(() => {
     fetchOrdersReport();
     fetchTotalOrders();
-  }, [restaurantFilter, timeFilter]);
+  }, [restaurantFilter, timeFilter, page, limit]);
 
   const filteredOrders = totalOrders.filter((order) =>
     order.Order_no.toLowerCase().includes(searchOrderNo.toLowerCase())
@@ -133,22 +138,21 @@ export default function CampaignReportsPage() {
     Payment_Failed: <ErrorOutline />,
     Cancelled: <Cancel />,
   };
-const colorMap: Record<string, string> = {
-  Pending: "#fdf2f8",            // Light Orange
-  Confirmed: "#BBDEFB",          // Light Blue
-  Accepted: "#C8E6C9",           // Light Green
-  Processing: "#B3E5FC",         // Light Cyan
-  Ready_For_Delivery: "#D1C4E9", // Light Purple
-  Food_on_the_way: "#B2DFDB",    // Teal Light
-  Delivered: "#DCEDC8",          // Lime Light Green
-  Dine_In: "#F8BBD0",            // Light Pink
-  Refunded: "#FFCDD2",           // Light Red
-  Refund_Requested: "#FFE082",   // Light Amber
-  Scheduled: "#B2EBF2",          // Light Aqua
-  Payment_Failed: "#FFCCBC",     // Light Coral
-  Cancelled: "#E0E0E0",          // Grey 300
-};
-
+  const colorMap: Record<string, string> = {
+    Pending: '#fdf2f8', // Light Orange
+    Confirmed: '#BBDEFB', // Light Blue
+    Accepted: '#C8E6C9', // Light Green
+    Processing: '#B3E5FC', // Light Cyan
+    Ready_For_Delivery: '#D1C4E9', // Light Purple
+    Food_on_the_way: '#B2DFDB', // Teal Light
+    Delivered: '#DCEDC8', // Lime Light Green
+    Dine_In: '#F8BBD0', // Light Pink
+    Refunded: '#FFCDD2', // Light Red
+    Refund_Requested: '#FFE082', // Light Amber
+    Scheduled: '#B2EBF2', // Light Aqua
+    Payment_Failed: '#FFCCBC', // Light Coral
+    Cancelled: '#E0E0E0', // Grey 300
+  };
 
   return (
     <Box p={2}>
@@ -159,11 +163,7 @@ const colorMap: Record<string, string> = {
         </Typography>
         <Box display="flex" gap={1}>
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <Select
-              value={restaurantFilter}
-              onChange={(e) => setRestaurantFilter(e.target.value)}
-              displayEmpty
-            >
+            <Select value={restaurantFilter} onChange={(e) => setRestaurantFilter(e.target.value)} displayEmpty>
               <MenuItem value="">All Restaurants</MenuItem>
               {restaurants?.map((data: any) => (
                 <MenuItem key={data?.id} value={data?.restaurants_no}>
@@ -202,9 +202,7 @@ const colorMap: Record<string, string> = {
               <Typography variant="h3" fontWeight={700}>
                 {ordersReport?.AllOrders?.count || 0}
               </Typography>
-              <Typography variant="body1">
-                Total Amount: ₹{ordersReport?.AllOrders?.totalAmount || 0}
-              </Typography>
+              <Typography variant="body1">Total Amount: ₹{ordersReport?.AllOrders?.totalAmount || 0}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -232,7 +230,7 @@ const colorMap: Record<string, string> = {
                     >
                       {icon}
                     </Box> */}
-                    <Typography variant="subtitle1" fontWeight={500} sx={{color: 'gray'}}>
+                    <Typography variant="subtitle1" fontWeight={500} sx={{ color: 'gray' }}>
                       {statusMap[status]}
                     </Typography>
                   </Box>
@@ -291,8 +289,8 @@ const colorMap: Record<string, string> = {
                       order.order_status === 'Delivered'
                         ? 'success.main'
                         : order.order_status === 'Canceled'
-                        ? 'error.main'
-                        : 'text.secondary'
+                          ? 'error.main'
+                          : 'text.secondary'
                     }
                   >
                     {order.order_status.replace(/_/g, ' ')}
@@ -318,6 +316,15 @@ const colorMap: Record<string, string> = {
           </TableBody>
         </Table>
       </TableContainer>
+      <Box display="flex" justifyContent="center" mt={2}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(_, value) => setPage(value)}
+          color="primary"
+          shape="rounded"
+        />
+      </Box>
     </Box>
   );
 }

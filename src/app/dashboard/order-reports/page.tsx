@@ -26,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
+import { Pagination } from '@mui/material';
 import { AlertCircle, ChevronDown, Clock, Eye, FileBarChart, FileDown, Search } from 'lucide-react';
 
 export default function OrderReportsPage() {
@@ -41,6 +42,11 @@ export default function OrderReportsPage() {
   const [searchOrderNo, setSearchOrderNo] = useState('');
   const [restaurants, setResturant] = useState([]);
   const [restaurantFilter, setRestaurantFilter] = useState('');
+
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(5); // or any default
+const [totalPages, setTotalPages] = useState(0);
+
 
   // const selectStyles = {
   //   minWidth: 180,
@@ -101,17 +107,19 @@ export default function OrderReportsPage() {
     fetchOrdersReport();
   }, [apiOrderReportofResturant, timeFilter, restaurantFilter]);
 
-  const fetchTotalOrders = async () => {
-    try {
-      const response = await axios.get(
-        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}`
-      );
-      setTotalOrders(response.data.data || []);
-    } catch (err: any) {
-      console.error('Error fetching total orders:', err);
-      setError('Failed to load total orders.');
-    }
-  };
+const fetchTotalOrders = async () => {
+  try {
+    const response = await axios.get(
+      `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
+    );
+    setTotalOrders(response.data.data || []);
+    setTotalPages(response.data.totalPages || 0);
+  } catch (err: any) {
+    console.error('Error fetching total orders:', err);
+    setError('Failed to load total orders.');
+  }
+};
+
 
   useEffect(() => {
     fetchResturants();
@@ -119,7 +127,7 @@ export default function OrderReportsPage() {
 
   useEffect(() => {
     fetchTotalOrders();
-  }, [restaurantFilter, timeFilter]);
+  }, [restaurantFilter, timeFilter,page]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -340,6 +348,16 @@ export default function OrderReportsPage() {
           </TableBody>
         </Table>
       </TableContainer>
+      <Box display="flex" justifyContent="center" mt={2}>
+  <Pagination
+    count={totalPages}
+    page={page}
+    onChange={(_, value) => setPage(value)}
+    color="primary"
+    shape="rounded"
+  />
+</Box>
+
     </Box>
   );
 }

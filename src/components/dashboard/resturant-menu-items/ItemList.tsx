@@ -159,7 +159,7 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
                       </Typography>
                     </CardContent>
                     <Box px={2} pb={1.5}>
-                      <Button
+                      {/* <Button
                         variant="outlined"
                         color="error"
                         fullWidth
@@ -182,18 +182,19 @@ export default function CategoryItemList({ restaurantsNo }: CategoryItemListProp
                         }}
                       >
                         Remove
-                      </Button>
+                      </Button> */}
 
                       <Button
                         variant="outlined"
                         fullWidth
                         size="small"
+                        disabled // ← This disables the button
                         onClick={() => updateItemAvailability(restaurantsNo, item.id, !!item.is_available)}
                         sx={{
                           mt: 1,
                           textTransform: 'none',
                           borderRadius: '10px',
-                          backgroundColor: item.is_available ? '#4caf50' : '#9e9e9e', // Green or Gray
+                          backgroundColor: item.is_available ? '#4caf50' : '#9e9e9e',
                           color: '#fff',
                           border: 'none',
                           fontWeight: 500,

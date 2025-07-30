@@ -6,6 +6,7 @@ import ProjectApiList from '@/app/api/ProjectApiList';
 import { Button, Card, CardMedia, Divider, Grid, Typography } from '@mui/material';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+
 import EditNearmeModal from '../formComponent/EditNearmeModal';
 
 interface NearmeData {
@@ -61,13 +62,16 @@ function NearmeComponent(): JSX.Element {
       payload.append('nearme_title', updatedForm.title);
       payload.append('nearme_desc', updatedForm.desc);
 
-      if (updatedForm.image) {
+      // Only append image files if they are of type File
+      if (updatedForm.image instanceof File) {
         payload.append('nearme_img', updatedForm.image);
       }
-      if (updatedForm.icon1Img) {
+
+      if (updatedForm.icon1Img instanceof File) {
         payload.append('nearme_icon1', updatedForm.icon1Img);
       }
-      if (updatedForm.icon2Img) {
+
+      if (updatedForm.icon2Img instanceof File) {
         payload.append('nearme_icon2', updatedForm.icon2Img);
       }
 
@@ -155,22 +159,44 @@ function NearmeComponent(): JSX.Element {
         </Grid>
 
         <Grid item xs={12} sm={8}>
-          <Typography variant="subtitle1" fontWeight={500}>Heading</Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>{data.nearme_heading}</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Heading
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {data.nearme_heading}
+          </Typography>
 
-          <Typography variant="subtitle1" fontWeight={500}>Subheading</Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>{data.nearme_subheading}</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Subheading
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {data.nearme_subheading}
+          </Typography>
 
-          <Typography variant="subtitle1" fontWeight={500}>Icon 1 Description</Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>{data.nearme_icon1_desc}</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Icon 1 Description
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {data.nearme_icon1_desc}
+          </Typography>
 
-          <Typography variant="subtitle1" fontWeight={500}>Icon 2 Description</Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>{data.nearme_icon2_desc}</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Icon 2 Description
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {data.nearme_icon2_desc}
+          </Typography>
 
-          <Typography variant="subtitle1" fontWeight={500}>Title</Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>{data.nearme_title}</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Title
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {data.nearme_title}
+          </Typography>
 
-          <Typography variant="subtitle1" fontWeight={500}>Description</Typography>
+          <Typography variant="subtitle1" fontWeight={500}>
+            Description
+          </Typography>
           <Typography variant="body1">{data.nearme_desc}</Typography>
         </Grid>
 
@@ -178,7 +204,9 @@ function NearmeComponent(): JSX.Element {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => {setOpen(true)}}
+            onClick={() => {
+              setOpen(true);
+            }}
             sx={{
               backgroundColor: '#d3d3d3',
               color: 'black',
@@ -195,7 +223,7 @@ function NearmeComponent(): JSX.Element {
 
       <EditNearmeModal
         open={open}
-        onClose={() => {setOpen(false)}}
+        onClose={() => setOpen(false)}
         data={data}
         onSave={(updatedData) =>
           handleSave({
@@ -205,9 +233,9 @@ function NearmeComponent(): JSX.Element {
             desc: updatedData.nearme_desc,
             icon1_desc: updatedData.nearme_icon1_desc,
             icon2_desc: updatedData.nearme_icon2_desc,
-            image: updatedData.nearme_img ?? null,
-            icon1Img: updatedData.nearme_icon1 ?? null,
-            icon2Img: updatedData.nearme_icon2 ?? null,
+            image: updatedData.nearme_img instanceof File ? updatedData.nearme_img : null,
+            icon1Img: updatedData.nearme_icon1 instanceof File ? updatedData.nearme_icon1 : null,
+            icon2Img: updatedData.nearme_icon2 instanceof File ? updatedData.nearme_icon2 : null,
           })
         }
       />

@@ -53,8 +53,11 @@ function ItemVariantComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ItemVariant | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingVariant, setDeletingVariant] = useState<ItemVariant | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { apiGetItemVariants, apiCreateItemVariant, apiUpdateItemVariant, apiGetItems } = ProjectApiList();
+  const { apiGetItemVariants, apiCreateItemVariant, apiUpdateItemVariant, apiGetItems, apiDeleteItemVariant } =
+    ProjectApiList();
 
   const {
     register,
@@ -139,8 +142,23 @@ function ItemVariantComponent(): JSX.Element {
     }
   }, [editingVariant, setValue]);
 
-  // console.log(items);
-  // console.log(editingVariant);
+  const handleDeleteClick = (variant: ItemVariant): void => {
+    setDeletingVariant(variant);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async (): Promise<void> => {
+    if (!deletingVariant) return;
+
+    try {
+      await axios.delete(`${apiDeleteItemVariant}/${deletingVariant.variantId}`);
+      await fetchVariants();
+      setDeleteDialogOpen(false);
+      setDeletingVariant(null);
+    } catch (err) {
+      // Handle or toast error
+    }
+  };
 
   return (
     <Box mt={5}>
@@ -221,11 +239,7 @@ function ItemVariantComponent(): JSX.Element {
                       >
                         <Pencil size={16} />
                       </IconButton>
-                      <IconButton
-                        onClick={() => {
-                          // Placeholder for delete handler
-                        }}
-                      >
+                      <IconButton onClick={() => handleDeleteClick(sub)}>
                         <Trash2 size={16} />
                       </IconButton>
                     </TableCell>
@@ -318,7 +332,7 @@ function ItemVariantComponent(): JSX.Element {
               </TextField>
             </Box>
 
-             {editingVariant && (
+            {editingVariant && (
               <Box mb={2} sx={{ ml: 16 }}>
                 <Typography variant="body2" component="span" color="textSecondary">
                   Selected Size:{' '}
@@ -328,7 +342,6 @@ function ItemVariantComponent(): JSX.Element {
                 </Typography>
               </Box>
             )}
-
 
             {/* Crust Type */}
             <Box display="flex" alignItems="center" gap={2}>
@@ -367,6 +380,29 @@ function ItemVariantComponent(): JSX.Element {
           </Button>
           <Button form="variant-form" type="submit" variant="contained" sx={{ textTransform: 'none' }}>
             {editingVariant ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete modal */}
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Variant</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete{' '}
+            <strong>
+              {deletingVariant?.itemName} ({deletingVariant?.size}, {deletingVariant?.crustType})
+            </strong>
+            ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={confirmDelete} variant="contained" color="error" sx={{ textTransform: 'none' }}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

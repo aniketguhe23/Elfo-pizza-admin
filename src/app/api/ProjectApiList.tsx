@@ -31,18 +31,22 @@ export default function ProjectApiList(): Record<string, string> {
     apiGetCategories: `${baseUrl}/api/menu/categories/get`,
     apiCreateCategories: `${baseUrl}/api/menu/categories/create`,
     apiUpdateCategories: `${baseUrl}/api/menu/categories/update`,
-
+    apiDeleteCategories: `${baseUrl}/api/menu/categories/delete`,
+    
     apiGetSubCategories: `${baseUrl}/api/menu/subcategories/get`,
     apiCreateSubCategories: `${baseUrl}/api/menu/subcategories/create`,
     apiUpdateSubCategories: `${baseUrl}/api/menu/subcategories/update`,
-
+    apiDeleteSubCategories: `${baseUrl}/api/menu/subcategories/delete`,
+    
     apiGetItems: `${baseUrl}/api/menu/items/get`,
     apiCreateItem: `${baseUrl}/api/menu/items/create`,
     apiUpdateItem: `${baseUrl}/api/menu/items/update`,
+    apiDeleteItem: `${baseUrl}/api/menu/items/delete`,
 
     apiGetItemVariants: `${baseUrl}/api/menu/item-variants/get`,
     apiCreateItemVariant: `${baseUrl}/api/menu/item-variants/create`,
     apiUpdateItemVariant: `${baseUrl}/api/menu/item-variants/update`,
+    apiDeleteItemVariant: `${baseUrl}/api/menu/item-variants/delete`,
 
     apiGetAllMenu: `${baseUrl}/api/allMenu/getAllmenu`,
     apiUpdateHomeMenu: `${baseUrl}/api/allMenu/updateHomeSceenItems`,

@@ -27,11 +27,18 @@ import type { Restaurant } from '@/types/restaurant-types';
 interface RestaurantListProps {
   restaurants: Restaurant[];
   onSelect: (restaurant: Restaurant) => void;
+  fetchRestaurants: () => void;
   onDeleteSuccess?: () => void;
   onEdit: (restaurant: Restaurant) => void; // NEW
 }
 
-function RestaurantList({ restaurants, onSelect, onDeleteSuccess, onEdit }: RestaurantListProps): JSX.Element {
+function RestaurantList({
+  restaurants,
+  onSelect,
+  onDeleteSuccess,
+  onEdit,
+  fetchRestaurants,
+}: RestaurantListProps): JSX.Element {
   const { apiRemoveRestaurant } = ProjectApiList();
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -54,6 +61,7 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess, onEdit }: Rest
     try {
       setDeletingId(selectedRestaurant.id);
       await axios.delete(`${apiRemoveRestaurant}/${selectedRestaurant.restaurants_no}`);
+      fetchRestaurants();
       onDeleteSuccess?.();
     } catch (error: unknown) {
       toast.error('Failed to delet. Please try again later.');
@@ -88,31 +96,19 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess, onEdit }: Rest
             >
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Box>
-                  <Typography variant="h6" fontWeight={600}>
-                    {rest.name}
-                  </Typography>
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    <Typography variant="h7" fontWeight={600}>
+                      # {rest.restaurants_no}
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      {rest.name}
+                    </Typography>
+                  </Box>
                   <Typography variant="body2" color="text.secondary">
                     {rest.address}
                   </Typography>
                 </Box>
 
-                <Tooltip title="Delete Restaurant">
-                  <span>
-                    <IconButton
-                      onClick={() => {
-                        openConfirmDialog(rest);
-                      }}
-                      color="error"
-                      disabled={deletingId === rest.id}
-                    >
-                      {deletingId === rest.id ? (
-                        <CircularProgress size={18} color="error" />
-                      ) : (
-                        <DeleteForeverRoundedIcon />
-                      )}
-                    </IconButton>
-                  </span>
-                </Tooltip>
                 <Tooltip title="Edit Restaurant">
                   <IconButton
                     onClick={() => {
@@ -132,6 +128,23 @@ function RestaurantList({ restaurants, onSelect, onDeleteSuccess, onEdit }: Rest
                       <path d="M12.146.146a.5.5 0 0 1 .708 0l2.707 2.707a.5.5 0 0 1 0 .708l-9.146 9.146a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l9.146-9.146zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zM10.5 3.207 2 11.707V13h1.293l8.5-8.5-1.293-1.293z" />
                     </svg>
                   </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete Restaurant">
+                  <span>
+                    <IconButton
+                      onClick={() => {
+                        openConfirmDialog(rest);
+                      }}
+                      color="error"
+                      disabled={deletingId === rest.id}
+                    >
+                      {deletingId === rest.id ? (
+                        <CircularProgress size={18} color="error" />
+                      ) : (
+                        <DeleteForeverRoundedIcon />
+                      )}
+                    </IconButton>
+                  </span>
                 </Tooltip>
               </Box>
 

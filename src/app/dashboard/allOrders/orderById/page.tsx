@@ -17,6 +17,7 @@ import {
   DialogTitle,
   FormControl,
   Grid,
+  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -28,6 +29,7 @@ import { toast } from 'react-toastify';
 
 export default function OrderDetailPage() {
   const { apiGetOrdersById, apiUpdateStatusOrdersById } = ProjectApiList();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const orderNo = searchParams.get('order_no');
@@ -35,7 +37,10 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState('');
-  const router = useRouter();
+
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [amountReceivedBy, setAmountReceivedBy] = useState('');
 
   const fetchOrder = async () => {
     try {
@@ -66,6 +71,20 @@ export default function OrderDetailPage() {
     if (!orderNo) return;
     fetchOrder();
   }, [orderNo]);
+
+  const handlePaymentUpdate = async () => {
+    try {
+      await axios.put(`${apiUpdateStatusOrdersById}/${orderNo}`, {
+        payment_status: paymentStatus,
+        amount_received_by: amountReceivedBy,
+      });
+      toast.success('Payment status updated');
+      fetchOrder();
+      setOpenPaymentDialog(false);
+    } catch {
+      toast.error('Failed to update payment status');
+    }
+  };
 
   return (
     <Box p={4}>
@@ -109,22 +128,29 @@ export default function OrderDetailPage() {
                 <Typography variant="body2" color="textSecondary">
                   Payment Method
                 </Typography>
-                <Chip label="Cash on Delivery" color="default" size="small" sx={{ fontWeight: 600 }} />
+                <Chip label={order?.payment_method} color="default" size="small" sx={{ fontWeight: 600 }} />
               </Grid>
               <Grid item xs={6} sm={4}>
                 <Typography variant="body2" color="textSecondary">
                   Payment Status
                 </Typography>
-                <Chip label="Unpaid" color="error" size="small" sx={{ fontWeight: 600 }} />
+                <Chip label={order?.payment_status} color="error" size="small" sx={{ fontWeight: 600 }} />
+              </Grid>
+              <Grid item xs={6} sm={4}>
+                <Typography variant="body2" color="textSecondary">
+                  Payment Received By
+                </Typography>
+                <Chip label={order?.amount_received_by} color="error" size="small" sx={{ fontWeight: 600 }} />
               </Grid>
             </Grid>
           </Box>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
-            {/* <Button
-              variant="contained"
+          <Box display="flex" flexDirection="row" alignItems="flex-end" gap={1}>
+            <Button
+              variant="outlined"
+              size="small"
               sx={{
                 backgroundColor: '#3366ff',
                 color: '#fff',
@@ -132,19 +158,13 @@ export default function OrderDetailPage() {
                 fontWeight: 500,
                 borderRadius: 0.5,
                 '&:hover': { backgroundColor: '#809fff' },
-                width: 160,
+                width: 200,
               }}
-              onClick={() => {
-                const params = new URLSearchParams({
-                  order_no: order?.Order_no,
-                });
-
-                router.push(`/dashboard/allOrders/invoice?${params.toString()}`);
-              }}
+              onClick={() => setOpenPaymentDialog(true)}
             >
-              Print Invoice
-            </Button> */}
-            {/* 
+              Update Payment Status
+            </Button>
+
             <Button
               onClick={() => setOpen(true)}
               variant="outlined"
@@ -160,7 +180,7 @@ export default function OrderDetailPage() {
               }}
             >
               Update Status
-            </Button> */}
+            </Button>
           </Box>
         </Grid>
       </Grid>
@@ -291,8 +311,18 @@ export default function OrderDetailPage() {
               <Select value={status} onChange={(e) => setStatus(e.target.value)} displayEmpty>
                 <MenuItem value="Pending">Pending</MenuItem>
                 <MenuItem value="Confirmed">Confirmed</MenuItem>
+                <MenuItem value="Processing">Processing</MenuItem>
+                <MenuItem value="Ready_For_Delivery">Ready For Delivery</MenuItem>
+                <MenuItem value="Food_on_the_way">Food On The Way</MenuItem>
                 <MenuItem value="Delivered">Delivered</MenuItem>
+                <MenuItem value="Refunded">Refunded</MenuItem>
                 <MenuItem value="Cancelled">Cancelled</MenuItem>
+                <MenuItem value="Cancelled_By_Customer">Cancelled By Customer</MenuItem>
+                {/* <MenuItem value="Refunded_Requested">Refunded Requested</MenuItem> */}
+                {/* <MenuItem value="Scheduled">Scheduled</MenuItem> */}
+                {/* <MenuItem value="Payment_Failed">Payment Failed</MenuItem> */}
+                {/* <MenuItem value="Dine_In">Dine In</MenuItem> */}
+                {/* <MenuItem value="Accepted">Accepted</MenuItem> */}
               </Select>
             </FormControl>
           </Box>
@@ -302,6 +332,60 @@ export default function OrderDetailPage() {
             Cancel
           </Button>
           <Button onClick={handleStatusUpdate} variant="contained" color="primary">
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Payment STATUS DIALOG */}
+
+      {/* PAYMENT STATUS DIALOG */}
+      <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 600 }}>Update Payment Status</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Change the payment status and confirm update.
+          </Typography>
+
+          {/* Payment Status Select */}
+          <Box mt={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="payment-status-label">Payment Status</InputLabel>
+              <Select
+                labelId="payment-status-label"
+                value={paymentStatus}
+                label="Payment Status"
+                onChange={(e) => setPaymentStatus(e.target.value)}
+              >
+                <MenuItem value="Unpaid">Unpaid</MenuItem>
+                <MenuItem value="Paid">Paid</MenuItem>
+                <MenuItem value="Refunded">Refunded</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Amount Received By Select */}
+          <Box mt={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="received-by-label">Amount Received By</InputLabel>
+              <Select
+                labelId="received-by-label"
+                value={amountReceivedBy}
+                label="Amount Received By"
+                onChange={(e) => setAmountReceivedBy(e.target.value)}
+              >
+                <MenuItem value="delivery person">Delivery Person</MenuItem>
+                <MenuItem value="resturant">Resturant</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setOpenPaymentDialog(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handlePaymentUpdate} variant="contained">
             Update
           </Button>
         </DialogActions>

@@ -200,11 +200,13 @@ export default function RestaurantMenuItems(): JSX.Element {
         </>
       ) : (
         <RestaurantList
+          fetchRestaurants={fetchRestaurants}
           restaurants={restaurants}
           onSelect={(r): void => {
             setSelectedRestaurant(r);
           }}
           onEdit={(r) => setEditingRestaurant(r)}
+
         />
       )}
     </Container>

@@ -31,6 +31,10 @@ export const paths = {
     orderReports: '/dashboard/order-reports',
     campaignReports: '/dashboard/campaign-reports',
     foodReports: '/dashboard/food-reports',
+    contactSupport: '/dashboard/contact-support',
+    resturantSupport: '/dashboard/resturant-support',
+    refunds: '/dashboard/refunds',
+    chat: '/dashboard/chat',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

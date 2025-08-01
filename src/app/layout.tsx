@@ -3,6 +3,8 @@ import type { Viewport } from 'next';
 
 import '@/styles/global.css';
 
+import { ToastContainer } from 'react-toastify';
+
 import { UserProvider } from '@/contexts/user-context';
 import { LocalizationProvider } from '@/components/core/localization-provider';
 import { ThemeProvider } from '@/components/core/theme-provider/theme-provider';
@@ -19,6 +21,7 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
       <body>
         <LocalizationProvider>
           <UserProvider>
+            <ToastContainer position="top-right" autoClose={3000} />
             <ThemeProvider>{children}</ThemeProvider>
           </UserProvider>
         </LocalizationProvider>

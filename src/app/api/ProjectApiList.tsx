@@ -149,6 +149,8 @@ export default function ProjectApiList(): Record<string, string> {
 
     // Location
     apiLocation: `${baseUrl}/api/location`,
+    apigetStates: `${baseUrl}/api/location/getStates`,
+    apigetCities: `${baseUrl}/api/location/geCitiesbyId`,
 
     // coupons
     apiGetCoupons: `${baseUrl}/api/coupons/get`,
@@ -175,6 +177,21 @@ export default function ProjectApiList(): Record<string, string> {
     apigetTopRestaurantsByOrders: `${baseUrl}/api/dashboard/getTopRestaurantsByOrders`,
     apigetTotalCustomers: `${baseUrl}/api/dashboard/getTotalCustomers`,
     apigetSalesTypePieChart: `${baseUrl}/api/dashboard/getSalesTypePieChart`,
+
+    //support
+    apiGetContactSUpport: `${baseUrl}/api/support/getsupport`,
+    apiUpdateSupportStatus: `${baseUrl}/api/support/updateSupport`,
+     apigetResturantSupport: `${baseUrl}/api/restaurantsupport/get-restaurant-support`,
+     apiupdateResturantSupport: `${baseUrl}/api/restaurantsupport/update-restaurant-support`,
+
+     // Refunds
+    apiGetAllRefunds: `${baseUrl}/api/refunds/getAllRefunds`,
+    apiUpdateRefundsStatus: `${baseUrl}/api/refunds/updateRefundStatus`,
+    
+    // chat
+    apipostChatsAdminMessages: `${baseUrl}/api/chat/send`,
+    apigetAdminChatList: `${baseUrl}/api/chat/admin-list`,
+    apigetAdminUserChatConverstation: `${baseUrl}/api/chat/user-admin`,
 
 
   };

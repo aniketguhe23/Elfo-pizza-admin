@@ -48,7 +48,7 @@ const Dashboard = () => {
     apigetTopRestaurantsByOrders,
     apigetTotalCustomers,
     apigetSalesTypePieChart,
-    apiGetResturants
+    apiGetResturants,
   } = ProjectApiList();
 
   const [activeFilter, setActiveFilter] = useState('all');
@@ -74,7 +74,7 @@ const Dashboard = () => {
   const [startDate, setStartDate] = useState<string>(''); // for range.from
   const [endDate, setEndDate] = useState<string>(''); // for range.to
 
-    const fetchResturants = async () => {
+  const fetchResturants = async () => {
     try {
       const res = await axios.get(`${apiGetResturants}`);
       setResturant(res.data.data || []);
@@ -82,8 +82,6 @@ const Dashboard = () => {
       setError('Failed to load orders.');
     }
   };
-
-
 
   const theme = useTheme();
   const COLORS = ['#66BB6A', '#42A5F5', '#FFA726', '#AB47BC'];
@@ -126,7 +124,7 @@ const Dashboard = () => {
     };
 
     fetchOrdersReport();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     if (Array.isArray(salesReport) && salesReport.length > 0) {
@@ -157,7 +155,7 @@ const Dashboard = () => {
     };
 
     fetchTopSellingItems();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     if (Array.isArray(topSellingItems) && topSellingItems.length > 0) {
@@ -188,7 +186,7 @@ const Dashboard = () => {
     };
 
     fetchAverageOrderValue();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     // if (!restaurants_no) return;
@@ -209,7 +207,7 @@ const Dashboard = () => {
     };
 
     fetchAverageOrderValue();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     if (Array.isArray(topRestaurantsByOrders) && topRestaurantsByOrders.length > 0) {
@@ -240,7 +238,7 @@ const Dashboard = () => {
     };
 
     fetchAverageOrderValue();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     const fetchSalesTypePieChart = async () => {
@@ -259,7 +257,7 @@ const Dashboard = () => {
     };
 
     fetchSalesTypePieChart();
-  }, [activeFilter, endDate, startDate,restaurantFilter]);
+  }, [activeFilter, endDate, startDate, restaurantFilter]);
 
   useEffect(() => {
     if (Array.isArray(salesTypePieChart) && salesTypePieChart.length > 0) {
@@ -272,7 +270,7 @@ const Dashboard = () => {
     }
   }, [salesTypePieChart]);
 
-    useEffect(() => {
+  useEffect(() => {
     fetchResturants();
   }, []);
 
@@ -291,91 +289,90 @@ const Dashboard = () => {
 
             {/* Toggle Button Group on the Right */}
             <Grid item xs={12}>
-  <Stack
-    direction={{ xs: 'column', sm: 'row' }}
-    spacing={2}
-    alignItems="center"
-    justifyContent="space-between"
-    sx={{ flexWrap: 'wrap' }}
-  >
-    {/* Restaurant Selector */}
-    <FormControl
-      size="small"
-      sx={{
-        minWidth: 200,
-        '& .MuiOutlinedInput-root': {
-          borderRadius: 2,
-          fontSize: '0.875rem',
-          height: 38,
-        },
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#ccc',
-        },
-        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#666',
-        },
-      }}
-      variant="outlined"
-    >
-      <Select
-        value={restaurantFilter}
-        onChange={(e) => setRestaurantFilter(e.target.value)}
-        size="small"
-        displayEmpty
-      >
-        <MenuItem value="">All Restaurants</MenuItem>
-        {restaurants?.map((data: any) => (
-          <MenuItem key={data?.id} value={data?.restaurants_no}>
-            {data?.name} {data?.address}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ flexWrap: 'wrap' }}
+              >
+                {/* Restaurant Selector */}
+                <FormControl
+                  size="small"
+                  sx={{
+                    minWidth: 200,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      fontSize: '0.875rem',
+                      height: 38,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#ccc',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#666',
+                    },
+                  }}
+                  variant="outlined"
+                >
+                  <Select
+                    value={restaurantFilter}
+                    onChange={(e) => setRestaurantFilter(e.target.value)}
+                    size="small"
+                    displayEmpty
+                  >
+                    <MenuItem value="">All Restaurants</MenuItem>
+                    {restaurants?.map((data: any) => (
+                      <MenuItem key={data?.id} value={data?.restaurants_no}>
+                        {data?.name} {data?.address}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-    {/* Toggle Button Filter */}
-    <ToggleButtonGroup
-      value={activeFilter}
-      exclusive
-      onChange={(_, newValue) => {
-        if (newValue !== null) setActiveFilter(newValue);
-      }}
-      color="primary"
-      sx={{
-        borderRadius: 5,
-        backgroundColor: '#f5f5f5',
-        p: 0.5,
-        gap: 1,
-        boxShadow: 1,
-        flexWrap: 'wrap',
-        '& .MuiToggleButton-root': {
-          border: 'none',
-          borderRadius: 20,
-          textTransform: 'capitalize',
-          fontWeight: 500,
-          px: 2,
-          py: 0.8,
-          fontSize: '0.875rem',
-          color: '#555',
-          transition: 'all 0.3s ease',
-          '&.Mui-selected': {
-            backgroundColor: '#1976d2',
-            color: '#fff',
-            fontWeight: 600,
-          },
-          '&:hover': {
-            backgroundColor: '#e0e0e0',
-          },
-        },
-      }}
-    >
-      <ToggleButton value="all">All</ToggleButton>
-      <ToggleButton value="yearly">Yearly</ToggleButton>
-      <ToggleButton value="monthly">Monthly</ToggleButton>
-      <ToggleButton value="weekly">Weekly</ToggleButton>
-    </ToggleButtonGroup>
-  </Stack>
-</Grid>
-
+                {/* Toggle Button Filter */}
+                <ToggleButtonGroup
+                  value={activeFilter}
+                  exclusive
+                  onChange={(_, newValue) => {
+                    if (newValue !== null) setActiveFilter(newValue);
+                  }}
+                  color="primary"
+                  sx={{
+                    borderRadius: 5,
+                    backgroundColor: '#f5f5f5',
+                    p: 0.5,
+                    gap: 1,
+                    boxShadow: 1,
+                    flexWrap: 'wrap',
+                    '& .MuiToggleButton-root': {
+                      border: 'none',
+                      borderRadius: 20,
+                      textTransform: 'capitalize',
+                      fontWeight: 500,
+                      px: 2,
+                      py: 0.8,
+                      fontSize: '0.875rem',
+                      color: '#555',
+                      transition: 'all 0.3s ease',
+                      '&.Mui-selected': {
+                        backgroundColor: '#1976d2',
+                        color: '#fff',
+                        fontWeight: 600,
+                      },
+                      '&:hover': {
+                        backgroundColor: '#e0e0e0',
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="all">All</ToggleButton>
+                  <ToggleButton value="yearly">Yearly</ToggleButton>
+                  <ToggleButton value="monthly">Monthly</ToggleButton>
+                  <ToggleButton value="weekly">Weekly</ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>

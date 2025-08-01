@@ -22,12 +22,6 @@ export const navItems: NavItemConfig[] = [
     icon: 'chart-pie',
   },
   {
-    key: 'pages',
-    title: 'Pages',
-    href: paths.dashboard.webpages,
-    icon: 'chart-pie',
-  },
-  {
     key: 'menuItems',
     title: 'Add Menu Items',
     icon: 'plugs-connected',
@@ -60,7 +54,7 @@ export const navItems: NavItemConfig[] = [
   },
   {
     key: 'resturantItems',
-    title: 'Resturant Items',
+    title: 'Resturant Config',
     href: paths.dashboard.resturantMenuItems,
     icon: 'chart-pie',
   },
@@ -98,7 +92,36 @@ export const navItems: NavItemConfig[] = [
       { key: 'orderReports', title: 'Order Reports', href: paths.dashboard.orderReports },
       { key: 'campaignReports', title: 'Campaign Reports', href: paths.dashboard.campaignReports },
       { key: 'foodReports', title: 'Food Reports', href: paths.dashboard.foodReports },
-     
     ],
+  },
+  {
+    key: 'pages',
+    title: 'Pages',
+    href: paths.dashboard.webpages,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'pages',
+    title: 'Refunds',
+    href: paths.dashboard.refunds,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'pages',
+    title: 'Contact Support',
+    href: paths.dashboard.contactSupport,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'pages',
+    title: 'Resturant Support',
+    href: paths.dashboard.resturantSupport,
+    icon: 'chart-pie',
+  },
+  {
+    key: 'pages',
+    title: 'Chat',
+    href: paths.dashboard.chat,
+    icon: 'chart-pie',
   },
 ];

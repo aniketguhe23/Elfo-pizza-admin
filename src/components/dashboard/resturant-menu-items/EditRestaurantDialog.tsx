@@ -101,11 +101,11 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
         onClose={onClose}
         maxWidth="md"
         fullWidth
-            BackdropProps={{
-            sx: {
+        BackdropProps={{
+          sx: {
             backgroundColor: 'rgba(0,0,0,0.7)',
             backdropFilter: 'blur(3px)',
-            },
+          },
         }}
       >
         <DialogTitle>Edit Restaurant</DialogTitle>
@@ -164,19 +164,24 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
               </Grid>
 
               <Grid item xs={12}>
-                <Button variant="outlined" onClick={() => setShowPasswordModal(true)}   sx={{
-            minWidth: 70,
-            fontSize: '0.75rem',
-            px: 2,
-            backgroundColor: '#AEAFB8',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setShowPasswordModal(true)}
+                  sx={{
+                    minWidth: 70,
+                    fontSize: '0.75rem',
+                    px: 2,
+                    backgroundColor: '#AEAFB8',
+                    color: 'black',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: '#222',
+                      color: '#fff',
+                    },
+                  }}
+                >
                   Change Password
                 </Button>
               </Grid>
@@ -185,35 +190,45 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onClose} variant="outlined" disabled={loading}  sx={{
-            minWidth: 70,
-            fontSize: '0.75rem',
-            px: 2,
-            backgroundColor: '#fff',
-            color: '#000',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            border: '1px solid #cccccc',
-            '&:hover': {
-              backgroundColor: '#f2f2f2',
-            },
-          }}>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            disabled={loading}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#fff',
+              color: '#000',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              border: '1px solid #cccccc',
+              '&:hover': {
+                backgroundColor: '#f2f2f2',
+              },
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={loading}  sx={{
-            minWidth: 70,
-            fontSize: '0.75rem',
-            px: 2,
-            backgroundColor: '#000',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            variant="contained"
+            disabled={loading}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
             {loading ? 'Updating...' : 'Save'}
           </Button>
         </DialogActions>

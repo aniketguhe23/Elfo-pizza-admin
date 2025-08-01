@@ -97,7 +97,7 @@ function RestaurantList({
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Box>
                   <Box display="flex" flexDirection="column" gap={1}>
-                    <Typography variant="h7" fontWeight={600}>
+                    <Typography variant="h6" fontWeight={600}>
                       # {rest.restaurants_no}
                     </Typography>
                     <Typography variant="h6" fontWeight={600}>

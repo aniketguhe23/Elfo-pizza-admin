@@ -48,8 +48,12 @@ function ExtraSauceComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [editingSauce, setEditingSauce] = useState<Sauce | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedSauce, setSelectedSauce] = useState<Sauce | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const { apiGetExtraSauce, apiCreateExtraSauce, apiUpdateExtraSauce } = ProjectApiList();
+  const { apiGetExtraSauce, apiCreateExtraSauce, apiUpdateExtraSauce, apiDeleteExtraSauce } = ProjectApiList();
 
   const {
     register,
@@ -70,7 +74,7 @@ function ExtraSauceComponent(): JSX.Element {
   }, [apiGetExtraSauce]);
 
   useEffect(() => {
-   void fetchSauces();
+    void fetchSauces();
   }, [fetchSauces]);
 
   const handleDialogOpen = (sauce?: Sauce): void => {
@@ -89,7 +93,31 @@ function ExtraSauceComponent(): JSX.Element {
     reset();
   };
 
+  const handleDeleteDialogOpen = (sauce: Sauce): void => {
+    setSelectedSauce(sauce);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteDialogClose = (): void => {
+    setSelectedSauce(null);
+    setDeleteOpen(false);
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (!selectedSauce) return;
+
+    try {
+      await axios.delete(`${apiDeleteExtraSauce}/${selectedSauce.id}`);
+      toast.success('Sauce deleted');
+      handleDeleteDialogClose();
+      await fetchSauces();
+    } catch {
+      toast.error('Failed to delete sauce');
+    }
+  };
+
   const onSubmit = async (data: SauceForm): Promise<void> => {
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('name', data.name);
@@ -111,6 +139,8 @@ function ExtraSauceComponent(): JSX.Element {
       await fetchSauces();
     } catch {
       toast.error('Error submitting sauce');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,7 +235,7 @@ function ExtraSauceComponent(): JSX.Element {
                   >
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={() => handleDeleteDialogOpen(sauce)}>
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>
@@ -363,7 +393,24 @@ function ExtraSauceComponent(): JSX.Element {
               },
             }}
           >
-            {editingSauce ? 'Update' : 'Save'}
+            {loading ? 'Saving...' : editingSauce ? 'Update' : 'Save'}{' '}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* delete diloge  */}
+
+      <Dialog open={deleteOpen} onClose={handleDeleteDialogClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Sauce</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{selectedSauce?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

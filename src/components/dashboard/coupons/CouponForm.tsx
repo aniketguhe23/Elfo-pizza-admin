@@ -41,6 +41,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 
 const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => {
   const { apiCreateCoupons, apiUpdateCoupons } = ProjectApiList();
+  const [loading, setLoading] = React.useState(false);
 
   const {
     register,
@@ -73,6 +74,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
   }, [defaultValues, reset]);
 
   const onSubmit = async (data: CouponFormFields) => {
+    setLoading(true);
     try {
       const formData = new FormData();
 
@@ -112,6 +114,8 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       onSuccess();
     } catch (err) {
       console.error('Failed to submit form', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -254,6 +258,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
         <Button
           type="submit"
           variant="contained"
+          disabled={loading}
           sx={{
             width: 90,
             fontSize: '0.75rem',
@@ -268,7 +273,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
             },
           }}
         >
-          {defaultValues ? 'Save' : 'Create'}
+          {loading ? 'Saving...' : defaultValues ? 'Save' : 'Create'}
         </Button>
       </DialogActions>
     </form>

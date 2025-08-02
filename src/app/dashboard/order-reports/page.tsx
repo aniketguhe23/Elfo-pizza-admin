@@ -14,6 +14,7 @@ import {
   IconButton,
   InputAdornment,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -26,7 +27,6 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { Pagination } from '@mui/material';
 import { AlertCircle, ChevronDown, Clock, Eye, FileBarChart, FileDown, Search } from 'lucide-react';
 
 export default function OrderReportsPage() {
@@ -44,9 +44,8 @@ export default function OrderReportsPage() {
   const [restaurantFilter, setRestaurantFilter] = useState('');
 
   const [page, setPage] = useState(1);
-const [limit, setLimit] = useState(5); // or any default
-const [totalPages, setTotalPages] = useState(0);
-
+  const [limit, setLimit] = useState(5); // or any default
+  const [totalPages, setTotalPages] = useState(0);
 
   // const selectStyles = {
   //   minWidth: 180,
@@ -107,19 +106,18 @@ const [totalPages, setTotalPages] = useState(0);
     fetchOrdersReport();
   }, [apiOrderReportofResturant, timeFilter, restaurantFilter]);
 
-const fetchTotalOrders = async () => {
-  try {
-    const response = await axios.get(
-      `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
-    );
-    setTotalOrders(response.data.data || []);
-    setTotalPages(response.data.totalPages || 0);
-  } catch (err: any) {
-    console.error('Error fetching total orders:', err);
-    setError('Failed to load total orders.');
-  }
-};
-
+  const fetchTotalOrders = async () => {
+    try {
+      const response = await axios.get(
+        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
+      );
+      setTotalOrders(response.data.data || []);
+      setTotalPages(response.data.totalPages || 0);
+    } catch (err: any) {
+      console.error('Error fetching total orders:', err);
+      setError('Failed to load total orders.');
+    }
+  };
 
   useEffect(() => {
     fetchResturants();
@@ -127,7 +125,7 @@ const fetchTotalOrders = async () => {
 
   useEffect(() => {
     fetchTotalOrders();
-  }, [restaurantFilter, timeFilter,page]);
+  }, [restaurantFilter, timeFilter, page]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -201,21 +199,21 @@ const fetchTotalOrders = async () => {
 
           <FormControl
             size="small"
-              sx={{
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  fontSize: '0.875rem',
-                  height: 36,
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#ccc',
-                },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#666',
-                },
-              }}
-              variant="outlined"
+            sx={{
+              minWidth: 150,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1,
+                fontSize: '0.875rem',
+                height: 36,
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#ccc',
+              },
+              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#666',
+              },
+            }}
+            variant="outlined"
           >
             <Select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} displayEmpty>
               <MenuItem value="all">All Time</MenuItem>
@@ -229,47 +227,41 @@ const fetchTotalOrders = async () => {
       </Box>
 
       {/* Report Cards */}
-      <Box
-  display="grid"
-  gridTemplateColumns="repeat(auto-fill, minmax(280px, 1fr))"
-  gap={2}
-  mb={4}
->
-  {[
-    { label: 'Scheduled Orders', value: ordersReport?.Scheduled, color: '#E0F7FA' },
-    { label: 'Pending Orders', value: ordersReport?.Pending, color: '#FFF3E0' },
-    { label: 'Accepted Orders', value: ordersReport?.Accepted, color: '#E8F5E9' },
-    { label: 'Processing Orders', value: ordersReport?.Processing, color: '#FFFDE7' },
-    { label: 'Food On the Way', value: ordersReport?.Food_on_the_way, color: '#E3F2FD' },
-    { label: 'Delivered', value: ordersReport?.Delivered, color: '#E6EE9C' },
-    { label: 'Cancelled', value: ordersReport?.Cancelled, color: '#FFEBEE' },
-    { label: 'Payment Failed', value: ordersReport?.Payment_Failed, color: '#F3E5F5' },
-    { label: 'Refunded', value: ordersReport?.Refunded, color: '#ECEFF1' },
-  ].map((report, idx) => (
-    <Card
-      key={idx}
-      variant="outlined"
-      sx={{
-        backgroundColor: report.color,
-        borderRadius: 2,
-        boxShadow: 1,
-        '&:hover': {
-          boxShadow: 4,
-        },
-      }}
-    >
-      <CardContent>
-        <Typography variant="h5" fontWeight="bold">
-          {loading ? <CircularProgress size={20} /> : report.value ?? 0}
-        </Typography>
-        <Typography color="text.secondary" fontSize={14}>
-          {report.label}
-        </Typography>
-      </CardContent>
-    </Card>
-  ))}
-</Box>
-
+      <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={2} mb={4}>
+        {[
+          { label: 'Confirmed Orders', value: ordersReport?.Confirmed, color: '#E0F7FA' },
+          { label: 'Pending Orders', value: ordersReport?.Pending, color: '#FFF3E0' },
+          { label: 'Ready for delivery', value: ordersReport?.Ready_For_Delivery, color: '#E8F5E9' },
+          { label: 'Processing Orders', value: ordersReport?.Processing, color: '#FFFDE7' },
+          { label: 'Food On the Way', value: ordersReport?.Food_on_the_way, color: '#E3F2FD' },
+          { label: 'Delivered', value: ordersReport?.Delivered, color: '#E6EE9C' },
+          { label: 'Cancelled', value: ordersReport?.Cancelled, color: '#FFEBEE' },
+          { label: 'Refunded', value: ordersReport?.Refunded, color: '#F3E5F5' },
+          { label: 'Cancelled By Customer', value: ordersReport?.Cancelled_By_Customer, color: '#ECEFF1' },
+        ].map((report, idx) => (
+          <Card
+            key={idx}
+            variant="outlined"
+            sx={{
+              backgroundColor: report.color,
+              borderRadius: 2,
+              boxShadow: 1,
+              '&:hover': {
+                boxShadow: 4,
+              },
+            }}
+          >
+            <CardContent>
+              <Typography variant="h5" fontWeight="bold">
+                {loading ? <CircularProgress size={20} /> : report.value ?? 0}
+              </Typography>
+              <Typography color="text.secondary" fontSize={14}>
+                {report.label}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
       {/* Orders Table */}
       <Typography variant="h6" mb={2}>
@@ -311,7 +303,7 @@ const fetchTotalOrders = async () => {
                   <TableCell>{order.delivery ?? 'NA'}</TableCell>
                   <TableCell>N/A</TableCell>
                   <TableCell>{order.total_price}</TableCell>
-                  <TableCell>{order.amount_received_by}</TableCell>
+                  <TableCell>{order.amount_received_by ?? " -"}</TableCell>
                   <TableCell>{order.payment_method}</TableCell>
                   <TableCell>
                     <Box
@@ -349,15 +341,14 @@ const fetchTotalOrders = async () => {
         </Table>
       </TableContainer>
       <Box display="flex" justifyContent="center" mt={2}>
-  <Pagination
-    count={totalPages}
-    page={page}
-    onChange={(_, value) => setPage(value)}
-    color="primary"
-    shape="rounded"
-  />
-</Box>
-
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(_, value) => setPage(value)}
+          color="primary"
+          shape="rounded"
+        />
+      </Box>
     </Box>
   );
 }

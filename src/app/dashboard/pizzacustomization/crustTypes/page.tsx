@@ -38,9 +38,15 @@ function CrustTypeComponent(): JSX.Element {
   const [crustTypes, setCrustTypes] = useState<CrustType[]>([]);
   const [open, setOpen] = useState(false);
   const [editingCrust, setEditingCrust] = useState<CrustType | null>(null);
+  const [deletingCrust, setDeletingCrust] = useState<CrustType | null>(null);
   const [search, setSearch] = useState('');
 
-  const { apiGetCrustTypes, apiCreateCrustTypes, apiUpdateCrustTypes } = ProjectApiList();
+  const {
+    apiGetCrustTypes,
+    apiCreateCrustTypes,
+    apiUpdateCrustTypes,
+    apiDeleteCrustTypes,
+  } = ProjectApiList();
 
   const {
     register,
@@ -91,6 +97,18 @@ function CrustTypeComponent(): JSX.Element {
     }
   };
 
+  const handleDelete = async (): Promise<void> => {
+    if (!deletingCrust) return;
+    try {
+      await axios.delete(`${apiDeleteCrustTypes}/${deletingCrust.id}`);
+      toast.success('Crust type deleted');
+      setDeletingCrust(null);
+      await fetchCrustTypes();
+    } catch (error) {
+      toast.error('Error deleting crust type');
+    }
+  };
+
   const filteredCrustTypes = crustTypes.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -106,7 +124,7 @@ function CrustTypeComponent(): JSX.Element {
             size="small"
             placeholder="Search Crust"
             value={search}
-            onChange={(e) => {setSearch(e.target.value)}}
+            onChange={(e) => setSearch(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -118,9 +136,7 @@ function CrustTypeComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => {
-              handleDialogOpen();
-            }}
+            onClick={() => handleDialogOpen()}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -160,14 +176,10 @@ function CrustTypeComponent(): JSX.Element {
                 <TableCell>₹{crust.price}</TableCell>
                 <TableCell>{crust.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      handleDialogOpen(crust);
-                    }}
-                  >
+                  <IconButton onClick={() => handleDialogOpen(crust)}>
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={() => setDeletingCrust(crust)}>
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>
@@ -177,6 +189,7 @@ function CrustTypeComponent(): JSX.Element {
         </Table>
       </TableContainer>
 
+      {/* Add/Edit Modal */}
       <Dialog
         open={open}
         onClose={handleDialogClose}
@@ -267,6 +280,36 @@ function CrustTypeComponent(): JSX.Element {
             }}
           >
             {editingCrust ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog
+        open={Boolean(deletingCrust)}
+        onClose={() => setDeletingCrust(null)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Delete Crust Type</DialogTitle>
+        <DialogContent dividers>
+          Are you sure you want to delete{' '}
+          <strong>{deletingCrust?.name}</strong>?
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeletingCrust(null)}
+            variant="outlined"
+            color="secondary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

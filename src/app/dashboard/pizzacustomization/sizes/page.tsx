@@ -160,6 +160,7 @@ function SizeComponent(): JSX.Element {
 
       <ListingTable
         data={filteredSizes}
+        fetchSizes={fetchSizes}
         onClick={(item) => {
           handleDialogOpen(item as Size);
         }}

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,14 +20,13 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
-  Checkbox,
 } from '@mui/material';
+import axios from 'axios';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-import ProjectApiList from '@/app/api/ProjectApiList';
 
 interface CheeseOption {
   id: number;
@@ -43,8 +44,11 @@ function CategoryComponent(): React.JSX.Element {
   const [search, setSearch] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteCheese, setDeleteCheese] = useState<CheeseOption | null>(null);
 
-  const { apiGetCheeseOptions, apiCreateCheeseOptions, apiUpdateCheeseOptions } = ProjectApiList();
+  const { apiGetCheeseOptions, apiCreateCheeseOptions, apiUpdateCheeseOptions,apiDeleteCheeseOptions } = ProjectApiList();
 
   const {
     register,
@@ -52,7 +56,9 @@ function CategoryComponent(): React.JSX.Element {
     reset,
     formState: { errors },
     setValue,
-  } = useForm<Omit<CheeseOption, 'id' | 'created_at'>>();
+  } = useForm<Omit<CheeseOption, 'id' | 'created_at'>>({ defaultValues: {
+    is_vegan: true, // ✅ Default to checked
+  },});
 
   const fetchCheeseOptions = useCallback(async (): Promise<void> => {
     try {
@@ -96,8 +102,32 @@ function CategoryComponent(): React.JSX.Element {
     }
   };
 
+  const handleDeleteDialogOpen = (cheese: CheeseOption): void => {
+    setDeleteCheese(cheese);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteDialogClose = (): void => {
+    setDeleteCheese(null);
+    setDeleteOpen(false);
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (!deleteCheese) return;
+
+    try {
+      await axios.delete(`${apiDeleteCheeseOptions}/${deleteCheese.id}`);
+      toast.success('Cheese option deleted');
+      handleDeleteDialogClose();
+      await fetchCheeseOptions(); // refresh list
+    } catch (error) {
+      toast.error('Error deleting cheese option');
+    }
+  };
+
   const onSubmit = async (data: Omit<CheeseOption, 'id' | 'created_at'>): Promise<void> => {
     try {
+      setIsLoading(true);
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('price', data.price);
@@ -107,31 +137,37 @@ function CategoryComponent(): React.JSX.Element {
 
       if (editingCheese) {
         await axios.put(`${apiUpdateCheeseOptions}/${editingCheese.id}`, formData);
+        toast.success('Cheese option updated');
       } else {
         await axios.post(apiCreateCheeseOptions, formData);
+        toast.success('Cheese option created');
       }
 
       handleDialogClose();
       await fetchCheeseOptions();
     } catch {
       toast.error('Error saving cheese option');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filtered = cheeseOptions.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = cheeseOptions.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
-        <Typography variant="h4" fontWeight={700}>Cheese Options</Typography>
+        <Typography variant="h4" fontWeight={700}>
+          Cheese Options
+        </Typography>
         <Box display="flex" alignItems="center" gap={2}>
           <TextField
             size="small"
             placeholder="Search Cheese"
             value={search}
-            onChange={(e): void => {setSearch(e.target.value)}}
+            onChange={(e): void => {
+              setSearch(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -143,7 +179,9 @@ function CategoryComponent(): React.JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={(): void => {handleDialogOpen()}}
+            onClick={(): void => {
+              handleDialogOpen();
+            }}
             sx={{ backgroundColor: '#000', color: '#fff', textTransform: 'none' }}
           >
             Add New
@@ -176,12 +214,18 @@ function CategoryComponent(): React.JSX.Element {
                 <TableCell>{item.is_vegan ? 'Yes' : 'No'}</TableCell>
                 <TableCell>{item.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton onClick={(): void => {handleDialogOpen(item)}}>
+                  <IconButton
+                    onClick={(): void => {
+                      handleDialogOpen(item);
+                    }}
+                  >
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
-                    <Trash2 size={16} />
-                  </IconButton>
+                  <Tooltip title="Delete">
+                    <IconButton onClick={() => handleDeleteDialogOpen(item)}>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
@@ -297,8 +341,10 @@ function CategoryComponent(): React.JSX.Element {
               <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegan?</Box>
               <Checkbox
                 {...register('is_vegan')}
-                defaultChecked={editingCheese?.is_vegan || false}
-                onChange={(e): void => {setValue('is_vegan', e.target.checked)}}
+                defaultChecked={editingCheese?.is_vegan || true}
+                onChange={(e): void => {
+                  setValue('is_vegan', e.target.checked);
+                }}
               />
             </Box>
           </Box>
@@ -307,6 +353,7 @@ function CategoryComponent(): React.JSX.Element {
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
           <Button
             onClick={handleDialogClose}
+            disabled={isLoading}
             sx={{
               minWidth: 70,
               fontSize: '0.75rem',
@@ -324,7 +371,30 @@ function CategoryComponent(): React.JSX.Element {
           >
             Cancel
           </Button>
+
           <Button
+            type="submit"
+            form="cheese-form"
+            variant="contained"
+            disabled={isLoading}
+            sx={{
+              minWidth: 70,
+              fontSize: '0.75rem',
+              px: 2,
+              backgroundColor: '#000',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#222',
+              },
+            }}
+          >
+            {isLoading ? (editingCheese ? 'Updating...' : 'Saving...') : editingCheese ? 'Update' : 'Save'}
+          </Button>
+
+          {/* <Button
             type="submit"
             form="cheese-form"
             variant="contained"
@@ -343,6 +413,22 @@ function CategoryComponent(): React.JSX.Element {
             }}
           >
             {editingCheese ? 'Update' : 'Save'}
+          </Button> */}
+        </DialogActions>
+      </Dialog>
+
+      {/* delete modal */}
+      <Dialog open={deleteOpen} onClose={handleDeleteDialogClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Cheese Option</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{deleteCheese?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

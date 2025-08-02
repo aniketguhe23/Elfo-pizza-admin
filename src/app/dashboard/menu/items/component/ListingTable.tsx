@@ -19,6 +19,7 @@ interface CategoryItem {
   id: number;
   name: string;
   description?: string;
+  imageUrl?: string;
   subcategoryName?: string;
   isVegetarian?: boolean | number;
   is_vegetarian?: boolean;
@@ -42,6 +43,7 @@ export function ListingTable({ data = [], onClick, onDelete, sx }: LatestOrdersP
           <TableHead>
             <TableRow>
               <TableCell>S. No</TableCell>
+              <TableCell>Image</TableCell>
               <TableCell>Category Name</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Sub Category</TableCell>
@@ -54,6 +56,17 @@ export function ListingTable({ data = [], onClick, onDelete, sx }: LatestOrdersP
             {data.map((item, index) => (
               <TableRow hover key={item.id}>
                 <TableCell>{index + 1}</TableCell>
+                <TableCell>
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                    />
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.description || '-'}</TableCell>
                 <TableCell>{item.subcategoryName || '-'}</TableCell>

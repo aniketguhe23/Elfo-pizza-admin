@@ -1,20 +1,26 @@
 import * as React from 'react';
-import { IconButton } from '@mui/material';
+import { useState } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import Divider from '@mui/material/Divider';
-import type { SxProps } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
+import axios from 'axios'; // Import axios for HTTP requests
 import { Pencil, Trash2 } from 'lucide-react';
 
-// Define a proper interface instead of using `any`
+interface ListingTableProps {
+  data: CategoryItem[];
+  onClick?: (item: CategoryItem) => void;
+  fetchSizes: () => void;
+}
+
 interface CategoryItem {
   id: number;
   name: string;
@@ -22,19 +28,28 @@ interface CategoryItem {
   price?: string;
 }
 
-interface LatestOrdersProps {
-  data?: CategoryItem[];
-  onClick?: (item: CategoryItem) => void;
-  sx?: SxProps;
-}
+export function ListingTable({ data, onClick, fetchSizes }: ListingTableProps): React.ReactElement {
+  const { apiDeleteBreadSize } = ProjectApiList();
 
-export function ListingTable({
-  data = [],
-  onClick,
-  sx,
-}: LatestOrdersProps): React.JSX.Element {
+  const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Function to handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (deleteItemId) {
+      try {
+        await axios.delete(`${apiDeleteBreadSize}/${deleteItemId}`); // Replace with your actual delete endpoint
+        fetchSizes();
+        setDeleteDialogOpen(false); // Close the delete confirmation dialog
+      } catch (error) {
+        console.error('Failed to delete item', error);
+        // Handle error state or show error message
+      }
+    }
+  };
+
   return (
-    <Card sx={sx}>
+    <Card>
       <Divider />
       <Box sx={{ overflowX: 'auto' }}>
         <Table sx={{ minWidth: 800 }}>
@@ -44,8 +59,6 @@ export function ListingTable({
               <TableCell>Name</TableCell>
               <TableCell>Size</TableCell>
               <TableCell>Price</TableCell>
-              {/* <TableCell>isVegetarian</TableCell>
-              <TableCell>isAvailable</TableCell> */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -56,21 +69,16 @@ export function ListingTable({
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.size || '-'}</TableCell>
                 <TableCell>{item.price || '-'}</TableCell>
-                {/* <TableCell>
-                  {item.isVegetarian === 1 || item.is_vegetarian === true
-                    ? 'Yes'
-                    : 'No'}
-                </TableCell>
-                <TableCell>
-                  {item.isAvailable === 1 || item.is_available === true
-                    ? 'Yes'
-                    : 'No'}
-                </TableCell> */}
                 <TableCell>
                   <IconButton onClick={() => onClick?.(item)}>
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setDeleteItemId(item.id);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>
@@ -90,6 +98,22 @@ export function ListingTable({
           View all
         </Button>
       </CardActions>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <p>Are you sure you want to delete this item?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="primary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }

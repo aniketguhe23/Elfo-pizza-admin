@@ -42,8 +42,10 @@ function DoughComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [editingDough, setEditingDough] = useState<DoughType | null>(null);
   const [search, setSearch] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [doughToDelete, setDoughToDelete] = useState<DoughType | null>(null);
 
-  const { apiGetDough, apiCreateDough, apiUpdateDough } = ProjectApiList();
+  const { apiGetDough, apiCreateDough, apiUpdateDough, apiDeleteDough } = ProjectApiList();
 
   const {
     register,
@@ -56,14 +58,14 @@ function DoughComponent(): JSX.Element {
     try {
       const response = await axios.get<{ data: DoughType[] }>(apiGetDough);
       setDoughList(response.data.data);
-    } catch (err) {
+    } catch {
       toast.error('Failed to fetch dough types');
     }
   }, [apiGetDough]);
 
   useEffect(() => {
-  void fetchDough();
-}, [fetchDough]);
+    void fetchDough();
+  }, [fetchDough]);
 
   const handleDialogOpen = (item?: DoughType): void => {
     setEditingDough(item ?? null);
@@ -89,8 +91,27 @@ function DoughComponent(): JSX.Element {
       }
       handleDialogClose();
       await fetchDough();
-    } catch (err) {
+    } catch {
       toast.error('Error saving dough type');
+    }
+  };
+
+  const handleDeleteClick = (dough: DoughType): void => {
+    setDoughToDelete(dough);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (!doughToDelete) return;
+
+    try {
+      await axios.delete(`${apiDeleteDough}/${doughToDelete.id}`);
+      toast.success('Dough type deleted');
+      setDeleteDialogOpen(false);
+      setDoughToDelete(null);
+      await fetchDough();
+    } catch {
+      toast.error('Failed to delete dough type');
     }
   };
 
@@ -162,14 +183,10 @@ function DoughComponent(): JSX.Element {
                   <TableCell>{dough.name}</TableCell>
                   <TableCell>₹{dough.price}</TableCell>
                   <TableCell>
-                    <IconButton
-                      onClick={() => {
-                        handleDialogOpen(dough);
-                      }}
-                    >
+                    <IconButton onClick={() => handleDialogOpen(dough)}>
                       <Pencil size={16} />
                     </IconButton>
-                    <IconButton>
+                    <IconButton onClick={() => handleDeleteClick(dough)}>
                       <Trash2 size={16} />
                     </IconButton>
                   </TableCell>
@@ -186,6 +203,7 @@ function DoughComponent(): JSX.Element {
         </Table>
       </TableContainer>
 
+      {/* Add/Edit Dialog */}
       <Dialog
         open={open}
         onClose={handleDialogClose}
@@ -233,50 +251,32 @@ function DoughComponent(): JSX.Element {
             </Box>
           </Box>
         </DialogContent>
-
         <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3 }}>
-          <Button
-            onClick={handleDialogClose}
-            variant="outlined"
-            color="secondary"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              color: '#333',
-              borderColor: '#ccc',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#f2f2f2',
-                color: '#000',
-                borderColor: '#bbb',
-              },
-            }}
-          >
+          <Button onClick={handleDialogClose} variant="outlined" color="secondary">
             Cancel
           </Button>
-          <Button
-            form="dough-form"
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{
-              width: 90,
-              fontSize: '0.75rem',
-              padding: '5px 10px',
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
+          <Button type="submit" form="dough-form" variant="contained" color="primary">
             {editingDough ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete{' '}
+          <strong>{doughToDelete?.name}</strong>?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

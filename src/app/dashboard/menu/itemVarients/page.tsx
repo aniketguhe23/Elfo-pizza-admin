@@ -229,7 +229,7 @@ function ItemVariantComponent(): JSX.Element {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{sub.itemName}</TableCell>
                     <TableCell>{sub.size}</TableCell>
-                    <TableCell>{sub.crustType}</TableCell>
+                    <TableCell>{sub.crustType ?? "-"}</TableCell>
                     <TableCell>₹{sub.price}</TableCell>
                     <TableCell>
                       <IconButton

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
   Button,
@@ -20,16 +21,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import ProjectApiList from '@/app/api/ProjectApiList';
 
 interface Sauce {
   id: number;
   name: string;
   price: string;
+  image: string;
   image_url: string;
   created_at: string;
 }
@@ -47,13 +48,18 @@ function SaucesComponent() {
   const [editingSauce, setEditingSauce] = useState<Sauce | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedSauceId, setSelectedSauceId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const { apiGetSauces, apiCreateSauces, apiUpdateSauces } = ProjectApiList();
+  const { apiGetSauces, apiCreateSauces, apiUpdateSauces, apiDeleteSauces } = ProjectApiList();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<SauceForm>();
 
@@ -68,7 +74,7 @@ function SaucesComponent() {
   }, [apiGetSauces]);
 
   useEffect(() => {
-   void fetchSauces();
+    void fetchSauces();
   }, [fetchSauces]);
 
   const handleDialogOpen = (sauce?: Sauce): void => {
@@ -95,13 +101,30 @@ function SaucesComponent() {
     }
   };
 
-  const onSubmit = async (data: SauceForm): Promise<void> => {
+  const handleDelete = async () => {
+    if (!selectedSauceId) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${apiDeleteSauces}/${selectedSauceId}`); // 👈 Adjust URL if needed
+      toast.success('Sauce deleted successfully');
+      await fetchSauces();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      toast.error('Failed to delete sauce');
+    } finally {
+      setDeleting(false);
+      setSelectedSauceId(null);
+    }
+  };
+
+  const onSubmit = async (data: any) => {
+    setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('price', String(data.price));
-      if (data.image?.[0]) {
-        formData.append('image', data.image[0]);
+      if (data.image) {
+        formData.append('image', data.image); // ✅ only works if image is File
       }
 
       if (editingSauce) {
@@ -110,10 +133,13 @@ function SaucesComponent() {
         await axios.post(apiCreateSauces, formData);
       }
 
+      toast.success(`Sauce ${editingSauce ? 'updated' : 'created'} successfully`);
       handleDialogClose();
       await fetchSauces();
-    } catch {
-      toast.error('Failed to save sauce');
+    } catch (error: any) {
+      toast.error('Something went wrong while saving the sauce');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,7 +153,9 @@ function SaucesComponent() {
   return (
     <Box mt={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
-        <Typography variant="h4" fontWeight={700}>Sauces</Typography>
+        <Typography variant="h4" fontWeight={700}>
+          Sauces
+        </Typography>
         <Box display="flex" alignItems="center" gap={2}>
           <TextField
             size="small"
@@ -163,11 +191,9 @@ function SaucesComponent() {
           </Button>
         </Box>
       </Box>
-
       <Typography variant="subtitle1" gutterBottom>
         You have {sauces.length} sauces
       </Typography>
-
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
@@ -198,12 +224,19 @@ function SaucesComponent() {
                   <TableCell>{sauce.name}</TableCell>
                   <TableCell>₹{sauce.price}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => {
-                      handleDialogOpen(sauce);
-                    }}>
+                    <IconButton
+                      onClick={() => {
+                        handleDialogOpen(sauce);
+                      }}
+                    >
                       <Pencil size={16} />
                     </IconButton>
-                    <IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedSauceId(sauce.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
                       <Trash2 size={16} />
                     </IconButton>
                   </TableCell>
@@ -212,14 +245,15 @@ function SaucesComponent() {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  <Typography variant="body2" color="textSecondary">No sauces found.</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    No sauces found.
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
-
       {/* Dialog */}
       <Dialog
         open={open}
@@ -311,8 +345,13 @@ function SaucesComponent() {
                   type="file"
                   hidden
                   accept="image/*"
-                  {...register('image')}
-                  onChange={onImageChange}
+                  onChange={(e) => {
+                    onImageChange(e); // if you use preview
+                    const file: any = e.target.files?.[0];
+                    if (file) {
+                      setValue('image', file); // ✅ sets the file in RHF
+                    }
+                  }}
                 />
               </Button>
             </Box>
@@ -360,6 +399,7 @@ function SaucesComponent() {
             type="submit"
             form="sauce-form"
             variant="contained"
+            disabled={isLoading}
             sx={{
               minWidth: 70,
               fontSize: '0.75rem',
@@ -374,7 +414,23 @@ function SaucesComponent() {
               },
             }}
           >
-            {editingSauce ? 'Update' : 'Save'}
+            {isLoading ? (editingSauce ? 'Updating...' : 'Saving...') : editingSauce ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* delete dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this sauce?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

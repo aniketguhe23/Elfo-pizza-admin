@@ -44,6 +44,8 @@ const CouponsPage = () => {
 
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [selected, setSelected] = useState<Coupon | undefined>(undefined);
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [selectedCouponId, setSelectedCouponId] = useState<any>(null);
 
   const [open, setOpen] = useState(false);
 
@@ -113,8 +115,13 @@ const CouponsPage = () => {
                 <IconButton onClick={() => handleEdit(c)}>
                   <EditIcon />
                 </IconButton>
-                <IconButton onClick={() => handleDelete(c.id)}>
-                  <DeleteIcon />
+                <IconButton
+                  onClick={() => {
+                    setSelectedCouponId(c.id); // set the ID of the coupon
+                    setOpenConfirm(true); // open the modal
+                  }}
+                >
+                  <DeleteIcon color="error" />
                 </IconButton>
               </TableCell>
             </TableRow>
@@ -142,6 +149,33 @@ const CouponsPage = () => {
             fetchCoupons();
           }}
         />
+      </Dialog>
+
+      {/* delete */}
+      <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this coupon?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenConfirm(false)}>Cancel</Button>
+          <Button
+            onClick={async () => {
+              try {
+                await axios.delete(`${apiDeleteCoupons}/${selectedCouponId}`);
+                fetchCoupons(); // refetch updated list
+              } catch (err) {
+                console.error('Failed to delete coupon:', err);
+              } finally {
+                setOpenConfirm(false);
+              }
+            }}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

@@ -12,6 +12,7 @@ import {
   Avatar,
   Box,
   Chip,
+  CircularProgress, // ✅ New
   Grid,
   IconButton,
   InputAdornment,
@@ -26,6 +27,7 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
+import { toast } from 'react-toastify'; // ✅ New
 
 interface Order {
   id: string;
@@ -49,27 +51,34 @@ interface User {
 
 export default function CustomerDetailPage() {
   const { apiUserDatabyId, apiGetUserOrdersById } = ProjectApiList();
-    const router = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const customerId = searchParams.get('id');
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true); // ✅
+  const [error, setError] = useState<string | null>(null); // ✅
 
   useEffect(() => {
     async function fetchCustomerAndOrders() {
       try {
-        // Fetch user details
+        setLoading(true);
+        setError(null);
+
         const resUser = await axios.get(`${apiUserDatabyId}/${customerId}`);
         const userData = resUser.data.user as User;
         setUser(userData);
 
-        // Fetch user's orders
         const resOrders = await axios.get(`${apiGetUserOrdersById}/${userData?.waId}`);
         const fetchedOrders = resOrders.data.data as Order[];
         setOrders(fetchedOrders);
-      } catch (err) {
-        console.error('Failed to fetch user or orders:', err);
+      } catch (err: any) {
+        const message = err?.response?.data?.message || 'Failed to fetch user or orders';
+        setError(message);
+        toast.error(message); // ✅ Show toast error
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -77,6 +86,24 @@ export default function CustomerDetailPage() {
   }, [customerId]);
 
   const filteredOrders = orders.filter((order) => order.Order_no.toLowerCase().includes(search.toLowerCase()));
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={4}>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   if (!user) return null;
 
@@ -109,7 +136,6 @@ export default function CustomerDetailPage() {
                 }}
               />
             </Stack>
-
             <Table>
               <TableHead>
                 <TableRow>
@@ -121,26 +147,34 @@ export default function CustomerDetailPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.map((order, index) => (
-                  <TableRow key={order.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{order.Order_no}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.order_status}
-                        color={order.order_status === 'Delivered' ? 'success' : 'warning'}
-                      />
-                    </TableCell>
-                    <TableCell>₹ {order.total_price}</TableCell>
-                    <TableCell align="right">
-                      <IconButton color="secondary">
-                        <VisibilityIcon
-                          onClick={() => router.push(`/dashboard/allOrders/orderById?order_no=${order.Order_no}`)}
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map((order, index) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{order.Order_no}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.order_status}
+                          color={order.order_status === 'Delivered' ? 'success' : 'warning'}
                         />
-                      </IconButton>
+                      </TableCell>
+                      <TableCell>₹ {order.total_price}</TableCell>
+                      <TableCell align="right">
+                        <IconButton color="secondary">
+                          <VisibilityIcon
+                            onClick={() => router.push(`/dashboard/allOrders/orderById?order_no=${order.Order_no}`)}
+                          />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" className="text-gray-500 py-4">
+                      No orders found
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </Paper>

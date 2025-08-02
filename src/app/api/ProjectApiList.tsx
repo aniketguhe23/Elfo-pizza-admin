@@ -77,36 +77,43 @@ export default function ProjectApiList(): Record<string, string> {
     apiCreateBreadSize: `${baseUrl}/api/bread-size/create`,
     apiGetBreadSize: `${baseUrl}/api/bread-size/get`,
     apiUpdateBreadSize: `${baseUrl}/api/bread-size/update-by-id`,
+    apiDeleteBreadSize: `${baseUrl}/api/bread-size/delete-by-id`,
 
     //Dough
     apiGetDough: `${baseUrl}/api/dough-type/get`,
     apiCreateDough: `${baseUrl}/api/dough-type/create`,
     apiUpdateDough: `${baseUrl}/api/dough-type/update`,
+    apiDeleteDough: `${baseUrl}/api/dough-type/delete`,
 
     //Crust Types
     apiGetCrustTypes: `${baseUrl}/api/crust-type/get`,
     apiCreateCrustTypes: `${baseUrl}/api/crust-type/create`,
     apiUpdateCrustTypes: `${baseUrl}/api/crust-type/update`,
+    apiDeleteCrustTypes: `${baseUrl}/api/crust-type/delete`,
 
     //Sauces
     apiGetSauces: `${baseUrl}/api/sauce/get`,
     apiCreateSauces: `${baseUrl}/api/sauce/create`,
     apiUpdateSauces: `${baseUrl}/api/sauce/update`,
+    apiDeleteSauces: `${baseUrl}/api/sauce/delete`,
 
     //Cheesse Options
     apiGetCheeseOptions: `${baseUrl}/api/cheese-option/get`,
     apiCreateCheeseOptions: `${baseUrl}/api/cheese-option/create`,
     apiUpdateCheeseOptions: `${baseUrl}/api/cheese-option/update`,
+    apiDeleteCheeseOptions: `${baseUrl}/api/cheese-option/delete`,
 
     //Toppings
     apiGetToppings: `${baseUrl}/api/topping/get`,
     apiCreateToppings: `${baseUrl}/api/topping/create`,
     apiUpdateToppings: `${baseUrl}/api/topping/update`,
+    apiDeleteToppings: `${baseUrl}/api/topping/delete`,
 
     //Extra Sauce
     apiGetExtraSauce: `${baseUrl}/api/extra-sauce/get`,
     apiCreateExtraSauce: `${baseUrl}/api/extra-sauce/create`,
     apiUpdateExtraSauce: `${baseUrl}/api/extra-sauce/update`,
+    apiDeleteExtraSauce: `${baseUrl}/api/extra-sauce/delete`,
 
     // Footer APis
 

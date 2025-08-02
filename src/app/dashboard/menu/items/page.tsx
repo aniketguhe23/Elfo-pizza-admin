@@ -58,8 +58,9 @@ function ItemsComponent(): JSX.Element {
   const [search, setSearch] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState<Item | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories,apiDeleteItem } = ProjectApiList();
+  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories, apiDeleteItem } = ProjectApiList();
 
   const {
     register,
@@ -68,7 +69,11 @@ function ItemsComponent(): JSX.Element {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      is_vegetarian: 1, // ✅ Default to checked
+    },
+  });
 
   // Wrap fetch functions in useCallback to fix missing dependencies warning
   const fetchItems = useCallback(async (): Promise<void> => {
@@ -116,7 +121,7 @@ function ItemsComponent(): JSX.Element {
       name: item?.name || '',
       description: item?.description || '',
       subcategory_id: item?.subcategory_id ?? 0,
-      is_vegetarian: item?.is_vegetarian ? 1 : 0,
+      is_vegetarian: 1,
       is_available: item?.is_available ? 1 : 0,
       image_url: undefined as unknown as FileList, // to satisfy TS, won't be used for reset
     });
@@ -135,12 +140,13 @@ function ItemsComponent(): JSX.Element {
     formData.append('name', data.name);
     formData.append('description', data.description);
     formData.append('subcategory_id', String(data.subcategory_id));
-    formData.append('is_vegetarian', String(data.is_vegetarian));
+    formData.append('is_vegetarian', '1');
     formData.append('is_available', String(data.is_available));
 
     if (data.image_url?.[0]) {
       formData.append('image', data.image_url[0]);
     }
+    setSubmitting(true);
 
     try {
       if (editingItem) {
@@ -155,7 +161,9 @@ function ItemsComponent(): JSX.Element {
       handleDialogClose();
       await fetchItems();
     } catch (error) {
-      // Optionally log to error tracking service
+      console.error('Submit error:', error);
+    } finally {
+      setSubmitting(false); // ⬅️ END
     }
   };
 
@@ -347,7 +355,8 @@ function ItemsComponent(): JSX.Element {
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian</Box>
               <Checkbox
-                checked={Boolean(isVegetarian)}
+                // checked={Boolean(isVegetarian)}
+                checked={true}
                 onChange={(e) => {
                   setValue('is_vegetarian', e.target.checked ? 1 : 0);
                 }}
@@ -371,7 +380,7 @@ function ItemsComponent(): JSX.Element {
             Cancel
           </Button>
           <Button type="submit" form="item-form" variant="contained" color="primary">
-            {editingItem ? 'Update' : 'Create'}
+            {submitting ? 'Saving...' : editingItem ? 'Update' : 'Create'}{' '}
           </Button>
         </DialogActions>
       </Dialog>

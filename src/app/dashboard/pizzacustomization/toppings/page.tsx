@@ -55,8 +55,11 @@ function ToppingsComponent(): JSX.Element {
   const [editing, setEditing] = useState<Topping | null>(null);
   const [search, setSearch] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Topping | null>(null);
 
-  const { apiGetToppings, apiCreateToppings, apiUpdateToppings } = ProjectApiList();
+  const { apiGetToppings, apiCreateToppings, apiUpdateToppings ,apiDeleteToppings} = ProjectApiList();
 
   const {
     register,
@@ -97,28 +100,63 @@ function ToppingsComponent(): JSX.Element {
     reset();
   };
 
+  const handleDeleteClick = (item: Topping) => {
+    setItemToDelete(item);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setDeleteOpen(false);
+    setItemToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      setLoading(true);
+      await axios.delete(`${apiDeleteToppings}/${itemToDelete.id}`);
+      toast.success('Topping deleted');
+      await fetchToppings();
+    } catch (err) {
+      toast.error('Failed to delete topping');
+    } finally {
+      setLoading(false);
+      handleDeleteClose();
+    }
+  };
+
   const onSubmit = async (data: ToppingFormData): Promise<void> => {
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('price', data.price);
       formData.append('is_vegetarian', String(data.is_vegetarian));
+
       if (data.image && data.image.length > 0) {
         formData.append('image', data.image[0]);
+      } else if (editing) {
+        // Send existing image URL for update
+        formData.append('image_url', editing.image_url);
       }
 
       if (editing) {
         await axios.put(`${apiUpdateToppings}/${editing.id}`, formData);
+        toast.success('Topping updated');
       } else {
         await axios.post(apiCreateToppings, formData);
+        toast.success('Topping created');
       }
 
       handleDialogClose();
       void fetchToppings();
-    } catch {
+    } catch (error) {
       toast.error('Error saving topping');
+    } finally {
+      setLoading(false);
     }
   };
+  // trigger('image');
 
   const filtered = toppings.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -200,7 +238,7 @@ function ToppingsComponent(): JSX.Element {
                   >
                     <Pencil size={16} />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={() => handleDeleteClick(topping)}>
                     <Trash2 size={16} />
                   </IconButton>
                 </TableCell>
@@ -276,7 +314,7 @@ function ToppingsComponent(): JSX.Element {
 
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian?</Box>
-              <Checkbox {...register('is_vegetarian')} />
+              <Checkbox defaultChecked  {...register('is_vegetarian')} />
             </Box>
 
             {previewImage && (
@@ -322,14 +360,12 @@ function ToppingsComponent(): JSX.Element {
                   hidden
                   type="file"
                   accept="image/*"
-                  {...register('image')}
+                  // ❌ REMOVE: {...register('image')}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
                       setPreviewImage(URL.createObjectURL(file));
-                      if (e.target.files) {
-                        setValue('image', e.target.files);
-                      }
+                      setValue('image', e.target.files as any); // ✅ store file list manually
                     }
                   }}
                 />
@@ -376,7 +412,26 @@ function ToppingsComponent(): JSX.Element {
               },
             }}
           >
-            {editing ? 'Update' : 'Save'}
+            {loading ? (editing ? 'Updating...' : 'Creating...') : editing ? 'Update' : 'Create'}{' '}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dleet diloge */}
+
+      <Dialog open={deleteOpen} onClose={handleDeleteClose}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{itemToDelete?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteClose} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
+            {loading ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

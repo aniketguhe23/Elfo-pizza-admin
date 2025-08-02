@@ -138,16 +138,16 @@ function ItemVariantComponent(): React.ReactElement {
           </TableHead>
           <TableBody>
             {filteredVariants.length > 0 ? (
-              filteredVariants.map((item, index) => {
-                const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item.category.name);
+              filteredVariants?.map((item, index) => {
+                const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item?.category?.name);
                 return (
                   <TableRow key={item.id}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.category.name}</TableCell>
-                    <TableCell>{item.is_vegetarian === 1 ? 'Yes' : 'No'}</TableCell>
-                    <TableCell>{item.is_available === 1 ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{item?.name}</TableCell>
+                    <TableCell>{item?.description}</TableCell>
+                    <TableCell>{item?.category?.name}</TableCell>
+                    <TableCell>{item?.is_vegetarian === 1 ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{item?.is_available === 1 ? 'Yes' : 'No'}</TableCell>
                     <TableCell>
                       {item.variants.map((variant) => (
                         <div key={`${item.id}-${variant.crust_type}`}>

@@ -10,6 +10,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -24,8 +25,6 @@ import {
 import axios from 'axios';
 import { BarChart2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { Pagination } from '@mui/material';
-
 
 export default function FoodReportPage() {
   const { apiGetFoodReport, apiGetResturants, apiGetAllMenu } = ProjectApiList();
@@ -43,9 +42,8 @@ export default function FoodReportPage() {
     endDate: '',
   });
   const [page, setPage] = useState(1);
-const [limit, setLimit] = useState(5);
-const [totalPages, setTotalPages] = useState(1);
-
+  const [limit, setLimit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchVariants = useCallback(async () => {
     try {
@@ -67,41 +65,37 @@ const [totalPages, setTotalPages] = useState(1);
     }
   }, [apiGetResturants]);
 
- const fetchFoodReport = async () => {
-  setLoading(true);
-  try {
-    const res = await axios.get(apiGetFoodReport, {
-      params: {
-        restaurant: filters.restaurant || undefined,
-        item: filters.item || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        page,
-        limit,
-      },
-    });
+  const fetchFoodReport = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(apiGetFoodReport, {
+        params: {
+          restaurant: filters.restaurant || undefined,
+          item: filters.item || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          page,
+          limit,
+        },
+      });
 
-    setFoodReport(res.data.data || []);
-    setTotalPages(res.data.totalPages || 1);
-  } catch (err) {
-    setError('Failed to load food report.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setFoodReport(res.data.data || []);
+      setTotalPages(res.data.totalPages || 1);
+    } catch (err) {
+      setError('Failed to load food report.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchVariants();
     fetchRestaurants();
   }, [fetchVariants, fetchRestaurants]);
 
-useEffect(() => {
-  fetchFoodReport();
-}, [filters, page, limit]);
-
-
-  console.log(restaurants)
+  useEffect(() => {
+    fetchFoodReport();
+  }, [filters, page, limit]);
 
   return (
     <Box sx={{ pt: 2, maxWidth: 1200, mx: 'auto' }}>
@@ -120,7 +114,9 @@ useEffect(() => {
         </Typography>
 
         {/* First Row: Restaurant */}
-        <Box mb={3}>
+        {/* First Row: Clear Filters + Restaurant */}
+        <Box mb={3} display="flex" alignItems="center" gap={2}>
+          {/* Restaurant Filter */}
           <Box sx={{ flex: '1 1 250px' }}>
             <Typography variant="body2" fontWeight={500} mb={1}>
               Restaurant
@@ -142,6 +138,22 @@ useEffect(() => {
               </Select>
             </FormControl>
           </Box>
+
+          {/* Clear Filters Button */}
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() =>
+              setFilters({
+                restaurant: '',
+                item: '',
+                startDate: '',
+                endDate: '',
+              })
+            }
+          >
+            Clear Filters
+          </Button>
         </Box>
 
         {/* Second Row: Item, Start Date, End Date */}
@@ -243,15 +255,15 @@ useEffect(() => {
               </TableBody>
             </Table>
           </TableContainer>
-             <Box display="flex" justifyContent="center" mt={2}>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={(_, value) => setPage(value)}
-                    color="primary"
-                    shape="rounded"
-                  />
-                </Box>
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              color="primary"
+              shape="rounded"
+            />
+          </Box>
         </Paper>
       )}
     </Box>

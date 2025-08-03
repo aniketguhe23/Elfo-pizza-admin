@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Visibility } from '@mui/icons-material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -17,37 +18,35 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 
 import { useSelection } from '@/hooks/use-selection';
-import { useRouter } from 'next/navigation';
 
 export interface Customer {
   id: string;
-  waId: string;
-  avatar: string;
+  waId?: string;
+  avatar?: string;
   name: string;
   email: string;
-  address: { city: string; state: string; country: string; street: string };
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
   phone: string;
   createdAt: Date;
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  created_at: string;
 }
 
 interface CustomersTableProps {
-  count?: number;
-  page?: number;
   rows?: Customer[];
-  rowsPerPage?: number;
   onView?: (customer: Customer) => void;
 }
 
-export function CustomersTable({
-  count = 0,
-  rows = [],
-  page = 0,
-  rowsPerPage = 0,
-  onView,
-}: CustomersTableProps): React.JSX.Element {
-    const router = useRouter();
+export function CustomersTable({ rows = [], onView }: CustomersTableProps): React.JSX.Element {
+  const router = useRouter();
   const rowIds = React.useMemo(() => rows.map((customer) => customer.id), [rows]);
-
   const { selected } = useSelection(rowIds);
 
   return (
@@ -70,16 +69,20 @@ export function CustomersTable({
                 <TableRow hover key={row.id} selected={isSelected}>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar src={row.avatar} />
-                      <Typography variant="subtitle2">{row.name}</Typography>
+                      <Avatar src={row.avatar || '/assets/default-avatar.png'} />
+                      <Typography variant="subtitle2" noWrap>
+                        {row.firstName} {row.lastName}
+                      </Typography>
                     </Stack>
                   </TableCell>
                   <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.phone}</TableCell>
-                  <TableCell>{dayjs(row.createdAt).format('MMM D, YYYY')}</TableCell>
+                  <TableCell>{row.mobile}</TableCell>
+                  <TableCell>{row.created_at ? dayjs(row.created_at).format('MMM D, YYYY') : '—'}</TableCell>
                   <TableCell align="center">
                     <IconButton
-                      onClick={() => router.push(`/dashboard/customers/customerById?id=${row.id}`)}
+                      onClick={() =>
+                        onView ? onView(row) : router.push(`/dashboard/customers/customerById?id=${row.id}`)
+                      }
                       color="secondary"
                     >
                       <Visibility />

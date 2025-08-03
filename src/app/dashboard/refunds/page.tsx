@@ -50,8 +50,10 @@ export default function RefundListPage() {
   const [selected, setSelected] = useState<Refund | null>(null);
   const [restaurantId, setRestaurantId] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const [error, setError] = useState('');
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const handleOpenDialog = (refund: Refund) => {
     setSelected(refund);
@@ -72,22 +74,23 @@ export default function RefundListPage() {
     }
   };
 
-  const fetchRefunds = async (restaurant_no: string) => {
+  const fetchRefunds = async (restaurant_no: string, pageNum: number = 1) => {
     try {
-      const res = await axios.get(`${apiGetAllRefunds}?restaurant_no=${restaurant_no}`);
+      const res = await axios.get(`${apiGetAllRefunds}?restaurant_no=${restaurant_no}&page=${pageNum}&limit=5`);
       setRefunds(res.data?.data || []);
+      setTotalPages(res.data?.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching refunds:', error);
     }
   };
 
   useEffect(() => {
-    fetchRestaurants();
-  }, []);
+    fetchRefunds(restaurantId, page);
+  }, [restaurantId, page]);
 
-  useEffect(() => {
-    fetchRefunds(restaurantId);
-  }, [restaurantId]);
+  // useEffect(() => {
+  //   fetchRefunds(restaurantId);
+  // }, [restaurantId]);
 
   return (
     <>
@@ -196,6 +199,22 @@ export default function RefundListPage() {
             ))
           )}
         </CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
+          <Button variant="outlined" size="small" disabled={page === 1} onClick={() => setPage((prev) => prev - 1)}>
+            Previous
+          </Button>
+          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+            Page {page} of {totalPages}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={page === totalPages}
+            onClick={() => setPage((prev) => prev + 1)}
+          >
+            Next
+          </Button>
+        </Box>
       </Card>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

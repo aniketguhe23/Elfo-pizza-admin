@@ -12,6 +12,7 @@ import {
   IconButton,
   InputAdornment,
   MenuItem,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -38,6 +39,12 @@ interface ItemVariant {
   crustType: string;
   price: number;
   itemName?: string;
+   pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
 }
 
 interface FormData {
@@ -56,6 +63,11 @@ function ItemVariantComponent(): JSX.Element {
   const [deletingVariant, setDeletingVariant] = useState<ItemVariant | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
   const { apiGetItemVariants, apiCreateItemVariant, apiUpdateItemVariant, apiGetItems, apiDeleteItemVariant } =
     ProjectApiList();
 
@@ -69,11 +81,19 @@ function ItemVariantComponent(): JSX.Element {
 
   // Wrapped fetch functions with useCallback to add to dependency array
   const fetchVariants = useCallback(async (): Promise<void> => {
+    setLoading(true);
     try {
-      const res: AxiosResponse<{ data: ItemVariant[] }> = await axios.get(apiGetItemVariants);
+      const res: AxiosResponse<{
+        data: ItemVariant[];
+        pagination: { totalPages: number; totalItems: number; currentPage: number };
+      }> = await axios.get(`${apiGetItemVariants}?page=${page}&limit=${limit}`);
+
       setVariants(res.data.data);
-    } catch {
-      // Handle error silently or add your error handling here
+      setTotalPages(res.data.pagination.totalPages); // ✅ Correct
+    } catch (err) {
+      console.error('Failed to fetch item variants', err);
+    } finally {
+      setLoading(false);
     }
   }, [apiGetItemVariants]);
 
@@ -89,7 +109,7 @@ function ItemVariantComponent(): JSX.Element {
   useEffect(() => {
     void fetchVariants();
     void fetchItems();
-  }, [fetchVariants, fetchItems]);
+  }, [fetchVariants, fetchItems, page]);
 
   const handleDialogOpen = (variant?: ItemVariant): void => {
     setEditingVariant(variant ?? null);
@@ -129,11 +149,11 @@ function ItemVariantComponent(): JSX.Element {
     }
   };
 
-  const filteredVariants = variants.filter(
+  const filteredVariants = variants?.filter(
     (v) =>
       (v.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       v.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.crustType.toLowerCase().includes(searchTerm.toLowerCase())
+      v.crustType?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -229,7 +249,7 @@ function ItemVariantComponent(): JSX.Element {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{sub.itemName}</TableCell>
                     <TableCell>{sub.size}</TableCell>
-                    <TableCell>{sub.crustType ?? "-"}</TableCell>
+                    <TableCell>{sub.crustType ?? '-'}</TableCell>
                     <TableCell>₹{sub.price}</TableCell>
                     <TableCell>
                       <IconButton
@@ -257,6 +277,34 @@ function ItemVariantComponent(): JSX.Element {
             )}
           </TableBody>
         </Table>
+
+        <Stack direction="row" justifyContent="center" alignItems="center" spacing={3} mt={4} mb={5}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => prev - 1)}
+            disabled={page === 1}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Previous
+          </Button>
+
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Page {page} of {totalPages}
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page === totalPages}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Next
+          </Button>
+        </Stack>
       </TableContainer>
 
       <Dialog

@@ -13,6 +13,7 @@ import {
   IconButton,
   InputAdornment,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -46,8 +47,12 @@ function CategoryComponent(): JSX.Element {
   const [search, setSearch] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const { apiGetCategories, apiCreateCategories, apiUpdateCategories,apiDeleteCategories } = ProjectApiList();
+  const { apiGetCategories, apiCreateCategories, apiUpdateCategories, apiDeleteCategories } = ProjectApiList();
 
   const {
     register,
@@ -58,13 +63,15 @@ function CategoryComponent(): JSX.Element {
 
   const fetchCategories = useCallback(async (): Promise<void> => {
     try {
-      const response = await axios.get<CategoryResponse>(apiGetCategories);
+      const response = await axios.get(`${apiGetCategories}?page=${page}&limit=${limit}`);
       const result = response.data?.data || [];
       setCategories(result);
+      setTotalPages(response.data?.totalPages || 1);
+      setTotalItems(response.data?.totalItems || 0);
     } catch (error) {
-      toast.error('Error fetching categories'); // <-- replaced alert
+      toast.error('Error fetching categories');
     }
-  }, [apiGetCategories]);
+  }, [apiGetCategories, page, limit]);
 
   useEffect(() => {
     void (async () => {
@@ -169,7 +176,7 @@ function CategoryComponent(): JSX.Element {
       </Box>
 
       <Typography variant="subtitle1" gutterBottom>
-        You have {categories.length} total categories
+        You have {totalItems} total categories
       </Typography>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
@@ -182,30 +189,65 @@ function CategoryComponent(): JSX.Element {
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {filteredCategories.map((category, index) => (
-              <TableRow key={category.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{category.name}</TableCell>
-                <TableCell>
-                  {category.created_at ? new Date(category.created_at).toISOString().split('T')[0] : 'N/A'}
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      handleDialogOpen(category);
-                    }}
-                  >
-                    <Pencil size={16} />
-                  </IconButton>
-                  <IconButton onClick={() => handleDeleteClick(category)}>
-                    <Trash2 size={16} />
-                  </IconButton>
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((category, index) => (
+                <TableRow key={category.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{category.name}</TableCell>
+                  <TableCell>
+                    {category.created_at ? new Date(category.created_at).toISOString().split('T')[0] : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleDialogOpen(category)}>
+                      <Pencil size={16} />
+                    </IconButton>
+                    <IconButton onClick={() => handleDeleteClick(category)}>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  <Typography variant="body2" color="text.secondary" py={2}>
+                    No Category Found
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
+
+        <Stack direction="row" justifyContent="center" alignItems="center" spacing={3} mt={4} mb={5}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => prev - 1)}
+            disabled={page === 1}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Previous
+          </Button>
+
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Page {page} of {totalPages}
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page === totalPages}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Next
+          </Button>
+        </Stack>
       </TableContainer>
 
       <Dialog

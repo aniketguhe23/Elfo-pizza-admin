@@ -1,20 +1,21 @@
 import * as React from 'react';
-import { IconButton } from '@mui/material';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import Divider from '@mui/material/Divider';
+import {
+  Box,
+  Button,
+  Card,
+  Divider,
+  IconButton,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import type { SxProps } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import { Pencil, Trash2 } from 'lucide-react';
 
-// Define a proper interface instead of using `any`
 interface CategoryItem {
   id: number;
   name: string;
@@ -31,10 +32,27 @@ interface LatestOrdersProps {
   data?: CategoryItem[];
   onClick?: (item: CategoryItem) => void;
   onDelete?: (item: CategoryItem) => void;
+  loading?: boolean;
   sx?: SxProps;
 }
 
-export function ListingTable({ data = [], onClick, onDelete, sx }: LatestOrdersProps): React.JSX.Element {
+export function ListingTable({
+  data = [],
+  onClick,
+  onDelete,
+  loading = false,
+  sx,
+}: LatestOrdersProps): React.JSX.Element {
+  const renderSkeletonRows = Array.from({ length: 5 }).map((_, index) => (
+    <TableRow key={index}>
+      {Array.from({ length: 8 }).map((__, i) => (
+        <TableCell key={i}>
+          <Skeleton variant="rectangular" width="100%" height={20} />
+        </TableCell>
+      ))}
+    </TableRow>
+  ));
+
   return (
     <Card sx={sx}>
       <Divider />
@@ -53,49 +71,60 @@ export function ListingTable({ data = [], onClick, onDelete, sx }: LatestOrdersP
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item, index) => (
-              <TableRow hover key={item.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
-                    />
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.description || '-'}</TableCell>
-                <TableCell>{item.subcategoryName || '-'}</TableCell>
-                <TableCell>{item.isVegetarian === 1 || item.is_vegetarian === true ? 'Yes' : 'No'}</TableCell>
-                <TableCell>{item.isAvailable === 1 || item.is_available === true ? 'Yes' : 'No'}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => onClick?.(item)}>
-                    <Pencil size={16} />
-                  </IconButton>
-                  <IconButton onClick={() => onDelete?.(item)}>
-                    <Trash2 size={16} />
-                  </IconButton>
+            {loading ? (
+              renderSkeletonRows
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  <Typography variant="body1" fontWeight={500} py={2}>
+                    No items found
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              data.map((item, index) => (
+                <TableRow hover key={item.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        style={{
+                          width: 50,
+                          height: 50,
+                          objectFit: 'cover',
+                          borderRadius: 4,
+                        }}
+                      />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.description || '-'}</TableCell>
+                  <TableCell>{item.subcategoryName || '-'}</TableCell>
+                  <TableCell>
+                    {item.isVegetarian === 1 || item.is_vegetarian === true ? 'Yes' : 'No'}
+                  </TableCell>
+                  <TableCell>
+                    {item.isAvailable === 1 || item.is_available === true ? 'Yes' : 'No'}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => onClick?.(item)}>
+                      <Pencil size={16} />
+                    </IconButton>
+                    <IconButton onClick={() => onDelete?.(item)}>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Box>
       <Divider />
-      <CardActions sx={{ justifyContent: 'flex-end' }}>
-        <Button
-          color="inherit"
-          endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />}
-          size="small"
-          variant="text"
-        >
-          View all
-        </Button>
-      </CardActions>
     </Card>
   );
 }

@@ -6,6 +6,7 @@ import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   InputAdornment,
   MenuItem,
   Paper,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -56,6 +58,12 @@ function SubCategoryComponent(): JSX.Element {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingSubCategory, setDeletingSubCategory] = useState<SubCategory | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10); // You can also allow dynamic limit if needed
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+
   const {
     apiGetSubCategories,
     apiCreateSubCategories,
@@ -72,17 +80,23 @@ function SubCategoryComponent(): JSX.Element {
   } = useForm<SubCategoryForm>();
 
   // Wrap fetch functions with useCallback to avoid missing dependencies warning in useEffect
-  const fetchSubCategories = useCallback(async (): Promise<void> => {
-    try {
-      const res = await axios.get<{ data: SubCategory[] }>(apiGetSubCategories);
-      const data = res.data.data || [];
-      setSubCategories(data);
-      setFilteredSubCategories(data);
-    } catch (err) {
-      // Handle error appropriately in production
-      toast.error('Error fetching subcategories:');
-    }
-  }, [apiGetSubCategories]);
+ const fetchSubCategories = useCallback(async (): Promise<void> => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`${apiGetSubCategories}?page=${page}&limit=${limit}`);
+    const data = res.data.data || [];
+    const pagination = res.data.pagination;
+
+    setSubCategories(data);
+    setFilteredSubCategories(data);
+    setTotalPages(pagination?.totalPages || 1);
+  } catch (err) {
+    toast.error('Error fetching subcategories');
+  } finally {
+    setLoading(false);
+  }
+}, [apiGetSubCategories, page, limit]);
+
 
   const fetchCategories = useCallback(async (): Promise<void> => {
     try {
@@ -96,9 +110,12 @@ function SubCategoryComponent(): JSX.Element {
   }, [apiGetCategories]);
 
   useEffect(() => {
-    void fetchSubCategories();
     void fetchCategories();
-  }, [fetchSubCategories, fetchCategories]);
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    void fetchSubCategories();
+  }, [fetchSubCategories]);
 
   const handleDialogOpen = (subCategory?: SubCategory): void => {
     setEditingSubCategory(subCategory || null);
@@ -225,26 +242,34 @@ function SubCategoryComponent(): JSX.Element {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredSubCategories.length > 0 ? (
-              filteredSubCategories.map((sub, index) => (
-                <TableRow key={sub.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{sub.name}</TableCell>
-                  <TableCell>{sub.category_name}</TableCell>
-                  <TableCell>{sub.created_at?.split('T')[0]}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={() => {
-                        handleDialogOpen(sub);
-                      }}
-                    >
-                      <Pencil size={16} />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeleteClick(sub)}>
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
+            {loading ? (
+    // Loading skeleton rows
+    [...Array(3)].map((_, i) => (
+      <TableRow key={i}>
+        {[...Array(5)].map((_, j) => (
+          <TableCell key={j}>
+           <CircularProgress size={24} />
+          </TableCell>
+        ))}
+      </TableRow>
+    ))
+  ) : filteredSubCategories.length > 0 ? (
+    // Data rows
+    filteredSubCategories.map((sub, index) => (
+      <TableRow key={sub.id}>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{sub.name}</TableCell>
+        <TableCell>{sub.category_name}</TableCell>
+        <TableCell>{sub.created_at?.split('T')[0]}</TableCell>
+        <TableCell>
+          <IconButton onClick={() => handleDialogOpen(sub)}>
+            <Pencil size={16} />
+          </IconButton>
+          <IconButton onClick={() => handleDeleteClick(sub)}>
+            <Trash2 size={16} />
+          </IconButton>
+        </TableCell>
+      </TableRow>
               ))
             ) : (
               <TableRow>
@@ -257,6 +282,34 @@ function SubCategoryComponent(): JSX.Element {
             )}
           </TableBody>
         </Table>
+
+        <Box display="flex" justifyContent="center" alignItems="center" mt={3} mb={5} gap={3}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Previous
+          </Button>
+
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Page {page} of {totalPages}
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages}
+            sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+          >
+            Next
+          </Button>
+        </Box>
       </TableContainer>
 
       <Dialog

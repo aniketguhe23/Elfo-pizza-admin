@@ -63,34 +63,46 @@ export function CustomersTable({ rows = [], onView }: CustomersTableProps): Reac
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => {
-              const isSelected = selected?.has(row.id);
-              return (
-                <TableRow hover key={row.id} selected={isSelected}>
-                  <TableCell>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar src={row.avatar || '/assets/default-avatar.png'} />
-                      <Typography variant="subtitle2" noWrap>
-                        {row.firstName} {row.lastName}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.mobile}</TableCell>
-                  <TableCell>{row.created_at ? dayjs(row.created_at).format('MMM D, YYYY') : '—'}</TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      onClick={() =>
-                        onView ? onView(row) : router.push(`/dashboard/customers/customerById?id=${row.id}`)
-                      }
-                      color="secondary"
-                    >
-                      <Visibility />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body1" color="textSecondary" sx={{ py: 2 }}>
+                    No users found.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((row) => {
+                const isSelected = selected?.has(row.id);
+                return (
+                  <TableRow hover key={row.id} selected={isSelected}>
+                    <TableCell>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar src={row.avatar || '/assets/default-avatar.png'} />
+                        <Typography variant="subtitle2" noWrap>
+                          {row.firstName} {row.lastName}
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>{row.email}</TableCell>
+                    <TableCell>{row.mobile}</TableCell>
+                    <TableCell>
+                      {row.created_at ? dayjs(row.created_at).format('MMM D, YYYY') : '—'}
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        onClick={() =>
+                          onView ? onView(row) : router.push(`/dashboard/customers/customerById?id=${row.id}`)
+                        }
+                        color="secondary"
+                      >
+                        <Visibility />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </Box>

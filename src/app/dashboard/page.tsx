@@ -12,6 +12,7 @@ import {
   Paper,
   Select,
   Stack,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -274,6 +275,8 @@ const Dashboard = () => {
     fetchResturants();
   }, []);
 
+  const formatRupee = (value: number) => `₹${value.toLocaleString('en-IN')}`;
+
   return (
     <Grid container spacing={3} p={3}>
       {/* Filter Header */}
@@ -287,14 +290,13 @@ const Dashboard = () => {
               </Typography>
             </Grid>
 
-            {/* Toggle Button Group on the Right */}
             <Grid item xs={12}>
               <Stack
-                direction={{ xs: 'column', sm: 'row' }}
+                direction="row"
                 spacing={2}
                 alignItems="center"
                 justifyContent="space-between"
-                sx={{ flexWrap: 'wrap' }}
+                sx={{ flexWrap: 'wrap', rowGap: 2 }}
               >
                 {/* Restaurant Selector */}
                 <FormControl
@@ -371,6 +373,51 @@ const Dashboard = () => {
                   <ToggleButton value="monthly">Monthly</ToggleButton>
                   <ToggleButton value="weekly">Weekly</ToggleButton>
                 </ToggleButtonGroup>
+
+                {/* Date Pickers */}
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="flex-end"
+                  sx={{ mt: 0, flexWrap: 'wrap' }}
+                >
+                  <Stack direction="column" alignItems="start" spacing={0}>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#555' }}>
+                      Start Date:
+                    </Typography>
+                    <TextField
+                      type="date"
+                      size="small"
+                      variant="outlined"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      sx={{
+                        minWidth: 150,
+                        '& input': { padding: '8.5px 10px' },
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+
+                  <Stack direction="column" alignItems="start" spacing={0}>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#555' }}>
+                      End Date:
+                    </Typography>
+                    <TextField
+                      type="date"
+                      size="small"
+                      variant="outlined"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      sx={{
+                        minWidth: 150,
+                        '& input': { padding: '8.5px 10px' },
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+                </Stack>
               </Stack>
             </Grid>
           </Grid>
@@ -384,9 +431,8 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={totalSalesReport}>
               <XAxis dataKey="date" style={{ fontSize: '12px' }} />
-              <YAxis style={{ fontSize: '12px' }} />
-
-              <Tooltip />
+              <YAxis style={{ fontSize: '12px' }} tickFormatter={(value) => formatRupee(value)} />
+              <Tooltip formatter={(value, name) => [formatRupee(Number(value)), name]} />
               <Line type="monotone" dataKey="sales" stroke="#00897B" strokeWidth={2} dot />
             </LineChart>
           </ResponsiveContainer>
@@ -432,8 +478,8 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={averageOrderValue}>
               <XAxis dataKey="month" style={{ fontSize: '12px' }} />
-              <YAxis style={{ fontSize: '12px' }} />
-              <Tooltip />
+              <YAxis style={{ fontSize: '12px' }} tickFormatter={(value) => formatRupee(value)} />
+              <Tooltip formatter={(value) => formatRupee(Number(value))} />
               <Line dataKey="value" stroke="#EF5350" dot />
             </LineChart>
           </ResponsiveContainer>

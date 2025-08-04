@@ -13,6 +13,7 @@ import {
   DialogTitle,
   InputAdornment,
   MenuItem,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material';
@@ -60,6 +61,11 @@ function ItemsComponent(): JSX.Element {
   const [deletingItem, setDeletingItem] = useState<Item | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10); // Fixed for now, you can make this dynamic
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false); // For loading indicator
+
   const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories, apiDeleteItem } = ProjectApiList();
 
   const {
@@ -77,15 +83,21 @@ function ItemsComponent(): JSX.Element {
 
   // Wrap fetch functions in useCallback to fix missing dependencies warning
   const fetchItems = useCallback(async (): Promise<void> => {
+    setLoading(true);
     try {
-      const response = await axios.get<{ data: Item[] }>(apiGetItems);
+      const response = await axios.get(`${apiGetItems}?page=${page}&limit=${limit}`);
       const fetchedItems = response.data.data || [];
       setItems(fetchedItems);
       setFilteredItems(fetchedItems);
+
+      const total = response.data.pagination?.totalItems || 0;
+      setTotalPages(Math.ceil(total / limit));
     } catch (error) {
-      // Optionally log to error tracking service
+      console.error('Failed to fetch items:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [apiGetItems]);
+  }, [apiGetItems, page, limit]);
 
   const fetchSubCategories = useCallback(async (): Promise<void> => {
     try {
@@ -98,9 +110,12 @@ function ItemsComponent(): JSX.Element {
   }, [apiGetSubCategories]);
 
   useEffect(() => {
-    void fetchItems();
     void fetchSubCategories();
   }, [fetchItems, fetchSubCategories]);
+
+  useEffect(() => {
+    void fetchItems();
+  }, [fetchItems]);
 
   useEffect(() => {
     if (!search) {
@@ -246,7 +261,37 @@ function ItemsComponent(): JSX.Element {
         data={filteredItems}
         onClick={(item) => handleDialogOpen(item as Item)}
         onDelete={(item) => handleDeleteClick(item as Item)}
+        loading={loading}
       />
+
+      {/* paginatation */}
+      <Stack direction="row" justifyContent="center" alignItems="center" spacing={3} mt={4} mb={5}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => setPage((prev) => prev - 1)}
+          disabled={page === 1 || loading}
+          sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+        >
+          Previous
+        </Button>
+
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          Page {page} of {totalPages}
+        </Typography>
+
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => setPage((prev) => prev + 1)}
+          disabled={page === totalPages || loading}
+          sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+        >
+          Next
+        </Button>
+      </Stack>
 
       <Dialog
         open={open}

@@ -126,7 +126,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
       setLoading(false);
     }
   };
-
+  
   return (
     <>
       <Dialog

@@ -7,17 +7,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import axios from 'axios';
@@ -43,24 +44,31 @@ const CouponsPage = () => {
   const { apiGetCoupons, apiDeleteCoupons } = ProjectApiList();
 
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
   const [selected, setSelected] = useState<Coupon | undefined>(undefined);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedCouponId, setSelectedCouponId] = useState<any>(null);
-
   const [open, setOpen] = useState(false);
 
   const fetchCoupons = async () => {
     try {
-      const res = await axios.get(apiGetCoupons); // Replace with actual base URL if needed
-      setCoupons(res.data.data);
+      setLoading(true);
+      const res = await axios.get(`${apiGetCoupons}?page=${page}&limit=10`);
+      setCoupons(res.data.data || []);
+      setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (err) {
       console.error('Error fetching coupons', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchCoupons();
-  }, []);
+  }, [page]);
 
   const handleEdit = (coupon: Coupon) => {
     setSelected(coupon);
@@ -90,45 +98,88 @@ const CouponsPage = () => {
         </Button>
       </Box>
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Code</TableCell>
-            <TableCell>Discount</TableCell>
-            <TableCell>Min Order</TableCell>
-            <TableCell>Expiry</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {coupons.map((c) => (
-            <TableRow key={c.id}>
-              <TableCell>{c.name}</TableCell>
-              <TableCell>{c.code}</TableCell>
-              <TableCell>{c.discountAmount ? `₹${c.discountAmount}` : `${c.discountPercent}%`}</TableCell>
-              <TableCell>{c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}</TableCell>
-              <TableCell>{dayjs(c.expiresAt).format('DD MMM YYYY')}</TableCell>
-              <TableCell>{c.isActive ? '✅' : '❌'}</TableCell>
-              <TableCell>
-                <IconButton onClick={() => handleEdit(c)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setSelectedCouponId(c.id); // set the ID of the coupon
-                    setOpenConfirm(true); // open the modal
-                  }}
-                >
-                  <DeleteIcon color="error" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {loading ? (
+        <Box display="flex" justifyContent="center" mt={5}>
+          <CircularProgress />
+        </Box>
+      ) : coupons.length === 0 ? (
+        <Typography align="center" mt={4}>
+          No coupons found.
+        </Typography>
+      ) : (
+        <>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Code</TableCell>
+                <TableCell>Discount</TableCell>
+                <TableCell>Min Order</TableCell>
+                <TableCell>Expiry</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {coupons.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>{c.name}</TableCell>
+                  <TableCell>{c.code}</TableCell>
+                  <TableCell>
+                    {c.discountAmount ? `₹${c.discountAmount}` : `${c.discountPercent}%`}
+                  </TableCell>
+                  <TableCell>{c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}</TableCell>
+                  <TableCell>{dayjs(c.expiresAt).format('DD MMM YYYY')}</TableCell>
+                  <TableCell>{c.isActive ? '✅' : '❌'}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleEdit(c)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedCouponId(c.id);
+                        setOpenConfirm(true);
+                      }}
+                    >
+                      <DeleteIcon color="error" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
+          <Stack direction="row" justifyContent="center" alignItems="center" spacing={3} mt={4} mb={5}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => setPage((prev) => prev - 1)}
+              disabled={page === 1 || loading}
+              sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+            >
+              Previous
+            </Button>
+
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Page {page} of {totalPages}
+            </Typography>
+
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={page === totalPages || loading}
+              sx={{ textTransform: 'none', borderRadius: 2, px: 2 }}
+            >
+              Next
+            </Button>
+          </Stack>
+        </>
+      )}
+
+      {/* Create/Edit Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>{selected ? 'Edit Coupon' : 'Create Coupon'}</DialogTitle>
         <CouponForm
@@ -151,7 +202,7 @@ const CouponsPage = () => {
         />
       </Dialog>
 
-      {/* delete */}
+      {/* Confirm Delete Dialog */}
       <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
@@ -163,7 +214,7 @@ const CouponsPage = () => {
             onClick={async () => {
               try {
                 await axios.delete(`${apiDeleteCoupons}/${selectedCouponId}`);
-                fetchCoupons(); // refetch updated list
+                fetchCoupons();
               } catch (err) {
                 console.error('Failed to delete coupon:', err);
               } finally {

@@ -199,6 +199,7 @@ export default function ProjectApiList(): Record<string, string> {
     apipostChatsAdminMessages: `${baseUrl}/api/chat/send`,
     apigetAdminChatList: `${baseUrl}/api/chat/admin-list`,
     apigetAdminUserChatConverstation: `${baseUrl}/api/chat/user-admin`,
+    apiCloseChat: `${baseUrl}/api/chat/closeChatSession`,
 
 
   };

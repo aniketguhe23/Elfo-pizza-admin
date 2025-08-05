@@ -158,6 +158,7 @@ export default function ProjectApiList(): Record<string, string> {
     apiLocation: `${baseUrl}/api/location`,
     apigetStates: `${baseUrl}/api/location/getStates`,
     apigetCities: `${baseUrl}/api/location/geCitiesbyId`,
+    apigetLocalities: `${baseUrl}/api/location/locality-by-city`,
 
     // coupons
     apiGetCoupons: `${baseUrl}/api/coupons/get`,

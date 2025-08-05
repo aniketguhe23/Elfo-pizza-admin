@@ -13,6 +13,7 @@ import {
   DialogTitle,
   FormControl,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -51,6 +52,8 @@ export default function ContactSupportPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [error, setError] = useState('');
   const [restaurantId, setRestaurantId] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchRestaurants = async () => {
     try {
@@ -63,9 +66,11 @@ export default function ContactSupportPage() {
 
   const fetchSupportRequests = async () => {
     try {
-      const res = await axios.get(`${apiGetContactSUpport}?restaurant_id=${restaurantId}`);
+      const res = await axios.get(`${apiGetContactSUpport}?restaurant_id=${restaurantId}&page=${page}&limit=10`);
+
       if (res.data.status === 'success') {
         setSupportRequests(res.data.data);
+        setTotalPages(res.data.pagination.totalPages);
       }
     } catch (err) {
       console.error('Failed to fetch support requests', err);
@@ -74,7 +79,7 @@ export default function ContactSupportPage() {
 
   useEffect(() => {
     fetchSupportRequests();
-  }, [restaurantId]);
+  }, [restaurantId, page]);
 
   useEffect(() => {
     fetchRestaurants();
@@ -312,6 +317,15 @@ export default function ContactSupportPage() {
             ))}
           </TableBody>
         </Table>
+          <Box display="flex" justifyContent="center" mt={3}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              color="primary"
+              shape="rounded"
+            />
+          </Box>
       </TableContainer>
     </div>
   );

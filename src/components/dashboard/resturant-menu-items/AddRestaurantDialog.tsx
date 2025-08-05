@@ -24,6 +24,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 
+type Locality = {
+  id: number;
+  name: string;
+  cityId: number;
+  active: boolean;
+};
+
 type City = {
   id: number;
   name: string;
@@ -40,6 +47,7 @@ interface RestaurantFormData {
   pincode: string;
   contact_email: string;
   contact_phone: string;
+  locality: string;
   // opening_time: string;
   // closing_time: string;
   is_active?: boolean;
@@ -77,6 +85,7 @@ const schema = yup.object().shape({
   city: yup.string().max(100).required(),
   state: yup.string().max(100).required(),
   pincode: yup.string().max(15).required(),
+  locality: yup.string().required(),
   contact_email: yup.string().email().max(150).required(),
   contact_phone: yup.string().max(15).required(),
   // opening_time: yup
@@ -98,7 +107,7 @@ const schema = yup.object().shape({
 });
 
 export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialogProps) {
-  const { apiCreateReesturants, apigetStates, apigetCities } = ProjectApiList();
+  const { apiCreateReesturants, apigetStates, apigetCities, apigetLocalities } = ProjectApiList();
   const [logo, setLogo] = useState<File | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -108,6 +117,8 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
   const [selectedStateId, setSelectedStateId] = useState<string>('');
 
   const [showPassword, setShowPassword] = useState(false);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -129,6 +140,7 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
       state: '',
       pincode: '',
       contact_email: '',
+      locality: '',
       contact_phone: '',
       // opening_time: '',
       // closing_time: '',
@@ -138,6 +150,7 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
   });
 
   const onSubmit = async (formData: RestaurantFormData) => {
+    // console.log(formData);
     try {
       setLoading(true);
 
@@ -157,7 +170,6 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
         setBanner(null);
       }
     } catch (error: any) {
-      // Check if it's a response with expected field error
       const res = error?.response?.data;
       if (res?.status === 'error' && res?.field === 'contact_email') {
         setError('contact_email', {
@@ -202,6 +214,23 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
 
     fetchCities();
   }, [selectedStateId]);
+
+  useEffect(() => {
+    const fetchLocalities = async () => {
+      if (!selectedCityId) return;
+
+      try {
+        const res = await axios.get(`${apigetLocalities}/${selectedCityId}`);
+        const localitiesData = res.data.data;
+        const activeLocalities = localitiesData.filter((loc: any) => loc.active);
+        setLocalities(activeLocalities);
+      } catch (err) {
+        console.error('Error fetching localities:', err);
+      }
+    };
+
+    fetchLocalities();
+  }, [selectedCityId]);
 
   const textFieldStyle = {
     borderRadius: '8px',
@@ -307,7 +336,7 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                           const selectedName = e.target.value;
                           field.onChange(selectedName); // stores the state name in form
 
-                          const selected:any = states.find((s) => s.name === selectedName);
+                          const selected: any = states.find((s) => s.name === selectedName);
                           if (selected) {
                             setSelectedStateId(selected.id); // store state ID separately
                           }
@@ -350,6 +379,16 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                         helperText={errors.city?.message}
                         SelectProps={{ native: true }}
                         InputProps={{ sx: textFieldStyle }}
+                        onChange={(e) => {
+                          const selectedCityName = e.target.value;
+                          field.onChange(selectedCityName); // update form value
+
+                          const selectedCity = cities.find((c) => c.name === selectedCityName);
+                          if (selectedCity) {
+                            setSelectedCityId(selectedCity.id); // trigger locality fetch
+                          }
+                        }}
+                        value={field.value || ''}
                       >
                         <option value="">Select a city</option>
                         {cities
@@ -359,6 +398,41 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                               {city.name}
                             </option>
                           ))}
+                      </TextField>
+                    )}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Grid container alignItems="center">
+                <Grid item xs={4}>
+                  <Typography variant="body2" fontWeight={600} color="#444" textTransform="uppercase" sx={{ pr: 2 }}>
+                    Locality
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Controller
+                    name="locality"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        select
+                        fullWidth
+                        size="small"
+                        error={!!errors.locality}
+                        helperText={errors.locality?.message}
+                        SelectProps={{ native: true }}
+                        InputProps={{ sx: textFieldStyle }}
+                      >
+                        <option value="">Select a locality</option>
+                        {localities.map((loc) => (
+                          <option key={loc.id} value={loc.name}>
+                            {loc.name}
+                          </option>
+                        ))}
                       </TextField>
                     )}
                   />
@@ -448,6 +522,15 @@ export default function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaur
                         placeholder="Enter Phone"
                         error={!!errors.contact_phone}
                         helperText={errors.contact_phone?.message}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          maxLength: 15, // optional: limit length
+                        }}
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(/\D/g, ''); // remove non-digits
+                          field.onChange(numericValue);
+                        }}
                         InputProps={{ sx: textFieldStyle }}
                       />
                     )}

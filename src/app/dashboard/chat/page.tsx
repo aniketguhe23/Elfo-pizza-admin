@@ -210,13 +210,11 @@ export default function ChatApp() {
     });
   };
 
-  // const truncateText = (text: string, charLimit = 30) => {
-  //   return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
-  // };
+
   return (
     <Box sx={{ display: 'flex', height: '90vh' }}>
       {/* Sidebar */}
-      <Paper sx={{ width: 300, borderRight: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+      <Paper sx={{ width: 450, borderRight: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Typography variant="h6" fontWeight="bold" display="flex" alignItems="center" gap={1}>
             <Message fontSize="small" /> Chat

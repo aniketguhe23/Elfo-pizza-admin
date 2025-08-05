@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -23,12 +21,20 @@ import * as yup from 'yup';
 
 import PasswordChangeDialog from './PasswordChangeDialog';
 
+type Locality = {
+  id: number;
+  name: string;
+  cityId: number;
+  active: boolean;
+};
+
 interface RestaurantFormData {
   name: string;
   address: string;
   city: string;
   state: string;
   pincode: number;
+  locality: string;
   contact_email: string;
   contact_phone: string;
   is_active?: boolean;
@@ -46,6 +52,7 @@ const schema = yup.object().shape({
   address: yup.string().required('Address is required'),
   state: yup.string().required('State is required'),
   city: yup.string().required('City is required'),
+  locality: yup.string().required('Locality is required'),
   pincode: yup.number().required('Pincode is required'),
   contact_email: yup.string().email('Invalid email').required('Email is required'),
   contact_phone: yup.string().required('Phone is required'),
@@ -53,12 +60,14 @@ const schema = yup.object().shape({
 });
 
 export default function EditRestaurantDialog({ open, onClose, restaurantData, onUpdate }: EditRestaurantDialogProps) {
-  const { apiUpdateRestaurantData, apigetStates, apigetCities } = ProjectApiList();
+  const { apiUpdateRestaurantData, apigetStates, apigetCities, apigetLocalities } = ProjectApiList();
   const [loading, setLoading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [states, setStates] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
 
   const {
     handleSubmit,
@@ -97,6 +106,22 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
     fetchCities();
   }, [selectedStateId]);
 
+  // Fetch localities when selectedCityId changes
+  useEffect(() => {
+    const fetchLocalities = async () => {
+      if (!selectedCityId) return;
+      try {
+        const res = await axios.get(`${apigetLocalities}/${selectedCityId}`);
+        const localitiesData = res.data.data;
+        const activeLocalities = localitiesData.filter((loc: any) => loc.active);
+        setLocalities(activeLocalities);
+      } catch (err) {
+        console.error('Error fetching localities:', err);
+      }
+    };
+    fetchLocalities();
+  }, [selectedCityId]);
+
   // Set form defaults from restaurantData
   useEffect(() => {
     if (restaurantData) {
@@ -126,7 +151,14 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
       setLoading(false);
     }
   };
-  
+
+  const textFieldStyle = {
+    borderRadius: '8px',
+    backgroundColor: '#fafafa',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+    '& input': { fontSize: '0.875rem' },
+  };
+
   return (
     <>
       <Dialog
@@ -143,8 +175,9 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
       >
         <DialogTitle>Edit Restaurant</DialogTitle>
         <DialogContent dividers sx={{ p: 3 }}>
-          <form>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={2}>
+              {/* Name, Address, Contact Email */}
               {['name', 'address', 'contact_email'].map((fieldName) => (
                 <Grid item xs={12} key={fieldName}>
                   <Grid container spacing={2} alignItems="center">
@@ -173,7 +206,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                 </Grid>
               ))}
 
-              {/* PINCODE Field (Number Only) */}
+              {/* Contact Phone */}
               <Grid item xs={12}>
                 <Grid container spacing={2} alignItems="center">
                   <Grid item xs={4}>
@@ -194,7 +227,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                           inputProps={{
                             inputMode: 'numeric',
                             pattern: '[0-9]*',
-                             maxLength: 15,
+                            maxLength: 15,
                           }}
                           onKeyPress={(e) => {
                             if (!/[0-9]/.test(e.key)) {
@@ -209,7 +242,8 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                   </Grid>
                 </Grid>
               </Grid>
-              
+
+              {/* Pincode */}
               <Grid item xs={12}>
                 <Grid container spacing={2} alignItems="center">
                   <Grid item xs={4}>
@@ -230,7 +264,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                           inputProps={{
                             inputMode: 'numeric',
                             pattern: '[0-9]*',
-                             maxLength: 7,
+                            maxLength: 7,
                           }}
                           onKeyPress={(e) => {
                             if (!/[0-9]/.test(e.key)) {
@@ -273,6 +307,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                             const selected = states.find((s) => s.name === selectedName);
                             setSelectedStateId(selected?.id || null);
                             setValue('city', '');
+                            setValue('locality', ''); // Clear locality when state changes
                           }}
                         >
                           <MenuItem value="">Select State</MenuItem>
@@ -290,7 +325,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
 
               {/* City Dropdown */}
               <Grid item xs={12}>
-                <Grid container spacing={2} alignItems="center">
+                <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <Typography variant="body2" fontWeight={500}>
                       CITY
@@ -309,6 +344,13 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                           variant="outlined"
                           error={!!errors.city}
                           helperText={errors.city?.message}
+                          onChange={(e) => {
+                            const selectedName = e.target.value;
+                            field.onChange(selectedName);
+                            const selectedCity = cities.find((c) => c.name === selectedName);
+                            setSelectedCityId(selectedCity?.id || null);
+                            setValue('locality', ''); // Clear locality when city changes
+                          }}
                         >
                           <MenuItem value="">Select City</MenuItem>
                           {cities.map((city) => (
@@ -321,91 +363,129 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
                     />
                   </Grid>
                 </Grid>
-              </Grid>
 
-              {/* is_active Checkbox */}
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
+                {/* Locality Dropdown */}
+
+                <Grid container spacing={2} sx={{marginTop: "2px"}}>
+                  <Grid item xs={4}>
+                    <Typography variant="body2" fontWeight={500}>
+                      LOCALITY
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
                     <Controller
-                      name="is_active"
+                      name="locality"
                       control={control}
-                      render={({ field }) => <Checkbox {...field} checked={field.value || false} />}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                         select
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          error={!!errors.locality}
+                          helperText={errors.locality?.message}
+                          SelectProps={{ native: true }}
+                          // InputProps={{ sx: textFieldStyle }}
+                        >
+                          <option value="">Select a locality</option>
+                          {localities.map((loc) => (
+                            <option key={loc.id} value={loc.name}>
+                              {loc.name}
+                            </option>
+                          ))}
+                        </TextField>
+                      )}
                     />
-                  }
-                  label="Active"
-                />
-              </Grid>
+                  </Grid>
+                </Grid>
 
-              {/* Change Password Button */}
-              <Grid item xs={12}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setShowPasswordModal(true)}
-                  sx={{
-                    fontSize: '0.75rem',
-                    px: 2,
-                    backgroundColor: '#AEAFB8',
-                    color: 'black',
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    borderRadius: 1,
-                    '&:hover': {
-                      backgroundColor: '#222',
-                      color: '#fff',
-                    },
-                  }}
-                >
-                  Change Password
-                </Button>
+                {/* is_active Checkbox */}
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Controller
+                        name="is_active"
+                        control={control}
+                        render={({ field }) => <Checkbox {...field} checked={field.value || false} />}
+                      />
+                    }
+                    label="Active"
+                  />
+                </Grid>
+
+                {/* Change Password Button */}
+                <Grid item xs={12}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setShowPasswordModal(true)}
+                    sx={{
+                      fontSize: '0.75rem',
+                      px: 2,
+                      backgroundColor: '#AEAFB8',
+                      color: 'black',
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      borderRadius: 1,
+                      '&:hover': {
+                        backgroundColor: '#222',
+                        color: '#fff',
+                      },
+                    }}
+                  >
+                    Change Password
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
+
+            {/* Dialog Actions */}
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={onClose}
+                variant="outlined"
+                disabled={loading}
+                sx={{
+                  fontSize: '0.75rem',
+                  px: 2,
+                  backgroundColor: '#fff',
+                  color: '#000',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  border: '1px solid #cccccc',
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: '#f2f2f2',
+                  },
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  fontSize: '0.75rem',
+                  px: 2,
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: '#222',
+                  },
+                }}
+              >
+                {loading ? 'Updating...' : 'Save'}
+              </Button>
+            </DialogActions>
           </form>
         </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={onClose}
-            variant="outlined"
-            disabled={loading}
-            sx={{
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#fff',
-              color: '#000',
-              textTransform: 'none',
-              fontWeight: 500,
-              border: '1px solid #cccccc',
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#f2f2f2',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            variant="contained"
-            disabled={loading}
-            sx={{
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
-            {loading ? 'Updating...' : 'Save'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
+      {/* Password Change Dialog */}
       <PasswordChangeDialog
         open={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}

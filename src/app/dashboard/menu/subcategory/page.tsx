@@ -83,7 +83,7 @@ function SubCategoryComponent(): JSX.Element {
  const fetchSubCategories = useCallback(async (): Promise<void> => {
   setLoading(true);
   try {
-    const res = await axios.get(`${apiGetSubCategories}?page=${page}&limit=${limit}`);
+    const res = await axios.get(`${apiGetSubCategories}`);
     const data = res.data.data || [];
     const pagination = res.data.pagination;
 

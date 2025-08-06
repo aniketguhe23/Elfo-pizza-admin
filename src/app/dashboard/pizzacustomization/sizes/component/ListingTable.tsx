@@ -89,14 +89,14 @@ export function ListingTable({ data, onClick, fetchSizes }: ListingTableProps): 
       </Box>
       <Divider />
       <CardActions sx={{ justifyContent: 'flex-end' }}>
-        <Button
+        {/* <Button
           color="inherit"
           endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />}
           size="small"
           variant="text"
         >
           View all
-        </Button>
+        </Button> */}
       </CardActions>
 
       {/* Delete Confirmation Dialog */}

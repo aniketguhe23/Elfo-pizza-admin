@@ -12,6 +12,7 @@ import {
   DialogTitle,
   FormControl,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -21,7 +22,6 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Pagination,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -66,9 +66,7 @@ export default function ContactSupportPage() {
 
   const fetchSupportRequests = async () => {
     try {
-      const res = await axios.get(
-        `${apigetResturantSupport}?restaurant_id=${restaurantId}&page=${page}&limit=10`
-      );
+      const res = await axios.get(`${apigetResturantSupport}?restaurant_id=${restaurantId}&page=${page}&limit=10`);
       if (res.data.status === 'success') {
         setSupportRequests(res.data.data || []);
         setTotalPages(res.data.pagination?.totalPages || 1);
@@ -207,7 +205,97 @@ export default function ContactSupportPage() {
                   </Button>
 
                   {/* Dialog code (unchanged) */}
-                  {/* ... */}
+            <Dialog
+  open={modalOpenId !== null}
+  onClose={() => setModalOpenId(null)}
+  fullWidth
+  maxWidth="xs"
+  PaperProps={{
+    sx: {
+      backgroundColor: 'rgba(255, 255, 255, 0.95)', // Slightly opaque white background for dialog content
+      boxShadow: 'none',
+    },
+  }}
+  BackdropProps={{
+    sx: {
+      backdropFilter: 'none', // <-- removes blur
+      backgroundColor: 'rgba(0, 0, 0, 0.1)', // <-- transparent black overlay
+    },
+  }}
+>
+  <DialogTitle
+    sx={{
+      fontWeight: 600,
+      fontSize: '1.2rem',
+      borderBottom: '1px solid #e0e0e0',
+      pb: 1.5,
+      mb: 1.5,
+    }}
+  >
+    Update Support Status
+  </DialogTitle>
+
+  <DialogContent>
+    <Typography variant="body2" sx={{ mb: 1 }} color="text.secondary">
+      Select New Status:
+    </Typography>
+    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 16 }}>
+      {['pending', 'acknowledge', 'resolved', 'rejected'].map((status) => (
+        <Button
+          key={status}
+          variant={selectedStatus === status ? 'contained' : 'outlined'}
+          onClick={() => setSelectedStatus(status as SupportRequest['status'])}
+          size="small"
+          sx={{
+            textTransform: 'capitalize',
+            minWidth: 100,
+            bgcolor: selectedStatus === status ? '#000' : 'transparent',
+            color: selectedStatus === status ? '#fff' : '#000',
+            borderColor: '#000',
+            '&:hover': {
+              bgcolor: selectedStatus === status ? '#222' : '#f0f0f0',
+            },
+          }}
+        >
+          {status}
+        </Button>
+      ))}
+    </div>
+  </DialogContent>
+
+  <DialogActions sx={{ px: 3, pb: 2, borderTop: '1px solid #e0e0e0' }}>
+    <Button
+      variant="contained"
+      onClick={() => {
+        if (modalOpenId !== null) {
+          handleStatusChange(modalOpenId, selectedStatus);
+        }
+      }}
+      disabled={updatingId === modalOpenId}
+      sx={{
+        bgcolor: '#000',
+        color: '#fff',
+        '&:hover': { bgcolor: '#222' },
+        textTransform: 'none',
+      }}
+    >
+      {updatingId === modalOpenId ? 'Updating...' : 'Update Status'}
+    </Button>
+    <Button
+      onClick={() => setModalOpenId(null)}
+      sx={{
+        textTransform: 'none',
+        color: '#333',
+        border: '1px solid #ccc',
+        bgcolor: '#f9f9f9',
+        '&:hover': { bgcolor: '#eee' },
+      }}
+    >
+      Cancel
+    </Button>
+  </DialogActions>
+</Dialog>
+
                 </TableCell>
               </TableRow>
             ))}
@@ -218,12 +306,7 @@ export default function ContactSupportPage() {
       {/* Pagination Component */}
       {totalPages > 1 && (
         <Box mt={3} display="flex" justifyContent="center">
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(event, value) => setPage(value)}
-            color="primary"
-          />
+          <Pagination count={totalPages} page={page} onChange={(event, value) => setPage(value)} color="primary" />
         </Box>
       )}
     </div>

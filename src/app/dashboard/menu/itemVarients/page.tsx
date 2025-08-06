@@ -39,7 +39,7 @@ interface ItemVariant {
   crustType: string;
   price: number;
   itemName?: string;
-   pagination: {
+  pagination: {
     page: number;
     limit: number;
     totalCount: number;
@@ -66,6 +66,7 @@ function ItemVariantComponent(): JSX.Element {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const { apiGetItemVariants, apiCreateItemVariant, apiUpdateItemVariant, apiGetItems, apiDeleteItemVariant } =
@@ -79,23 +80,26 @@ function ItemVariantComponent(): JSX.Element {
     formState: { errors },
   } = useForm<FormData>();
 
-  // Wrapped fetch functions with useCallback to add to dependency array
-  const fetchVariants = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const res: AxiosResponse<{
-        data: ItemVariant[];
-        pagination: { totalPages: number; totalItems: number; currentPage: number };
-      }> = await axios.get(`${apiGetItemVariants}?page=${page}&limit=${limit}`);
 
-      setVariants(res.data.data);
-      setTotalPages(res.data.pagination.totalPages); // ✅ Correct
-    } catch (err) {
-      console.error('Failed to fetch item variants', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiGetItemVariants]);
+  // Wrapped fetch functions with useCallback to add to dependency array
+const fetchVariants = useCallback(async (): Promise<void> => {
+  setLoading(true);
+  try {
+    const res: AxiosResponse<{
+      data: ItemVariant[];
+      pagination: { totalPages: number; totalItems: number; currentPage: number; totalCount: number };
+    }> = await axios.get(`${apiGetItemVariants}?page=${page}&limit=${limit}`);
+
+    setVariants(res.data.data);
+    setTotalPages(res.data.pagination.totalPages);
+    setTotalCount(res.data.pagination.totalCount);
+  } catch (err) {
+    console.error('Failed to fetch item variants', err);
+  } finally {
+    setLoading(false);
+  }
+}, [apiGetItemVariants, page, limit]); // ✅ Add page and limit here
+
 
   const fetchItems = useCallback(async (): Promise<void> => {
     try {
@@ -106,9 +110,13 @@ function ItemVariantComponent(): JSX.Element {
     }
   }, [apiGetItems]);
 
+useEffect(() => {
+  fetchVariants();
+}, [fetchVariants]);
+
   useEffect(() => {
-    void fetchVariants();
-    void fetchItems();
+    // fetchVariants();
+    fetchItems();
   }, [fetchVariants, fetchItems, page]);
 
   const handleDialogOpen = (variant?: ItemVariant): void => {
@@ -226,7 +234,7 @@ function ItemVariantComponent(): JSX.Element {
       </Box>
 
       <Typography variant="subtitle1" gutterBottom>
-        You have {variants.length} total variants
+        You have {totalCount} total variants
       </Typography>
 
       <TableContainer sx={{ borderRadius: 2 }}>

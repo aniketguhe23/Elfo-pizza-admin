@@ -369,9 +369,9 @@ const Dashboard = () => {
                   }}
                 >
                   <ToggleButton value="all">All</ToggleButton>
-                  <ToggleButton value="yearly">Yearly</ToggleButton>
                   <ToggleButton value="monthly">Monthly</ToggleButton>
                   <ToggleButton value="weekly">Weekly</ToggleButton>
+                  <ToggleButton value="yearly">Yearly</ToggleButton>
                 </ToggleButtonGroup>
 
                 {/* Date Pickers */}

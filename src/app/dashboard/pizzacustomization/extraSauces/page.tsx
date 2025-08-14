@@ -12,7 +12,9 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -27,9 +29,18 @@ import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
+interface BreadSize {
+  id: number;
+  name: string;
+}
+
 interface Sauce {
   id: number;
   name: string;
+  pizza_size: string;
+  light_price: string;
+  regular_price: string;
+  extra_price: string;
   price: string;
   image_url: string;
   created_at: string;
@@ -37,6 +48,10 @@ interface Sauce {
 
 interface SauceForm {
   name: string;
+  pizza_size: string;
+  light_price: string;
+  regular_price: string;
+  extra_price: string;
   price: string;
   image_url: string;
   image?: FileList;
@@ -45,6 +60,7 @@ interface SauceForm {
 function ExtraSauceComponent(): JSX.Element {
   const [sauces, setSauces] = useState<Sauce[]>([]);
   const [filteredSauces, setFilteredSauces] = useState<Sauce[]>([]);
+  const [breadSizes, setBreadSizes] = useState<BreadSize[]>([]);
   const [open, setOpen] = useState(false);
   const [editingSauce, setEditingSauce] = useState<Sauce | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,15 +69,36 @@ function ExtraSauceComponent(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const { apiGetExtraSauce, apiCreateExtraSauce, apiUpdateExtraSauce, apiDeleteExtraSauce } = ProjectApiList();
+  const { apiGetExtraSauce, apiCreateExtraSauce, apiUpdateExtraSauce, apiDeleteExtraSauce, apiGetBreadSize } =
+    ProjectApiList();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
-  } = useForm<SauceForm>();
+  } = useForm<SauceForm>({
+    defaultValues: {
+      pizza_size: '',
+      light_price: '',
+      regular_price: '',
+      extra_price: '',
+    },
+  });
 
+  // Fetch bread sizes for pizza_size dropdown
+  const fetchBreadSizes = useCallback(async () => {
+    try {
+      const res = await axios.get<{ data: BreadSize[] }>(apiGetBreadSize);
+      setBreadSizes(res.data.data || []);
+    } catch {
+      toast.error('Error fetching bread sizes');
+    }
+  }, [apiGetBreadSize]);
+
+  // Fetch sauces
   const fetchSauces = useCallback(async (): Promise<void> => {
     try {
       const res = await axios.get<{ data: Sauce[] }>(apiGetExtraSauce);
@@ -74,22 +111,29 @@ function ExtraSauceComponent(): JSX.Element {
   }, [apiGetExtraSauce]);
 
   useEffect(() => {
+    void fetchBreadSizes();
     void fetchSauces();
-  }, [fetchSauces]);
+  }, [fetchBreadSizes, fetchSauces]);
 
   const handleDialogOpen = (sauce?: Sauce): void => {
     setEditingSauce(sauce || null);
     reset({
       name: sauce?.name || '',
-      price: sauce?.price || '',
+      pizza_size: sauce?.pizza_size || '',
+      light_price: sauce?.light_price || '',
+      regular_price: sauce?.regular_price || '',
+      extra_price: sauce?.extra_price || '',
+      // price: sauce?.price || '',
       image_url: sauce?.image_url || '',
     });
+    setPreviewImage(sauce?.image_url || null);
     setOpen(true);
   };
 
   const handleDialogClose = (): void => {
     setOpen(false);
     setEditingSauce(null);
+    setPreviewImage(null);
     reset();
   };
 
@@ -107,12 +151,15 @@ function ExtraSauceComponent(): JSX.Element {
     if (!selectedSauce) return;
 
     try {
+      setLoading(true);
       await axios.delete(`${apiDeleteExtraSauce}/${selectedSauce.id}`);
       toast.success('Sauce deleted');
       handleDeleteDialogClose();
       await fetchSauces();
     } catch {
       toast.error('Failed to delete sauce');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,24 +168,34 @@ function ExtraSauceComponent(): JSX.Element {
     try {
       const formData = new FormData();
       formData.append('name', data.name);
-      formData.append('price', data.price);
+      formData.append('pizza_size', data.pizza_size);
+      formData.append('light_price', data.light_price);
+      formData.append('regular_price', data.regular_price);
+      formData.append('extra_price', data.extra_price);
+      // formData.append('price', data.price);
 
       if (data.image && data.image.length > 0) {
         formData.append('image', data.image[0]);
-      } else {
-        formData.append('image_url', data.image_url);
+      } else if (editingSauce) {
+        formData.append('image_url', editingSauce.image_url);
       }
 
       if (editingSauce) {
         await axios.put(`${apiUpdateExtraSauce}/${editingSauce.id}`, formData);
+        toast.success('Sauce updated');
       } else {
         await axios.post(apiCreateExtraSauce, formData);
+        toast.success('Sauce created');
       }
 
       handleDialogClose();
       await fetchSauces();
-    } catch {
-      toast.error('Error submitting sauce');
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.error || error.response?.data?.message || 'Error submitting sauce');
+      } else {
+        toast.error('Unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -204,43 +261,54 @@ function ExtraSauceComponent(): JSX.Element {
           <TableHead>
             <TableRow>
               <TableCell>S. No</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Price</TableCell>
               <TableCell>Image</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Pizza Size</TableCell>
+              <TableCell>Light Price</TableCell>
+              <TableCell>Regular Price</TableCell>
+              <TableCell>Extra Price</TableCell>
+              {/* <TableCell>Price</TableCell> */}
               <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredSauces.map((sauce, index) => (
-              <TableRow key={sauce.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{sauce.name}</TableCell>
-                <TableCell>₹{sauce.price}</TableCell>
-                <TableCell>
-                  {sauce.image_url && (
-                    <img
-                      src={sauce.image_url}
-                      alt={sauce.name}
-                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
-                    />
-                  )}
-                </TableCell>
-                <TableCell>{sauce.created_at.split('T')[0]}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      handleDialogOpen(sauce);
-                    }}
-                  >
-                    <Pencil size={16} />
-                  </IconButton>
-                  <IconButton onClick={() => handleDeleteDialogOpen(sauce)}>
-                    <Trash2 size={16} />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredSauces.map((sauce, index) => {
+              // const sizeName = breadSizes.find((size) => size.id === sauce.pizza_size)?.name || 'N/A';
+              return (
+                <TableRow key={sauce.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>
+                    {sauce.image_url && (
+                      <img
+                        src={sauce.image_url}
+                        alt={sauce.name}
+                        style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>{sauce.name}</TableCell>
+                  <TableCell>{sauce.pizza_size}</TableCell>
+                  <TableCell>₹{sauce.light_price}</TableCell>
+                  <TableCell>₹{sauce.regular_price}</TableCell>
+                  <TableCell>₹{sauce.extra_price}</TableCell>
+                  {/* <TableCell>₹{sauce.price}</TableCell> */}
+                  <TableCell>{sauce.created_at.split('T')[0]}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => {
+                        handleDialogOpen(sauce);
+                      }}
+                    >
+                      <Pencil size={16} />
+                    </IconButton>
+                    <IconButton onClick={() => handleDeleteDialogOpen(sauce)}>
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -271,6 +339,9 @@ function ExtraSauceComponent(): JSX.Element {
           <Typography variant="h6" fontWeight={600}>
             {editingSauce ? 'Edit Sauce' : 'Add Sauce'}
           </Typography>
+          <IconButton onClick={handleDialogClose} size="small" sx={{ ml: 2 }}>
+            ✕
+          </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
@@ -294,9 +365,74 @@ function ExtraSauceComponent(): JSX.Element {
               />
             </Box>
 
-            {/* Price */}
+            {/* Pizza Size */}
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Pizza Size</Box>
+              <Select
+                size="small"
+                fullWidth
+                defaultValue={breadSizes[0]?.id ?? ''}
+                {...register('pizza_size', { required: 'Pizza size is required' })}
+                error={Boolean(errors.pizza_size)}
+              >
+                {breadSizes.map((size) => (
+                  <MenuItem key={size.id} value={size.name}>
+                    {size.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.pizza_size && (
+                <Typography variant="caption" color="error">
+                  {errors.pizza_size.message}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Light Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Light Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('light_price', { required: 'Light price is required' })}
+                error={Boolean(errors.light_price)}
+                helperText={errors.light_price?.message}
+              />
+            </Box>
+
+            {/* Regular Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Regular Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('regular_price', { required: 'Regular price is required' })}
+                error={Boolean(errors.regular_price)}
+                helperText={errors.regular_price?.message}
+              />
+            </Box>
+
+            {/* Extra Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Extra Price (₹)</Box>
+              <TextField
+                type="number"
+                fullWidth
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('extra_price', { required: 'Extra price is required' })}
+                error={Boolean(errors.extra_price)}
+                helperText={errors.extra_price?.message}
+              />
+            </Box>
+
+            {/* Base Price */}
+            {/* <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Base Price (₹)</Box>
               <TextField
                 type="number"
                 fullWidth
@@ -306,7 +442,7 @@ function ExtraSauceComponent(): JSX.Element {
                 error={Boolean(errors.price)}
                 helperText={errors.price?.message}
               />
-            </Box>
+            </Box> */}
 
             {/* Existing Image */}
             {editingSauce?.image_url && (
@@ -349,9 +485,32 @@ function ExtraSauceComponent(): JSX.Element {
                 }}
               >
                 Choose File
-                <input type="file" hidden accept="image/*" {...register('image')} />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPreviewImage(URL.createObjectURL(file));
+                      setValue('image', e.target.files as any);
+                    }
+                  }}
+                />
               </Button>
             </Box>
+
+            {/* Preview Image */}
+            {previewImage && (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Box sx={{ width: 140, fontWeight: 500 }}>Preview</Box>
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  style={{ width: 80, height: 80, borderRadius: 6, objectFit: 'cover' }}
+                />
+              </Box>
+            )}
           </Box>
         </DialogContent>
 
@@ -379,6 +538,7 @@ function ExtraSauceComponent(): JSX.Element {
             type="submit"
             form="sauce-form"
             variant="contained"
+            disabled={loading}
             sx={{
               minWidth: 70,
               fontSize: '0.75rem',
@@ -393,13 +553,12 @@ function ExtraSauceComponent(): JSX.Element {
               },
             }}
           >
-            {loading ? 'Saving...' : editingSauce ? 'Update' : 'Save'}{' '}
+            {loading ? (editingSauce ? 'Updating...' : 'Creating...') : editingSauce ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* delete diloge  */}
-
+      {/* Delete dialog */}
       <Dialog open={deleteOpen} onClose={handleDeleteDialogClose} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Sauce</DialogTitle>
         <DialogContent>
@@ -409,7 +568,7 @@ function ExtraSauceComponent(): JSX.Element {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteDialogClose}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
             Delete
           </Button>
         </DialogActions>

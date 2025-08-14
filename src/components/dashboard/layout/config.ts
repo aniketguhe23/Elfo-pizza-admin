@@ -114,7 +114,7 @@ export const navItems: NavItemConfig[] = [
   },
   {
     key: 'pages',
-    title: 'Resturant Support',
+    title: 'Restaurant Support',
     href: paths.dashboard.resturantSupport,
     icon: 'chart-pie',
   },

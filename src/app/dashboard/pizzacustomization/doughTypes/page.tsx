@@ -11,6 +11,8 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  MenuItem,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -30,22 +32,36 @@ interface DoughType {
   id: number;
   name: string;
   price: string;
+  pizza_size?: string;
+}
+
+interface BreadSize {
+  id: number;
+  name: string; // Assuming bread size has a "name" field
 }
 
 interface FormData {
   name: string;
   price: number;
+  pizza_size: string;
 }
 
 function DoughComponent(): JSX.Element {
   const [doughList, setDoughList] = useState<DoughType[]>([]);
+  const [breadSizes, setBreadSizes] = useState<BreadSize[]>([]);
   const [open, setOpen] = useState(false);
   const [editingDough, setEditingDough] = useState<DoughType | null>(null);
   const [search, setSearch] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [doughToDelete, setDoughToDelete] = useState<DoughType | null>(null);
 
-  const { apiGetDough, apiCreateDough, apiUpdateDough, apiDeleteDough } = ProjectApiList();
+  const {
+    apiGetDough,
+    apiCreateDough,
+    apiUpdateDough,
+    apiDeleteDough,
+    apiGetBreadSize,
+  } = ProjectApiList();
 
   const {
     register,
@@ -63,15 +79,26 @@ function DoughComponent(): JSX.Element {
     }
   }, [apiGetDough]);
 
+  const fetchBreadSizes = useCallback(async () => {
+    try {
+      const response = await axios.get<{ data: BreadSize[] }>(apiGetBreadSize);
+      setBreadSizes(response.data.data);
+    } catch {
+      toast.error('Failed to fetch bread sizes');
+    }
+  }, [apiGetBreadSize]);
+
   useEffect(() => {
     void fetchDough();
-  }, [fetchDough]);
+    void fetchBreadSizes();
+  }, [fetchDough, fetchBreadSizes]);
 
   const handleDialogOpen = (item?: DoughType): void => {
     setEditingDough(item ?? null);
     reset({
       name: item?.name || '',
       price: parseFloat(item?.price ?? '0'),
+      pizza_size: item?.pizza_size || '',
     });
     setOpen(true);
   };
@@ -82,19 +109,23 @@ function DoughComponent(): JSX.Element {
     setOpen(false);
   };
 
-  const onSubmit = async (data: FormData): Promise<void> => {
-    try {
-      if (editingDough) {
-        await axios.put(`${apiUpdateDough}/${editingDough.id}`, data);
-      } else {
-        await axios.post(apiCreateDough, data);
-      }
-      handleDialogClose();
-      await fetchDough();
-    } catch {
-      toast.error('Error saving dough type');
+const onSubmit = async (data: FormData): Promise<void> => {
+  try {
+    if (editingDough) {
+      await axios.put(`${apiUpdateDough}/${editingDough.id}`, data);
+    } else {
+      await axios.post(apiCreateDough, data);
     }
-  };
+    handleDialogClose();
+    await fetchDough();
+  } catch (err: any) {
+    const message =
+      err.response?.data?.message || err.response?.data?.error || err.message || "Error saving dough type";
+    toast.error(message);
+    console.error("Error saving dough type:", err);
+  }
+};
+
 
   const handleDeleteClick = (dough: DoughType): void => {
     setDoughToDelete(dough);
@@ -130,9 +161,7 @@ function DoughComponent(): JSX.Element {
             size="small"
             placeholder="Search Dough"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -144,9 +173,7 @@ function DoughComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => {
-              handleDialogOpen();
-            }}
+            onClick={() => handleDialogOpen()}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -172,6 +199,7 @@ function DoughComponent(): JSX.Element {
               <TableCell>S. No</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Price (₹)</TableCell>
+              <TableCell>Pizza Size</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -182,6 +210,7 @@ function DoughComponent(): JSX.Element {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{dough.name}</TableCell>
                   <TableCell>₹{dough.price}</TableCell>
+                  <TableCell>{dough.pizza_size || '-'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleDialogOpen(dough)}>
                       <Pencil size={16} />
@@ -194,7 +223,7 @@ function DoughComponent(): JSX.Element {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   No dough types found.
                 </TableCell>
               </TableRow>
@@ -209,12 +238,6 @@ function DoughComponent(): JSX.Element {
         onClose={handleDialogClose}
         fullWidth
         maxWidth="sm"
-        BackdropProps={{
-          sx: {
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(2px)',
-          },
-        }}
       >
         <DialogTitle>{editingDough ? 'Edit Dough Type' : 'Add Dough Type'}</DialogTitle>
         <DialogContent dividers>
@@ -227,6 +250,7 @@ function DoughComponent(): JSX.Element {
             gap={2}
             mt={1}
           >
+            {/* Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Name</Box>
               <TextField
@@ -237,6 +261,8 @@ function DoughComponent(): JSX.Element {
                 helperText={errors.name?.message}
               />
             </Box>
+
+            {/* Price */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Price</Box>
               <TextField
@@ -248,6 +274,30 @@ function DoughComponent(): JSX.Element {
                 error={Boolean(errors.price)}
                 helperText={errors.price?.message}
               />
+            </Box>
+
+            {/* Pizza Size */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Pizza Size</Box>
+              <Select
+                fullWidth
+                size="small"
+                defaultValue=""
+                {...register('pizza_size', { required: 'Pizza size is required' })}
+                error={Boolean(errors.pizza_size)}
+              >
+                <MenuItem value="">Select Size</MenuItem>
+                {breadSizes.map((size) => (
+                  <MenuItem key={size.id} value={size.name}>
+                    {size.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.pizza_size && (
+                <Typography variant="caption" color="error">
+                  {errors.pizza_size.message}
+                </Typography>
+              )}
             </Box>
           </Box>
         </DialogContent>

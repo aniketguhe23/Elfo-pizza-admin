@@ -14,6 +14,7 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -34,6 +35,10 @@ interface Topping {
   name: string;
   is_vegetarian: boolean;
   price: string;
+  light_price: string;
+  regular_price: string;
+  extra_price: string;
+  pizza_size: string | null;
   image_url: string;
   created_at: string;
 }
@@ -42,15 +47,29 @@ interface ToppingResponse {
   data: Topping[];
 }
 
+interface PizzaSize {
+  id: number;
+  name: string;
+}
+
+interface PizzaSizeResponse {
+  data: PizzaSize[];
+}
+
 interface ToppingFormData {
   name: string;
   price: string;
+  light_price: string;
+  regular_price: string;
+  extra_price: string;
+  pizza_size: string;
   is_vegetarian: boolean;
   image: FileList;
 }
 
 function ToppingsComponent(): JSX.Element {
   const [toppings, setToppings] = useState<Topping[]>([]);
+  const [pizzaSizes, setPizzaSizes] = useState<PizzaSize[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Topping | null>(null);
   const [search, setSearch] = useState('');
@@ -59,15 +78,20 @@ function ToppingsComponent(): JSX.Element {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Topping | null>(null);
 
-  const { apiGetToppings, apiCreateToppings, apiUpdateToppings ,apiDeleteToppings} = ProjectApiList();
+  const { apiGetToppings, apiCreateToppings, apiUpdateToppings, apiDeleteToppings, apiGetBreadSize } = ProjectApiList();
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     setValue,
     formState: { errors },
-  } = useForm<ToppingFormData>();
+  } = useForm<ToppingFormData>({
+    defaultValues: {
+      is_vegetarian: true, // ✅ Checked by default
+    },
+  });
 
   const fetchToppings = useCallback(async (): Promise<void> => {
     try {
@@ -78,16 +102,30 @@ function ToppingsComponent(): JSX.Element {
     }
   }, [apiGetToppings]);
 
+  const fetchPizzaSizes = useCallback(async (): Promise<void> => {
+    try {
+      const response = await axios.get<PizzaSizeResponse>(apiGetBreadSize);
+      setPizzaSizes(response.data?.data || []);
+    } catch {
+      toast.error('Error fetching pizza sizes');
+    }
+  }, [apiGetBreadSize]);
+
   useEffect(() => {
     void fetchToppings();
-  }, [fetchToppings]);
+    void fetchPizzaSizes();
+  }, [fetchToppings, fetchPizzaSizes]);
 
   const handleDialogOpen = (topping?: Topping): void => {
     setEditing(topping || null);
     reset({
       name: topping?.name || '',
-      price: topping?.price || '',
-      is_vegetarian: topping?.is_vegetarian || false,
+      // price: topping?.price || '',
+      light_price: topping?.light_price || '',
+      regular_price: topping?.regular_price || '',
+      extra_price: topping?.extra_price || '',
+      pizza_size: topping?.pizza_size || '',
+      is_vegetarian: topping?.is_vegetarian || true,
     });
     setPreviewImage(topping?.image_url || null);
     setOpen(true);
@@ -117,7 +155,7 @@ function ToppingsComponent(): JSX.Element {
       await axios.delete(`${apiDeleteToppings}/${itemToDelete.id}`);
       toast.success('Topping deleted');
       await fetchToppings();
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete topping');
     } finally {
       setLoading(false);
@@ -131,12 +169,15 @@ function ToppingsComponent(): JSX.Element {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('price', data.price);
+      formData.append('light_price', data.light_price);
+      formData.append('regular_price', data.regular_price);
+      formData.append('extra_price', data.extra_price);
+      formData.append('pizza_size', data.pizza_size);
       formData.append('is_vegetarian', String(data.is_vegetarian));
 
       if (data.image && data.image.length > 0) {
         formData.append('image', data.image[0]);
       } else if (editing) {
-        // Send existing image URL for update
         formData.append('image_url', editing.image_url);
       }
 
@@ -150,18 +191,22 @@ function ToppingsComponent(): JSX.Element {
 
       handleDialogClose();
       void fetchToppings();
-    } catch (error) {
-      toast.error('Error saving topping');
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.error || 'Error saving topping');
+      } else {
+        toast.error('Unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
   };
-  // trigger('image');
 
   const filtered = toppings.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <Box mt={5}>
+      {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} gap={2}>
         <Typography variant="h4" fontWeight={700}>
           Toppings
@@ -171,9 +216,7 @@ function ToppingsComponent(): JSX.Element {
             size="small"
             placeholder="Search Toppings"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -185,9 +228,7 @@ function ToppingsComponent(): JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => {
-              handleDialogOpen();
-            }}
+            onClick={() => handleDialogOpen()}
             sx={{
               backgroundColor: '#000',
               color: '#fff',
@@ -206,6 +247,7 @@ function ToppingsComponent(): JSX.Element {
         You have {toppings.length} toppings
       </Typography>
 
+      {/* Table */}
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
@@ -213,7 +255,11 @@ function ToppingsComponent(): JSX.Element {
               <TableCell>S. No</TableCell>
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Pizza Size</TableCell>
+              {/* <TableCell>Price</TableCell> */}
+              <TableCell>Light Price</TableCell>
+              <TableCell>Regular Price</TableCell>
+              <TableCell>Extra Price</TableCell>
               <TableCell>Vegetarian</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
@@ -227,15 +273,15 @@ function ToppingsComponent(): JSX.Element {
                   <Avatar src={topping.image_url} alt={topping.name} />
                 </TableCell>
                 <TableCell>{topping.name}</TableCell>
-                <TableCell>₹{topping.price}</TableCell>
+                <TableCell>{topping.pizza_size}</TableCell>
+                {/* <TableCell>₹{topping.price}</TableCell> */}
+                <TableCell>₹{topping.light_price}</TableCell>
+                <TableCell>₹{topping.regular_price}</TableCell>
+                <TableCell>₹{topping.extra_price}</TableCell>
                 <TableCell>{topping.is_vegetarian ? 'Yes' : 'No'}</TableCell>
                 <TableCell>{new Date(topping.created_at).toISOString().split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      handleDialogOpen(topping);
-                    }}
-                  >
+                  <IconButton onClick={() => handleDialogOpen(topping)}>
                     <Pencil size={16} />
                   </IconButton>
                   <IconButton onClick={() => handleDeleteClick(topping)}>
@@ -248,29 +294,9 @@ function ToppingsComponent(): JSX.Element {
         </Table>
       </TableContainer>
 
-      {/* Topping Dialog */}
-      <Dialog
-        open={open}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="sm"
-        BackdropProps={{
-          sx: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(3px)',
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            px: 3,
-            py: 2,
-            borderBottom: '1px solid #e0e0e0',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+      {/* Add/Edit Dialog */}
+      <Dialog open={open} onClose={handleDialogClose} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight={600}>
             {editing ? 'Edit Topping' : 'Add Topping'}
           </Typography>
@@ -278,7 +304,6 @@ function ToppingsComponent(): JSX.Element {
             <X size={18} />
           </IconButton>
         </DialogTitle>
-
         <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
           <Box
             component="form"
@@ -288,6 +313,26 @@ function ToppingsComponent(): JSX.Element {
             flexDirection="column"
             gap={3}
           >
+            {/* Pizza Size */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Pizza Size</Box>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                {...register('pizza_size', { required: 'Pizza size is required' })}
+                error={Boolean(errors.pizza_size)}
+                helperText={errors.pizza_size?.message}
+              >
+                {pizzaSizes.map((size) => (
+                  <MenuItem key={size.id} value={size.name}>
+                    {size.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+
+            {/* Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Topping Name</Box>
               <TextField
@@ -299,73 +344,65 @@ function ToppingsComponent(): JSX.Element {
               />
             </Box>
 
+            {/* Prices */}
+            {[
+              // { label: 'Price (₹)', name: 'price' },
+              { label: 'Light Price (₹)', name: 'light_price' },
+              { label: 'Regular Price (₹)', name: 'regular_price' },
+              { label: 'Extra Price (₹)', name: 'extra_price' },
+            ].map((field) => (
+              <Box key={field.name} display="flex" alignItems="center" gap={2}>
+                <Box sx={{ width: 140, fontWeight: 500 }}>{field.label}</Box>
+                <TextField
+                  type="number"
+                  fullWidth
+                  size="small"
+                  inputProps={{ min: 0, step: 0.01 }}
+                  {...register(field.name as keyof ToppingFormData, { required: `${field.label} is required` })}
+                  error={Boolean(errors[field.name as keyof ToppingFormData])}
+                  helperText={errors[field.name as keyof ToppingFormData]?.message as string}
+                />
+              </Box>
+            ))}
+
+            {/* Vegetarian */}
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                inputProps={{ min: 0, step: 0.01 }}
-                {...register('price', { required: 'Price is required' })}
-                error={Boolean(errors.price)}
-                helperText={errors.price?.message}
+              <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian?</Box>
+              {/* <Checkbox {...register('is_vegetarian')} checked={watch('is_vegetarian')} /> */}
+              <Checkbox
+                {...register('is_vegetarian')}
+                checked={watch('is_vegetarian')}
+                onChange={(e) => setValue('is_vegetarian', e.target.checked)}
               />
             </Box>
 
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian?</Box>
-              <Checkbox defaultChecked  {...register('is_vegetarian')} />
-            </Box>
-
+            {/* Preview */}
             {previewImage && (
               <Box display="flex" alignItems="center" gap={2}>
                 <Box sx={{ width: 140, fontWeight: 500 }}>Preview</Box>
                 <Avatar
                   src={previewImage}
                   alt="Preview"
-                  sx={{
-                    width: 70,
-                    height: 70,
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  }}
+                  sx={{ width: 70, height: 70, borderRadius: 2 }}
                   variant="rounded"
                 />
               </Box>
             )}
 
+            {/* Upload Image */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
-              <Button
-                variant="outlined"
-                component="label"
-                size="small"
-                sx={{
-                  width: 110,
-                  fontSize: '0.75rem',
-                  padding: '5px 10px',
-                  backgroundColor: '#fff',
-                  color: '#000',
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  borderRadius: 1,
-                  '&:hover': {
-                    backgroundColor: '#222',
-                    color: '#fff',
-                  },
-                }}
-              >
+              <Button variant="outlined" component="label" size="small">
                 Choose File
                 <input
                   hidden
                   type="file"
                   accept="image/*"
-                  // ❌ REMOVE: {...register('image')}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
                       setPreviewImage(URL.createObjectURL(file));
-                      setValue('image', e.target.files as any); // ✅ store file list manually
+                      setValue('image', e.target.files as any);
                     }
                   }}
                 />
@@ -373,52 +410,17 @@ function ToppingsComponent(): JSX.Element {
             </Box>
           </Box>
         </DialogContent>
-
-        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
-          <Button
-            onClick={handleDialogClose}
-            sx={{
-              minWidth: 70,
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#fff',
-              color: '#000',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              border: '1px solid #cccccc',
-              '&:hover': {
-                backgroundColor: '#f2f2f2',
-              },
-            }}
-          >
+        <DialogActions>
+          <Button onClick={handleDialogClose} sx={{ backgroundColor: '#fff', color: '#000' }}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="topping-form"
-            variant="contained"
-            sx={{
-              minWidth: 70,
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
-            {loading ? (editing ? 'Updating...' : 'Creating...') : editing ? 'Update' : 'Create'}{' '}
+          <Button type="submit" form="topping-form" variant="contained" sx={{ backgroundColor: '#000', color: '#fff' }}>
+            {loading ? (editing ? 'Updating...' : 'Creating...') : editing ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dleet diloge */}
-
+      {/* Delete Dialog */}
       <Dialog open={deleteOpen} onClose={handleDeleteClose}>
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>

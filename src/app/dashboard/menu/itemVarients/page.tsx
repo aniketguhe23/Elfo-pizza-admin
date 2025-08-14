@@ -25,6 +25,7 @@ import {
 import axios, { type AxiosResponse } from 'axios';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Item {
   id: number;
@@ -137,25 +138,33 @@ useEffect(() => {
   };
 
   const onSubmit = async (data: FormData): Promise<void> => {
-    console.log(data);
-    let payload = {
-      item_id: data?.item_id,
-      size: data?.size,
-      crust_type: data?.crustType,
-      price: data?.price,
-    };
-    try {
-      if (editingVariant) {
-        await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, payload);
-      } else {
-        await axios.post(apiCreateItemVariant, data);
-      }
-      handleDialogClose();
-      await fetchVariants();
-    } catch {
-      // Handle error silently or add your error handling here
-    }
+  console.log(data);
+  let payload = {
+    item_id: data?.item_id,
+    size: data?.size,
+    crust_type: data?.crustType,
+    price: data?.price,
   };
+  
+  try {
+    if (editingVariant) {
+      await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, payload);
+    } else {
+      await axios.post(apiCreateItemVariant, payload); // use payload instead of data for consistency
+    }
+    handleDialogClose();
+    await fetchVariants();
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error submitting item variant:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to submit item variant");
+    } else {
+      console.error("Unexpected error:", error);
+      toast.error("Unexpected error occurred");
+    }
+  }
+};
+
 
   const filteredVariants = variants?.filter(
     (v) =>

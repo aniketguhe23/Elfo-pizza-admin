@@ -176,6 +176,7 @@ export default function ContactSupportPage() {
             <TableRow>
               <TableCell>SI</TableCell>
               <TableCell>Restaurant ID</TableCell>
+              <TableCell>Restaurant</TableCell>
               <TableCell>Subject</TableCell>
               <TableCell>Message</TableCell>
               <TableCell>Status</TableCell>
@@ -187,6 +188,7 @@ export default function ContactSupportPage() {
               <TableRow key={req.id}>
                 <TableCell>{(page - 1) * 10 + index + 1}</TableCell>
                 <TableCell>{req.restaurant_id}</TableCell>
+                <TableCell>{req.restaurant_name || "-"}</TableCell>
                 <TableCell>{req.subject}</TableCell>
                 <TableCell>{req.message}</TableCell>
                 <TableCell>
@@ -205,97 +207,96 @@ export default function ContactSupportPage() {
                   </Button>
 
                   {/* Dialog code (unchanged) */}
-            <Dialog
-  open={modalOpenId !== null}
-  onClose={() => setModalOpenId(null)}
-  fullWidth
-  maxWidth="xs"
-  PaperProps={{
-    sx: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)', // Slightly opaque white background for dialog content
-      boxShadow: 'none',
-    },
-  }}
-  BackdropProps={{
-    sx: {
-      backdropFilter: 'none', // <-- removes blur
-      backgroundColor: 'rgba(0, 0, 0, 0.1)', // <-- transparent black overlay
-    },
-  }}
->
-  <DialogTitle
-    sx={{
-      fontWeight: 600,
-      fontSize: '1.2rem',
-      borderBottom: '1px solid #e0e0e0',
-      pb: 1.5,
-      mb: 1.5,
-    }}
-  >
-    Update Support Status
-  </DialogTitle>
+                  <Dialog
+                    open={modalOpenId !== null}
+                    onClose={() => setModalOpenId(null)}
+                    fullWidth
+                    maxWidth="xs"
+                    PaperProps={{
+                      sx: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)', // Slightly opaque white background for dialog content
+                        boxShadow: 'none',
+                      },
+                    }}
+                    BackdropProps={{
+                      sx: {
+                        backdropFilter: 'none', // <-- removes blur
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)', // <-- transparent black overlay
+                      },
+                    }}
+                  >
+                    <DialogTitle
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1.2rem',
+                        borderBottom: '1px solid #e0e0e0',
+                        pb: 1.5,
+                        mb: 1.5,
+                      }}
+                    >
+                      Update Support Status
+                    </DialogTitle>
 
-  <DialogContent>
-    <Typography variant="body2" sx={{ mb: 1 }} color="text.secondary">
-      Select New Status:
-    </Typography>
-    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 16 }}>
-      {['pending', 'acknowledge', 'resolved', 'rejected'].map((status) => (
-        <Button
-          key={status}
-          variant={selectedStatus === status ? 'contained' : 'outlined'}
-          onClick={() => setSelectedStatus(status as SupportRequest['status'])}
-          size="small"
-          sx={{
-            textTransform: 'capitalize',
-            minWidth: 100,
-            bgcolor: selectedStatus === status ? '#000' : 'transparent',
-            color: selectedStatus === status ? '#fff' : '#000',
-            borderColor: '#000',
-            '&:hover': {
-              bgcolor: selectedStatus === status ? '#222' : '#f0f0f0',
-            },
-          }}
-        >
-          {status}
-        </Button>
-      ))}
-    </div>
-  </DialogContent>
+                    <DialogContent>
+                      <Typography variant="body2" sx={{ mb: 1 }} color="text.secondary">
+                        Select New Status:
+                      </Typography>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 16 }}>
+                        {['pending', 'acknowledge', 'resolved', 'rejected'].map((status) => (
+                          <Button
+                            key={status}
+                            variant={selectedStatus === status ? 'contained' : 'outlined'}
+                            onClick={() => setSelectedStatus(status as SupportRequest['status'])}
+                            size="small"
+                            sx={{
+                              textTransform: 'capitalize',
+                              minWidth: 100,
+                              bgcolor: selectedStatus === status ? '#000' : 'transparent',
+                              color: selectedStatus === status ? '#fff' : '#000',
+                              borderColor: '#000',
+                              '&:hover': {
+                                bgcolor: selectedStatus === status ? '#222' : '#f0f0f0',
+                              },
+                            }}
+                          >
+                            {status}
+                          </Button>
+                        ))}
+                      </div>
+                    </DialogContent>
 
-  <DialogActions sx={{ px: 3, pb: 2, borderTop: '1px solid #e0e0e0' }}>
-    <Button
-      variant="contained"
-      onClick={() => {
-        if (modalOpenId !== null) {
-          handleStatusChange(modalOpenId, selectedStatus);
-        }
-      }}
-      disabled={updatingId === modalOpenId}
-      sx={{
-        bgcolor: '#000',
-        color: '#fff',
-        '&:hover': { bgcolor: '#222' },
-        textTransform: 'none',
-      }}
-    >
-      {updatingId === modalOpenId ? 'Updating...' : 'Update Status'}
-    </Button>
-    <Button
-      onClick={() => setModalOpenId(null)}
-      sx={{
-        textTransform: 'none',
-        color: '#333',
-        border: '1px solid #ccc',
-        bgcolor: '#f9f9f9',
-        '&:hover': { bgcolor: '#eee' },
-      }}
-    >
-      Cancel
-    </Button>
-  </DialogActions>
-</Dialog>
-
+                    <DialogActions sx={{ px: 3, pb: 2, borderTop: '1px solid #e0e0e0' }}>
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          if (modalOpenId !== null) {
+                            handleStatusChange(modalOpenId, selectedStatus);
+                          }
+                        }}
+                        disabled={updatingId === modalOpenId}
+                        sx={{
+                          bgcolor: '#000',
+                          color: '#fff',
+                          '&:hover': { bgcolor: '#222' },
+                          textTransform: 'none',
+                        }}
+                      >
+                        {updatingId === modalOpenId ? 'Updating...' : 'Update Status'}
+                      </Button>
+                      <Button
+                        onClick={() => setModalOpenId(null)}
+                        sx={{
+                          textTransform: 'none',
+                          color: '#333',
+                          border: '1px solid #ccc',
+                          bgcolor: '#f9f9f9',
+                          '&:hover': { bgcolor: '#eee' },
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                 </TableCell>
               </TableRow>
             ))}

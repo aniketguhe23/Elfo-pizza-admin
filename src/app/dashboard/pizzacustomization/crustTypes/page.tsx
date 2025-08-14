@@ -12,6 +12,7 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -31,11 +32,19 @@ interface CrustType {
   id: number;
   name: string;
   price: string;
+  pizza_size: number; // FK to size table
   created_at: string;
+}
+
+interface SizeType {
+  id: number;
+  name: string; // e.g., Small, Medium, Large
+  size: string; // e.g., "8 inches"
 }
 
 function CrustTypeComponent(): JSX.Element {
   const [crustTypes, setCrustTypes] = useState<CrustType[]>([]);
+  const [sizes, setSizes] = useState<SizeType[]>([]);
   const [open, setOpen] = useState(false);
   const [editingCrust, setEditingCrust] = useState<CrustType | null>(null);
   const [deletingCrust, setDeletingCrust] = useState<CrustType | null>(null);
@@ -46,6 +55,7 @@ function CrustTypeComponent(): JSX.Element {
     apiCreateCrustTypes,
     apiUpdateCrustTypes,
     apiDeleteCrustTypes,
+    apiGetBreadSize,
   } = ProjectApiList();
 
   const {
@@ -53,7 +63,7 @@ function CrustTypeComponent(): JSX.Element {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ name: string; price: number }>();
+  } = useForm<{ name: string; price: number; pizza_size: number }>();
 
   const fetchCrustTypes = useCallback(async (): Promise<void> => {
     try {
@@ -64,15 +74,26 @@ function CrustTypeComponent(): JSX.Element {
     }
   }, [apiGetCrustTypes]);
 
+  const fetchSizes = useCallback(async (): Promise<void> => {
+    try {
+      const response = await axios.get<{ data: SizeType[] }>(apiGetBreadSize);
+      setSizes(response.data?.data || []);
+    } catch (error) {
+      toast.error('Error fetching pizza sizes');
+    }
+  }, [apiGetBreadSize]);
+
   useEffect(() => {
     void fetchCrustTypes();
-  }, [fetchCrustTypes]);
+    void fetchSizes();
+  }, [fetchCrustTypes, fetchSizes]);
 
   const handleDialogOpen = (crust?: CrustType): void => {
     setEditingCrust(crust || null);
     reset({
       name: crust?.name || '',
       price: parseFloat(crust?.price || '0'),
+      pizza_size: crust?.pizza_size || 0,
     });
     setOpen(true);
   };
@@ -83,19 +104,21 @@ function CrustTypeComponent(): JSX.Element {
     reset();
   };
 
-  const onSubmit = async (data: { name: string; price: number }): Promise<void> => {
-    try {
-      if (editingCrust) {
-        await axios.put(`${apiUpdateCrustTypes}/${editingCrust.id}`, data);
-      } else {
-        await axios.post(apiCreateCrustTypes, data);
-      }
-      handleDialogClose();
-      await fetchCrustTypes();
-    } catch (error) {
-      toast.error('Error saving crust type');
+const onSubmit = async (data: { name: string; price: number; pizza_size: number }): Promise<void> => {
+  try {
+    if (editingCrust) {
+      await axios.put(`${apiUpdateCrustTypes}/${editingCrust.id}`, data);
+    } else {
+      await axios.post(apiCreateCrustTypes, data);
     }
-  };
+    handleDialogClose();
+    await fetchCrustTypes();
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message || "Error saving crust type";
+    toast.error(message);
+  }
+};
+
 
   const handleDelete = async (): Promise<void> => {
     if (!deletingCrust) return;
@@ -115,6 +138,7 @@ function CrustTypeComponent(): JSX.Element {
 
   return (
     <Box mt={5}>
+      {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
         <Typography variant="h4" fontWeight={700}>
           Crust Types
@@ -157,12 +181,14 @@ function CrustTypeComponent(): JSX.Element {
         You have {crustTypes.length} total crust types
       </Typography>
 
+      {/* Table */}
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>S. No</TableCell>
               <TableCell>Crust Name</TableCell>
+              <TableCell>Pizza Size</TableCell>
               <TableCell>Price (₹)</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
@@ -173,6 +199,9 @@ function CrustTypeComponent(): JSX.Element {
               <TableRow key={crust.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{crust.name}</TableCell>
+                <TableCell>
+                  {crust.pizza_size || 'N/A'}
+                </TableCell>
                 <TableCell>₹{crust.price}</TableCell>
                 <TableCell>{crust.created_at.split('T')[0]}</TableCell>
                 <TableCell>
@@ -213,6 +242,7 @@ function CrustTypeComponent(): JSX.Element {
             gap={2}
             mt={1}
           >
+            {/* Crust Name */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Crust Name</Box>
               <TextField
@@ -224,6 +254,26 @@ function CrustTypeComponent(): JSX.Element {
               />
             </Box>
 
+            {/* Pizza Size */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box sx={{ width: 120, fontWeight: 500 }}>Pizza Size</Box>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                {...register('pizza_size', { required: 'Pizza size is required', valueAsNumber: true })}
+                error={Boolean(errors.pizza_size)}
+                helperText={errors.pizza_size?.message}
+              >
+                {sizes.map((size) => (
+                  <MenuItem key={size.id} value={size.name}>
+                    {size.name} ({size.size})
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+
+            {/* Price */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Price (₹)</Box>
               <TextField
@@ -231,7 +281,7 @@ function CrustTypeComponent(): JSX.Element {
                 fullWidth
                 size="small"
                 inputProps={{ min: 0, step: 0.01 }}
-                {...register('price', { required: 'Price is required' })}
+                {...register('price', { required: 'Price is required', valueAsNumber: true })}
                 error={Boolean(errors.price)}
                 helperText={errors.price?.message}
               />

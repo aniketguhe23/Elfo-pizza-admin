@@ -12,6 +12,7 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -34,11 +35,21 @@ interface CheeseOption {
   price: string;
   image_url: string;
   is_vegan: boolean;
+  pizza_size: string;
+  light_price: string;
+  regular_price: string;
+  extra_price: string;
   created_at: string;
+}
+
+interface BreadSize {
+  id: number;
+  name: string;
 }
 
 function CategoryComponent(): React.JSX.Element {
   const [cheeseOptions, setCheeseOptions] = useState<CheeseOption[]>([]);
+  const [breadSizes, setBreadSizes] = useState<BreadSize[]>([]);
   const [open, setOpen] = useState<boolean>(false);
   const [editingCheese, setEditingCheese] = useState<CheeseOption | null>(null);
   const [search, setSearch] = useState<string>('');
@@ -48,7 +59,13 @@ function CategoryComponent(): React.JSX.Element {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteCheese, setDeleteCheese] = useState<CheeseOption | null>(null);
 
-  const { apiGetCheeseOptions, apiCreateCheeseOptions, apiUpdateCheeseOptions,apiDeleteCheeseOptions } = ProjectApiList();
+  const {
+    apiGetCheeseOptions,
+    apiCreateCheeseOptions,
+    apiUpdateCheeseOptions,
+    apiDeleteCheeseOptions,
+    apiGetBreadSize,
+  } = ProjectApiList();
 
   const {
     register,
@@ -56,10 +73,18 @@ function CategoryComponent(): React.JSX.Element {
     reset,
     formState: { errors },
     setValue,
-  } = useForm<Omit<CheeseOption, 'id' | 'created_at'>>({ defaultValues: {
-    is_vegan: true, // ✅ Default to checked
-  },});
+    watch
+  } = useForm<Omit<CheeseOption, 'id' | 'created_at'>>({
+    defaultValues: {
+      is_vegan: true,
+      pizza_size: '',
+      light_price: '',
+      regular_price: '',
+      extra_price: '',
+    },
+  });
 
+  // Fetch cheese options
   const fetchCheeseOptions = useCallback(async (): Promise<void> => {
     try {
       const res = await axios.get<{ data: CheeseOption[] }>(apiGetCheeseOptions);
@@ -69,17 +94,32 @@ function CategoryComponent(): React.JSX.Element {
     }
   }, [apiGetCheeseOptions]);
 
+  // Fetch bread sizes
+  const fetchBreadSizes = useCallback(async (): Promise<void> => {
+    try {
+      const res = await axios.get<{ data: BreadSize[] }>(apiGetBreadSize);
+      setBreadSizes(res.data.data || []);
+    } catch {
+      toast.error('Error fetching bread sizes');
+    }
+  }, [apiGetBreadSize]);
+
   useEffect((): void => {
     void fetchCheeseOptions();
-  }, [fetchCheeseOptions]);
+    void fetchBreadSizes();
+  }, [fetchCheeseOptions, fetchBreadSizes]);
 
   const handleDialogOpen = (cheese?: CheeseOption): void => {
     setEditingCheese(cheese || null);
     reset({
       name: cheese?.name || '',
       price: cheese?.price || '',
-      is_vegan: cheese?.is_vegan || false,
+      is_vegan: cheese?.is_vegan ?? true,
       image_url: cheese?.image_url || '',
+      pizza_size: cheese?.pizza_size || '',
+      light_price: cheese?.light_price || '',
+      regular_price: cheese?.regular_price || '',
+      extra_price: cheese?.extra_price || '',
     });
     setImagePreview(cheese?.image_url || '');
     setSelectedImage(null);
@@ -114,13 +154,12 @@ function CategoryComponent(): React.JSX.Element {
 
   const handleDelete = async (): Promise<void> => {
     if (!deleteCheese) return;
-
     try {
       await axios.delete(`${apiDeleteCheeseOptions}/${deleteCheese.id}`);
       toast.success('Cheese option deleted');
       handleDeleteDialogClose();
-      await fetchCheeseOptions(); // refresh list
-    } catch (error) {
+      await fetchCheeseOptions();
+    } catch {
       toast.error('Error deleting cheese option');
     }
   };
@@ -130,8 +169,13 @@ function CategoryComponent(): React.JSX.Element {
       setIsLoading(true);
       const formData = new FormData();
       formData.append('name', data.name);
-      formData.append('price', data.price);
+      // formData.append('price', data.price);
       formData.append('is_vegan', String(data.is_vegan));
+      formData.append('pizza_size', data.pizza_size);
+      formData.append('light_price', data.light_price);
+      formData.append('regular_price', data.regular_price);
+      formData.append('extra_price', data.extra_price);
+
       if (selectedImage) formData.append('image', selectedImage);
       else formData.append('image_url', data.image_url);
 
@@ -145,8 +189,13 @@ function CategoryComponent(): React.JSX.Element {
 
       handleDialogClose();
       await fetchCheeseOptions();
-    } catch {
-      toast.error('Error saving cheese option');
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        'Error saving cheese option';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +205,7 @@ function CategoryComponent(): React.JSX.Element {
 
   return (
     <Box mt={5}>
+      {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
         <Typography variant="h4" fontWeight={700}>
           Cheese Options
@@ -165,9 +215,7 @@ function CategoryComponent(): React.JSX.Element {
             size="small"
             placeholder="Search Cheese"
             value={search}
-            onChange={(e): void => {
-              setSearch(e.target.value);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -179,9 +227,7 @@ function CategoryComponent(): React.JSX.Element {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={(): void => {
-              handleDialogOpen();
-            }}
+            onClick={() => handleDialogOpen()}
             sx={{ backgroundColor: '#000', color: '#fff', textTransform: 'none' }}
           >
             Add New
@@ -189,6 +235,7 @@ function CategoryComponent(): React.JSX.Element {
         </Box>
       </Box>
 
+      {/* Table */}
       <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead>
@@ -196,7 +243,11 @@ function CategoryComponent(): React.JSX.Element {
               <TableCell>S. No</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Image</TableCell>
-              <TableCell>Price</TableCell>
+              {/* <TableCell>Price</TableCell> */}
+              <TableCell>Pizza Size</TableCell>
+              <TableCell>Light</TableCell>
+              <TableCell>Regular</TableCell>
+              <TableCell>Extra</TableCell>
               <TableCell>Vegan</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
@@ -210,15 +261,15 @@ function CategoryComponent(): React.JSX.Element {
                 <TableCell>
                   <img src={item.image_url} alt={item.name} width={50} height={50} style={{ borderRadius: 8 }} />
                 </TableCell>
-                <TableCell>₹{item.price}</TableCell>
+                {/* <TableCell>₹{item.price}</TableCell> */}
+                <TableCell>{item.pizza_size}</TableCell>
+                <TableCell>₹{item.light_price}</TableCell>
+                <TableCell>₹{item.regular_price}</TableCell>
+                <TableCell>₹{item.extra_price}</TableCell>
                 <TableCell>{item.is_vegan ? 'Yes' : 'No'}</TableCell>
                 <TableCell>{item.created_at.split('T')[0]}</TableCell>
                 <TableCell>
-                  <IconButton
-                    onClick={(): void => {
-                      handleDialogOpen(item);
-                    }}
-                  >
+                  <IconButton onClick={() => handleDialogOpen(item)}>
                     <Pencil size={16} />
                   </IconButton>
                   <Tooltip title="Delete">
@@ -233,45 +284,21 @@ function CategoryComponent(): React.JSX.Element {
         </Table>
       </TableContainer>
 
-      <Dialog
-        open={open}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="sm"
-        BackdropProps={{
-          sx: {
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(3px)',
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            px: 3,
-            py: 2,
-            borderBottom: '1px solid #e0e0e0',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Typography variant="h6" fontWeight={600}>
-            {editingCheese ? 'Edit Cheese' : 'Add Cheese'}
-          </Typography>
-          <IconButton onClick={handleDialogClose} />
-        </DialogTitle>
-
-        <DialogContent sx={{ px: 3, py: 3, mt: 3 }}>
+      {/* Add/Edit Dialog */}
+      <Dialog open={open} onClose={handleDialogClose} fullWidth maxWidth="sm">
+        <DialogTitle>{editingCheese ? 'Edit Cheese' : 'Add Cheese'}</DialogTitle>
+        <DialogContent sx={{ px: 3, py: 3, mt: 1 }}>
           <Box
             component="form"
             id="cheese-form"
             onSubmit={handleSubmit(onSubmit)}
             display="flex"
             flexDirection="column"
-            gap={3}
+            gap={2}
           >
+            {/* Name */}
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Cheese Name</Box>
+              <Typography width="150px">Cheese Name</Typography>
               <TextField
                 fullWidth
                 size="small"
@@ -281,8 +308,9 @@ function CategoryComponent(): React.JSX.Element {
               />
             </Box>
 
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Price (₹)</Box>
+            {/* Price */}
+            {/* <Box display="flex" alignItems="center" gap={2}>
+              <Typography width="150px">Price (₹)</Typography>
               <TextField
                 fullWidth
                 size="small"
@@ -292,132 +320,114 @@ function CategoryComponent(): React.JSX.Element {
                 error={Boolean(errors.price)}
                 helperText={errors.price?.message}
               />
-            </Box>
+            </Box> */}
 
+            {/* Pizza Size */}
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Upload Image</Box>
-              <Button
-                variant="outlined"
-                component="label"
+              <Typography width="150px">Pizza Size</Typography>
+              <TextField
+                select
+                fullWidth
                 size="small"
-                sx={{
-                  width: 110,
-                  fontSize: '0.75rem',
-                  padding: '5px 10px',
-                  backgroundColor: '#fff',
-                  color: '#000',
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  borderRadius: 1,
-                  '&:hover': {
-                    backgroundColor: '#222',
-                    color: '#fff',
-                  },
-                }}
+                {...register('pizza_size', { required: 'Pizza size is required' })}
+                error={Boolean(errors.pizza_size)}
+                helperText={errors.pizza_size?.message}
               >
-                Choose File
-                <input hidden type="file" accept="image/*" onChange={onImageChange} />
-              </Button>
+                {breadSizes.map((size) => (
+                  <MenuItem key={size.id} value={size.name}>
+                    {size.name}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
 
-            {imagePreview && (
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box sx={{ width: 140, fontWeight: 500 }}>Preview</Box>
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  style={{
-                    width: 100,
-                    height: 100,
-                    objectFit: 'cover',
-                    borderRadius: 10,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  }}
-                />
-              </Box>
-            )}
-
+            {/* Light Price */}
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegan?</Box>
+              <Typography width="150px">Light Price (₹)</Typography>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('light_price', { required: 'Light price is required' })}
+                error={Boolean(errors.light_price)}
+                helperText={errors.light_price?.message}
+              />
+            </Box>
+
+            {/* Regular Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography width="150px">Regular Price (₹)</Typography>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('regular_price', { required: 'Regular price is required' })}
+                error={Boolean(errors.regular_price)}
+                helperText={errors.regular_price?.message}
+              />
+            </Box>
+
+            {/* Extra Price */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography width="150px">Extra Price (₹)</Typography>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: 0.01 }}
+                {...register('extra_price', { required: 'Extra price is required' })}
+                error={Boolean(errors.extra_price)}
+                helperText={errors.extra_price?.message}
+              />
+            </Box>
+
+            {/* Vegan */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography width="150px">Is Vegan?</Typography>
               <Checkbox
                 {...register('is_vegan')}
-                defaultChecked={editingCheese?.is_vegan || true}
-                onChange={(e): void => {
-                  setValue('is_vegan', e.target.checked);
-                }}
+                checked={watch('is_vegan')}
+                onChange={(e) => setValue('is_vegan', e.target.checked)}
               />
+            </Box>
+
+            {/* Upload */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography width="150px">Image</Typography>
+              <Box>
+                <Button variant="outlined" component="label" size="small">
+                  Choose Image
+                  <input hidden type="file" accept="image/*" onChange={onImageChange} />
+                </Button>
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    style={{
+                      width: 100,
+                      height: 100,
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      marginTop: 8,
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ justifyContent: 'flex-end', gap: 1, px: 3, pb: 2 }}>
-          <Button
-            onClick={handleDialogClose}
-            disabled={isLoading}
-            sx={{
-              minWidth: 70,
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#fff',
-              color: '#000',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              border: '1px solid #cccccc',
-              '&:hover': {
-                backgroundColor: '#f2f2f2',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            type="submit"
-            form="cheese-form"
-            variant="contained"
-            disabled={isLoading}
-            sx={{
-              minWidth: 70,
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button type="submit" form="cheese-form" variant="contained" disabled={isLoading}>
             {isLoading ? (editingCheese ? 'Updating...' : 'Saving...') : editingCheese ? 'Update' : 'Save'}
           </Button>
-
-          {/* <Button
-            type="submit"
-            form="cheese-form"
-            variant="contained"
-            sx={{
-              minWidth: 70,
-              fontSize: '0.75rem',
-              px: 2,
-              backgroundColor: '#000',
-              color: '#fff',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: '#222',
-              },
-            }}
-          >
-            {editingCheese ? 'Update' : 'Save'}
-          </Button> */}
         </DialogActions>
       </Dialog>
 
-      {/* delete modal */}
+      {/* Delete Dialog */}
       <Dialog open={deleteOpen} onClose={handleDeleteDialogClose} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Cheese Option</DialogTitle>
         <DialogContent>

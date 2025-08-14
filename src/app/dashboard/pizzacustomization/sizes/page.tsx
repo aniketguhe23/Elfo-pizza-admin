@@ -93,19 +93,25 @@ function SizeComponent(): JSX.Element {
     reset();
   };
 
-  const onSubmit = async (data: FormData): Promise<void> => {
-    try {
-      if (editingSize) {
-        await axios.put(`${apiUpdateBreadSize}/${editingSize.id}`, data);
-      } else {
-        await axios.post(apiCreateBreadSize, data);
-      }
-      handleDialogClose();
-      await fetchSizes();
-    } catch {
-      toast.error('Failed to save size');
+const onSubmit = async (data: FormData): Promise<void> => {
+  try {
+    if (editingSize) {
+      await axios.put(`${apiUpdateBreadSize}/${editingSize.id}`, data);
+    } else {
+      await axios.post(apiCreateBreadSize, data);
     }
-  };
+    handleDialogClose();
+    await fetchSizes();
+  } catch (error: any) {
+    const errorMsg =
+      error.response?.data?.error || // Your backend's { error: "..."} format
+      error.response?.data?.message || // If backend uses { message: "..."}
+      error.message || // Fallback to axios error message
+      "Failed to save size"; // Default fallback
+    toast.error(errorMsg);
+  }
+};
+
 
   return (
     <Box mt={5}>

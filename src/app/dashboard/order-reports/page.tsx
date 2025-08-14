@@ -109,7 +109,7 @@ export default function OrderReportsPage() {
   const fetchTotalOrders = async () => {
     try {
       const response = await axios.get(
-        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
+        `${apiGetAllOrdersbyResturant}?restaurant_id=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}&order_id=${searchOrderNo}`
       );
       setTotalOrders(response.data.data || []);
       setTotalPages(response.data.totalPages || 0);
@@ -125,7 +125,7 @@ export default function OrderReportsPage() {
 
   useEffect(() => {
     fetchTotalOrders();
-  }, [restaurantFilter, timeFilter, page]);
+  }, [restaurantFilter, timeFilter, page, searchOrderNo]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -153,9 +153,9 @@ export default function OrderReportsPage() {
     }
   };
 
-  const filteredOrders = totalOrders.filter((order) =>
-    order.Order_no.toLowerCase().includes(searchOrderNo.toLowerCase())
-  );
+  // const filteredOrders = totalOrders.filter((order) =>
+  //   order.Order_no.toLowerCase().includes(searchOrderNo.toLowerCase())
+  // );
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -264,6 +264,20 @@ export default function OrderReportsPage() {
       </Box>
 
       {/* Orders Table */}
+      <Box display="flex" justifyContent="flex-end" mb={1}>
+        <TextField
+          size="small"
+          placeholder="Search Order ID"
+          value={searchOrderNo}
+          onChange={(e) => {
+            setSearchOrderNo(e.target.value);
+            setPage(1); // Reset page when search changes
+          }}
+          sx={{ minWidth: 180 }}
+        />
+      </Box>
+
+      {/* Orders Table */}
       <Typography variant="h6" mb={2}>
         Total Orders
       </Typography>
@@ -288,8 +302,8 @@ export default function OrderReportsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredOrders.length ? (
-              filteredOrders.map((order, index) => (
+            {totalOrders.length ? (
+              totalOrders.map((order, index) => (
                 <TableRow key={order.Order_no}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{order.Order_no}</TableCell>
@@ -303,7 +317,7 @@ export default function OrderReportsPage() {
                   <TableCell>{order.delivery ?? 'NA'}</TableCell>
                   <TableCell>N/A</TableCell>
                   <TableCell>{order.total_price}</TableCell>
-                  <TableCell>{order.amount_received_by ?? " -"}</TableCell>
+                  <TableCell>{order.amount_received_by ?? ' -'}</TableCell>
                   <TableCell>{order.payment_method}</TableCell>
                   <TableCell>
                     <Box

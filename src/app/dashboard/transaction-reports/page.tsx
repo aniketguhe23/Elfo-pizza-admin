@@ -21,6 +21,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  TextField,
 } from '@mui/material';
 import axios from 'axios';
 import { BarChart2 } from 'lucide-react';
@@ -28,8 +29,6 @@ import { BarChart2 } from 'lucide-react';
 export default function TransactionReportsPage() {
   const { apiGetAllOrdersForResturant, apiTransactionReportofResturant, apiGetResturants } = ProjectApiList();
   const router = useRouter();
-
-  const restaurantOptions = ['Elfo Main', 'Elfo North', 'Elfo West'];
 
   const [timeFilter, setTimeFilter] = useState('all');
   const [transactionReport, setTransactionReport] = useState<any>({});
@@ -45,26 +44,35 @@ export default function TransactionReportsPage() {
   const [limit, setLimit] = useState(5); // Default items per page
   const [totalPages, setTotalPages] = useState(1);
 
+  // Fetch restaurants
   const fetchResturants = async () => {
     try {
       const res = await axios.get(`${apiGetResturants}`);
       setResturant(res.data.data || []);
     } catch (err) {
-      setError('Failed to load orders.');
+      setError('Failed to load restaurants.');
+    } finally {
+      setRestaurantLoading(false);
     }
   };
+
+  // Fetch orders with backend filtering
   const fetchTotalOrders = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(
-        `${apiGetAllOrdersForResturant}?restaurant_name=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}`
+        `${apiGetAllOrdersForResturant}?restaurant_name=${restaurantFilter}&time=${timeFilter}&page=${page}&limit=${limit}&order_id=${searchOrderNo}`
       );
       setTotalOrders(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       setError('Failed to load orders.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Fetch transaction summary
   const fetchTransactionReport = async () => {
     try {
       const res = await axios.get(
@@ -73,27 +81,24 @@ export default function TransactionReportsPage() {
       setTransactionReport(res.data.data || {});
     } catch (err) {
       setError('Failed to load transaction report.');
-    } finally {
-      setLoading(false);
     }
   };
 
+  // Load restaurants once
   useEffect(() => {
     fetchResturants();
   }, []);
 
+  // Reload orders and report on filter/page change
   useEffect(() => {
     fetchTotalOrders();
     fetchTransactionReport();
-  }, [restaurantLoading, restaurantFilter, timeFilter, page]);
+  }, [restaurantFilter, timeFilter, page, searchOrderNo]);
 
+  // Reset page when filters/search change
   useEffect(() => {
-    setPage(1); // Reset pagination when filters change
-  }, [restaurantFilter, timeFilter]);
-
-  const filteredOrders = totalOrders.filter((order) =>
-    order.Order_no?.toLowerCase().includes(searchOrderNo.toLowerCase())
-  );
+    setPage(1);
+  }, [restaurantFilter, timeFilter, searchOrderNo]);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -103,84 +108,47 @@ export default function TransactionReportsPage() {
         <Typography variant="h5" fontWeight={600}>
           Transaction Report
         </Typography>
+
         <Box ml="auto" display="flex" gap={2}>
           {/* Restaurant Filter */}
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            {/* <Typography
-        variant="body2"
-        sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#444' }}
-      >
-        Filter by Restaurant
-      </Typography> */}
-            <FormControl
-              size="small"
-              sx={{
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  fontSize: '0.875rem',
-                  height: 36,
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#ccc',
-                },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#666',
-                },
-              }}
-              variant="outlined"
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select
+              value={restaurantFilter}
+              onChange={(e) => setRestaurantFilter(e.target.value)}
+              displayEmpty
             >
-              <Select
-                value={restaurantFilter}
-                onChange={(e) => setRestaurantFilter(e.target.value)}
-                size="small"
-                displayEmpty
-              >
-                <MenuItem value="">All Restaurants</MenuItem>
-                {restaurants?.map((data: any) => (
-                  <MenuItem key={data?.id} value={data?.restaurants_no}>
-                    {data?.name} {data?.address}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+              <MenuItem value="">All Restaurants</MenuItem>
+              {restaurants?.map((data: any) => (
+                <MenuItem key={data?.id} value={data?.restaurants_no}>
+                  {data?.name} {data?.address}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           {/* Time Filter */}
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            {/* <Typography
-        variant="body2"
-        sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#444' }}
-      >
-        Filter by Time
-      </Typography> */}
-            <FormControl
-              size="small"
-              sx={{
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  fontSize: '0.875rem',
-                  height: 36,
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#ccc',
-                },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#666',
-                },
-              }}
-              variant="outlined"
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select
+              value={timeFilter}
+              onChange={(e) => setTimeFilter(e.target.value)}
+              displayEmpty
             >
-              <Select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} size="small" displayEmpty>
-                <MenuItem value="all">All Time</MenuItem>
-                <MenuItem value="today">Today</MenuItem>
-                <MenuItem value="week">This Week</MenuItem>
-                <MenuItem value="month">This Month</MenuItem>
-                <MenuItem value="year">This Year</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+              <MenuItem value="all">All Time</MenuItem>
+              <MenuItem value="today">Today</MenuItem>
+              <MenuItem value="week">This Week</MenuItem>
+              <MenuItem value="month">This Month</MenuItem>
+              <MenuItem value="year">This Year</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Search by Order ID */}
+          {/* <TextField
+            size="small"
+            placeholder="Search Order ID"
+            value={searchOrderNo}
+            onChange={(e) => setSearchOrderNo(e.target.value)}
+            sx={{ minWidth: 180 }}
+          /> */}
         </Box>
       </Box>
 
@@ -203,8 +171,8 @@ export default function TransactionReportsPage() {
                 key === 'complete'
                   ? 'Completed Transactions'
                   : key === 'onHold'
-                    ? 'On-Hold Transactions'
-                    : 'Refunded Transactions';
+                  ? 'On-Hold Transactions'
+                  : 'Refunded Transactions';
 
               return (
                 <Card key={key} sx={{ flex: 1, bgcolor: bg, borderRadius: 2 }}>
@@ -223,6 +191,20 @@ export default function TransactionReportsPage() {
               );
             })}
           </Box>
+
+          {/* Orders Table */}
+<Box display="flex" justifyContent="flex-end" mb={1}>
+  <TextField
+    size="small"
+    placeholder="Search Order ID"
+    value={searchOrderNo}
+    onChange={(e) => {
+      setSearchOrderNo(e.target.value);
+      setPage(1); // Reset page when search changes
+    }}
+    sx={{ minWidth: 180 }}
+  />
+</Box>
 
           {/* Orders Table */}
           <TableContainer component={Paper}>
@@ -244,8 +226,8 @@ export default function TransactionReportsPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order, index) => (
+                {totalOrders.length > 0 ? (
+                  totalOrders.map((order, index) => (
                     <TableRow key={order.Order_no}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{order.Order_no}</TableCell>
@@ -278,6 +260,8 @@ export default function TransactionReportsPage() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* Pagination */}
           <Box display="flex" justifyContent="center" mt={3}>
             <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} color="primary" />
           </Box>

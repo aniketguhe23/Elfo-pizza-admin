@@ -5,6 +5,7 @@ import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,6 +16,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -22,10 +24,10 @@ import {
   TableRow,
   TextField,
   Typography,
-  Checkbox,
 } from '@mui/material';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+
 import ConfirmationDialog from '@/components/dashboard/locationSetup/ConfirmationDialog';
 
 export default function LocationManager() {
@@ -165,6 +167,33 @@ export default function LocationManager() {
     setDeleteDialogOpen(true);
   };
 
+  const handleToggleActive = async (item: any, type: 'state' | 'city' | 'locality') => {
+    try {
+      const updated = { ...item, active: !item.active };
+
+      if (type === 'state') {
+        await axios.put(`${apiLocation}/updateState/${item.id}`, updated);
+        await fetchStates();
+      } else if (type === 'city') {
+        await axios.put(`${apiLocation}/updateCity/${item.id}`, {
+          ...updated,
+          stateId: selectedState, // backend expects stateId on update
+        });
+        await fetchCities(selectedState);
+      } else if (type === 'locality') {
+        await axios.put(`${apiLocation}/updatelocality/${item.id}`, {
+          ...updated,
+          cityId: selectedCity, // backend expects cityId on update
+        });
+        await fetchLocalities(selectedCity);
+      }
+
+      toast.success('Status updated');
+    } catch (err) {
+      toast.error('Failed to update status');
+    }
+  };
+
   const openDialogFor = (type: string, item?: any) => {
     setDialogOpen(true);
     setTypeToAdd(type);
@@ -279,7 +308,10 @@ export default function LocationManager() {
                 <TableRow key={s.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{s.name}</TableCell>
-                  <TableCell>{s.active ? 'Yes' : 'No'}</TableCell>
+                  {/* <TableCell>{s.active ? 'Yes' : 'No'}</TableCell> */}
+                  <TableCell>
+                    <Switch checked={s.active} onChange={() => handleToggleActive(s, 'state')} color="primary" />
+                  </TableCell>
                   <TableCell align="right">
                     <Button onClick={() => openDialogFor('state', s)}>Edit</Button>
                     <Button color="error" onClick={() => confirmDelete(s, 'state')}>
@@ -307,7 +339,11 @@ export default function LocationManager() {
                 <TableRow key={c.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{c.name}</TableCell>
-                  <TableCell>{c.active ? 'Yes' : 'No'}</TableCell>
+                  {/* <TableCell>{c.active ? 'Yes' : 'No'}</TableCell> */}
+                  <TableCell>
+                    <Switch checked={c.active} onChange={() => handleToggleActive(c, 'city')} color="primary" />
+                  </TableCell>
+
                   <TableCell align="right">
                     <Button onClick={() => openDialogFor('city', c)}>Edit</Button>
                     <Button color="error" onClick={() => confirmDelete(c, 'city')}>
@@ -335,7 +371,11 @@ export default function LocationManager() {
                 <TableRow key={l.id}>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell>{l.name}</TableCell>
-                  <TableCell>{l.active ? 'Yes' : 'No'}</TableCell>
+                  {/* <TableCell>{l.active ? 'Yes' : 'No'}</TableCell> */}
+                  <TableCell>
+                    <Switch checked={l.active} onChange={() => handleToggleActive(l, 'locality')} color="primary" />
+                  </TableCell>
+
                   <TableCell align="right">
                     <Button onClick={() => openDialogFor('locality', l)}>Edit</Button>
                     <Button color="error" onClick={() => confirmDelete(l, 'locality')}>
@@ -360,7 +400,9 @@ export default function LocationManager() {
 
         {/* Dialog */}
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-          <DialogTitle>{editMode ? 'Edit' : 'Add'} {typeToAdd}</DialogTitle>
+          <DialogTitle>
+            {editMode ? 'Edit' : 'Add'} {typeToAdd}
+          </DialogTitle>
           <DialogContent>
             <TextField
               autoFocus

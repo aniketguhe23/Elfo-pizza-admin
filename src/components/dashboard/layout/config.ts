@@ -27,7 +27,7 @@ export const navItems: NavItemConfig[] = [
     icon: 'plugs-connected',
     items: [
       { key: 'category', title: 'Category', href: paths.dashboard.category },
-      { key: 'subCategory', title: 'Sub Category', href: paths.dashboard.subcategory },
+      // { key: 'subCategory', title: 'Sub Category', href: paths.dashboard.subcategory },
       { key: 'items', title: 'Items', href: paths.dashboard.items },
       { key: 'itemsVarient', title: 'Items Varient', href: paths.dashboard.itemVarient },
     ],

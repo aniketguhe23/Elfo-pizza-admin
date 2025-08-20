@@ -20,6 +20,7 @@ import {
 import axios from 'axios'; // Removed AxiosResponse import, only used as type
 import { Plus, Search } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 import { ListingTable } from './component/ListingTable';
 
@@ -32,8 +33,9 @@ interface SubCategory {
 interface Item {
   id: number;
   name: string;
+  categoryName: string;
   description: string;
-  subcategory_id: number;
+  category_id: number;
   is_vegetarian: boolean;
   is_available: boolean;
   imageUrl?: string;
@@ -43,10 +45,14 @@ interface Item {
 interface FormData {
   name: string;
   description: string;
-  subcategory_id: number;
+  category_id: number;
   is_vegetarian: number;
   is_available: number;
   image_url: FileList;
+}
+interface Category {
+  id: number;
+  name: string;
 }
 
 function ItemsComponent(): JSX.Element {
@@ -60,13 +66,15 @@ function ItemsComponent(): JSX.Element {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState<Item | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [page, setPage] = useState(1);
   const [limit] = useState(10); // Fixed for now, you can make this dynamic
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false); // For loading indicator
 
-  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories, apiDeleteItem } = ProjectApiList();
+  const { apiGetItems, apiCreateItem, apiUpdateItem, apiGetSubCategories, apiDeleteItem, apiGetCategories } =
+    ProjectApiList();
 
   const {
     register,
@@ -98,6 +106,21 @@ function ItemsComponent(): JSX.Element {
       setLoading(false);
     }
   }, [apiGetItems, page, limit]);
+
+  const fetchCategories = useCallback(async (): Promise<void> => {
+    try {
+      const res = await axios.get<{ data: Category[] }>(apiGetCategories);
+      const data = res.data.data || [];
+      setCategories(data);
+    } catch (err) {
+      // Handle error appropriately in production
+      toast.error('Error fetching categories:');
+    }
+  }, [apiGetCategories]);
+
+  useEffect(() => {
+    void fetchCategories();
+  }, [fetchCategories]);
 
   const fetchSubCategories = useCallback(async (): Promise<void> => {
     try {
@@ -135,7 +158,7 @@ function ItemsComponent(): JSX.Element {
     reset({
       name: item?.name || '',
       description: item?.description || '',
-      subcategory_id: item?.subcategory_id ?? 0,
+      category_id: item?.category_id,
       is_vegetarian: 1,
       is_available: item?.is_available ? 1 : 0,
       image_url: undefined as unknown as FileList, // to satisfy TS, won't be used for reset
@@ -154,7 +177,7 @@ function ItemsComponent(): JSX.Element {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('description', data.description);
-    formData.append('subcategory_id', String(data.subcategory_id));
+    formData.append('category_id', String(data.category_id));
     formData.append('is_vegetarian', '1');
     formData.append('is_available', String(data.is_available));
 
@@ -340,21 +363,21 @@ function ItemsComponent(): JSX.Element {
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Subcategory</Box>
+              <Box sx={{ width: 140, fontWeight: 500 }}>Category</Box>
               <TextField
                 select
                 fullWidth
                 size="small"
-                {...register('subcategory_id', { required: 'Subcategory is required' })}
-                error={Boolean(errors.subcategory_id)}
-                helperText={errors.subcategory_id?.message}
+                {...register('category_id', { required: 'Subcategory is required' })}
+                error={Boolean(errors.category_id)}
+                helperText={errors.category_id?.message}
               >
-                {subCategories.map((sub) => (
+                {categories.map((sub) => (
                   <MenuItem key={sub.id} value={sub.id}>
                     {sub.name}{' '}
-                    <Typography component="span" fontSize="0.75rem" color="text.secondary" pl={1}>
-                      ({sub.category_name})
-                    </Typography>
+                    {/* <Typography component="span" fontSize="0.75rem" color="text.secondary" pl={1}>
+                      ({sub.name})
+                    </Typography> */}
                   </MenuItem>
                 ))}
               </TextField>
@@ -363,10 +386,10 @@ function ItemsComponent(): JSX.Element {
             {editingItem && (
               <Box sx={{ display: 'flex', alignItems: 'center', mt: -2, ml: 16, mb: 1 }}>
                 <Typography variant="subtitle2" sx={{ color: 'gray', fontSize: '0.8rem', mr: 1 }}>
-                  Selected Subcategory:
+                  Selected Category:
                 </Typography>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
-                  {editingItem.subcategoryName || 'Unnamed'}
+                  {editingItem.categoryName || 'Unnamed'}
                 </Typography>
               </Box>
             )}
@@ -397,10 +420,8 @@ function ItemsComponent(): JSX.Element {
               />
             </Box>
 
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{ width: 140, fontWeight: 500 }}>Is Vegetarian</Box>
+            <Box display="none">
               <Checkbox
-                // checked={Boolean(isVegetarian)}
                 checked={true}
                 onChange={(e) => {
                   setValue('is_vegetarian', e.target.checked ? 1 : 0);

@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import HomeTab from './HomePage/page';
 import ValuesPage from './ValuesPage/page';
 import FooterTab from './FooterPage/page';
+import LegalPage from './LegalPage/page';
 
 export default function Page(): React.JSX.Element {
   const [value, setValue] = React.useState(0);
@@ -29,6 +30,7 @@ const handleTabChange = (event: React.SyntheticEvent, newValue: number): void =>
         <Tab label="Home" />
         <Tab label="Values" />
         <Tab label="Footer" />
+        <Tab label="Policies" />
       </Tabs>
 
       {/* Tab Content */}
@@ -36,6 +38,7 @@ const handleTabChange = (event: React.SyntheticEvent, newValue: number): void =>
         {value === 0 && <HomeTab />}
         {value === 1 && <ValuesPage />}
         {value === 2 && <FooterTab />}
+        {value === 3 && <LegalPage />}
       </Box>
     </Stack>
   );

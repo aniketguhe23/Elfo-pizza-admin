@@ -118,6 +118,11 @@ export default function ProjectApiList(): Record<string, string> {
     // Footer APis
 
     // contact Info
+    apiGetFooterLegalLinks: `${baseUrl}/api/policies/get`,
+    apiCreateFooterLegalLinks: `${baseUrl}/api/policies/create`,
+    apiUpdateFooterLegalLinks: `${baseUrl}/api/policies/update`,
+
+    // contact Info
     apiGetFooterData: `${baseUrl}/api/footer/contect/get`,
     apiCreateFooterData: `${baseUrl}/api/footer/contect/create`,
     apiUpdateFooterData: `${baseUrl}/api/footer/contect/update`,

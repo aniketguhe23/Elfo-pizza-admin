@@ -161,7 +161,7 @@ function ItemVariantComponent(): React.ReactElement {
             <TableBody>
               {variants.length > 0 ? (
                 variants.map((item, index) => {
-                  const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item?.category?.name);
+                  const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item?.category);
                   return (
                     <TableRow key={item.id}>
                       <TableCell>{(page - 1) * limit + index + 1}</TableCell>

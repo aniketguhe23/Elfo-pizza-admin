@@ -58,14 +58,15 @@ function EditLegalLinksModal({
 
   const renderTextField = (
     name: keyof LegalLinksFormValues,
-    label: string
+    label: string,
+    disabled: boolean = false
   ): JSX.Element => (
     <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems="center" gap={2}>
       <Box sx={{ width: { sm: 160 }, fontWeight: 500 }}>{label}</Box>
       <Controller
         name={name}
         control={control}
-        rules={{ required: `${label} is required` }}
+        rules={!disabled ? { required: `${label} is required` } : undefined}
         render={({ field, fieldState }) => (
           <TextField
             {...field}
@@ -73,6 +74,7 @@ function EditLegalLinksModal({
             size="small"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message}
+            disabled={disabled}
           />
         )}
       />
@@ -104,21 +106,28 @@ function EditLegalLinksModal({
           Legal Links
         </Typography>
         {renderTextField('terms_text', 'Terms & Conditions Text')}
-        {renderTextField('terms_url', 'Terms URL')}
+        {renderTextField('terms_url', 'Terms URL', true)}
+
         {renderTextField('cookie_text', 'Cookie Policy Text')}
-        {renderTextField('cookie_url', 'Cookie URL')}
+        {renderTextField('cookie_url', 'Cookie URL', true)}
+
         {renderTextField('privacy_text', 'Privacy Policy Text')}
-        {renderTextField('privacy_url', 'Privacy URL')}
+        {renderTextField('privacy_url', 'Privacy URL', true)}
+
         {renderTextField('accessibility_text', 'Accessibility Info Text')}
-        {renderTextField('accessibility_url', 'Accessibility URL')}
+        {renderTextField('accessibility_url', 'Accessibility URL', true)}
+
         {renderTextField('applicant_text', 'Job Applicant Text')}
         {renderTextField('applicant_url', 'Job Applicant URL')}
+
         {renderTextField('mp_text', 'MP Info Text')}
         {renderTextField('mp_url', 'MP Info URL')}
+
         {renderTextField('supply_text', 'Supply Chain Policy Text')}
-        {renderTextField('supply_url', 'Supply Chain URL')}
+        {renderTextField('supply_url', 'Supply Chain URL', true)}
+
         {renderTextField('fssai_text', 'FSSAI Details Text')}
-        {renderTextField('fssai_url', 'FSSAI URL')}
+        {renderTextField('fssai_url', 'FSSAI URL', true)}
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-end', gap: 1 }}>

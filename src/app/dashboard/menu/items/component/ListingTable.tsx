@@ -22,6 +22,7 @@ interface CategoryItem {
   description?: string;
   imageUrl?: string;
   subcategoryName?: string;
+  categoryName?: string;
   isVegetarian?: boolean | number;
   is_vegetarian?: boolean;
   isAvailable?: boolean | number;
@@ -62,10 +63,10 @@ export function ListingTable({
             <TableRow>
               <TableCell>S. No</TableCell>
               <TableCell>Image</TableCell>
-              <TableCell>Category Name</TableCell>
+              <TableCell>Item </TableCell>
               <TableCell>Description</TableCell>
-              <TableCell>Sub Category</TableCell>
-              <TableCell>isVegetarian</TableCell>
+              <TableCell>Category</TableCell>
+              {/* <TableCell>isVegetarian</TableCell> */}
               <TableCell>isAvailable</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -103,12 +104,12 @@ export function ListingTable({
                   </TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.description || '-'}</TableCell>
-                  <TableCell>{item.subcategoryName || '-'}</TableCell>
-                  <TableCell>
+                  <TableCell>{item.categoryName || '-'}</TableCell>
+                  {/* <TableCell>
                     {item.isVegetarian === 1 || item.is_vegetarian === true ? 'Yes' : 'No'}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
-                    {item.isAvailable === 1 || item.is_available === true ? 'Yes' : 'No'}
+                    {item.isAvailable === true ? 'Yes' : 'No'}
                   </TableCell>
                   <TableCell>
                     <IconButton onClick={() => onClick?.(item)}>

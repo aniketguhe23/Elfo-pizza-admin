@@ -29,15 +29,15 @@ interface Variant {
   price: number;
 }
 
-interface Category {
-  name: string;
-}
+// interface Category {
+//   name: string;
+// }
 
 interface MenuItem {
   id: number;
   name: string;
   description: string;
-  category: Category;
+  category: string;
   is_vegetarian: number;
   is_available: number;
   on_homePage: boolean;
@@ -161,13 +161,13 @@ function ItemVariantComponent(): React.ReactElement {
             <TableBody>
               {variants.length > 0 ? (
                 variants.map((item, index) => {
-                  const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item?.category?.name);
+                  const showSuggestionToggle = SUGGESTION_CATEGORIES.includes(item?.category);
                   return (
                     <TableRow key={item.id}>
                       <TableCell>{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell>{item?.name}</TableCell>
                       <TableCell>{item?.description}</TableCell>
-                      <TableCell>{item?.category?.name}</TableCell>
+                      <TableCell>{item?.category}</TableCell>
                       <TableCell>{item?.is_vegetarian === 1 ? 'Yes' : 'No'}</TableCell>
                       <TableCell>{item?.is_available === 1 ? 'Yes' : 'No'}</TableCell>
                       <TableCell>

@@ -21,6 +21,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
+
 // import { useUser } from '@/hooks/use-user';
 
 interface LoginResponse {
@@ -56,45 +57,48 @@ export function SignInForm(): React.JSX.Element {
     formState: { errors },
   } = useForm<Values>({ resolver: zodResolver(schema) });
 
- const logInFunction = async (values: Values): Promise<void> => {
-  setIsPending(true);
+  const logInFunction = async (values: Values): Promise<void> => {
+    setIsPending(true);
 
-  try {
-  const response = await axios.post<LoginResponse>(apiLogIn, values);
+    try {
+      const response = await axios.post<LoginResponse>(apiLogIn, values);
 
-    if (response.status === 200) {
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('adminUser', JSON.stringify(user));
-      router.push('/dashboard');
-      window.location.reload();
-    } else {
-      throw new Error('Login failed');
+      if (response.status === 200) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('adminUser', JSON.stringify(user));
+        router.push('/dashboard');
+        // window.location.reload();
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      } else {
+        throw new Error('Login failed');
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data as { message?: string };
+        const message = typeof data?.message === 'string' ? data.message : 'Something went wrong';
+
+        setError('root', {
+          type: 'manual',
+          message,
+        });
+      } else if (err instanceof Error) {
+        setError('root', {
+          type: 'manual',
+          message: err.message,
+        });
+      } else {
+        setError('root', {
+          type: 'manual',
+          message: 'Unknown error',
+        });
+      }
+    } finally {
+      setIsPending(false);
     }
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err)) {
-      const data = err.response?.data as { message?: string };
-      const message = typeof data?.message === 'string' ? data.message : 'Something went wrong';
-
-      setError('root', {
-        type: 'manual',
-        message,
-      });
-    } else if (err instanceof Error) {
-      setError('root', {
-        type: 'manual',
-        message: err.message,
-      });
-    } else {
-      setError('root', {
-        type: 'manual',
-        message: 'Unknown error',
-      });
-    }
-  } finally {
-    setIsPending(false);
-  }
-};
+  };
 
   const onSubmit = async (values: Values): Promise<void> => {
     await logInFunction(values);

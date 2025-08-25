@@ -1,69 +1,84 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
-// ✅ ClassicEditor can be imported directly (no dynamic)
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import React, { useState } from "react";
+import dynamic from "next/dynamic";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 
-// ✅ Dynamic only for CKEditor React wrapper
-const CKEditor = dynamic(() => import('@ckeditor/ckeditor5-react').then((mod) => mod.CKEditor), { ssr: false });
+// ✅ Dynamically import ReactQuill to avoid "document is not defined"
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+import "react-quill/dist/quill.snow.css";
 
 interface EditLegalLinksModalProps {
   open: boolean;
   onClose: () => void;
-  field: string;
-  label: string;
-  value: string;
-  onSave: (value: string) => void;
+  onSubmit: (data: {
+    terms_conditions: string;
+    privacy_policy: string;
+    cookie_policy: string;
+  }) => void;
+  initialData: {
+    terms_conditions: string;
+    privacy_policy: string;
+    cookie_policy: string;
+  };
 }
 
-function EditLegalLinksModal({ open, onClose, field, label, value, onSave }: EditLegalLinksModalProps) {
-  const [content, setContent] = useState(value);
+const EditLegalLinksModal: React.FC<EditLegalLinksModalProps> = ({
+  open,
+  onClose,
+  onSubmit,
+  initialData,
+}) => {
+  const [terms, setTerms] = useState(initialData?.terms_conditions || "");
+  const [privacy, setPrivacy] = useState(initialData?.privacy_policy || "");
+  const [cookie, setCookie] = useState(initialData?.cookie_policy || "");
+
+  const handleSave = () => {
+    onSubmit({
+      terms_conditions: terms,
+      privacy_policy: privacy,
+      cookie_policy: cookie,
+    });
+    onClose();
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Edit {label}</DialogTitle>
+      <DialogTitle>Edit Legal Links</DialogTitle>
       <DialogContent dividers>
-        <CKEditor
-          editor={ClassicEditor as any}
-          data={content}
-          onChange={(_, editor) => {
-            const data = editor.getData();
-            setContent(data);
-          }}
-          config={{
-            toolbar: [
-              'heading',
-              '|',
-              'bold',
-              'italic',
-              'underline',
-              'link',
-              '|',
-              'bulletedList',
-              'numberedList',
-              '|',
-              'undo',
-              'redo',
-            ],
-          }}
-        />
+        <Box mb={3}>
+          <h3 className="text-lg font-semibold mb-2">Terms & Conditions</h3>
+          <ReactQuill value={terms} onChange={setTerms} />
+        </Box>
+
+        <Box mb={3}>
+          <h3 className="text-lg font-semibold mb-2">Privacy Policy</h3>
+          <ReactQuill value={privacy} onChange={setPrivacy} />
+        </Box>
+
+        <Box mb={3}>
+          <h3 className="text-lg font-semibold mb-2">Cookie Policy</h3>
+          <ReactQuill value={cookie} onChange={setCookie} />
+        </Box>
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} variant="outlined">
           Cancel
         </Button>
-        <Button
-          onClick={() => onSave(content)}
-          variant="contained"
-          sx={{ backgroundColor: '#333', '&:hover': { backgroundColor: '#000' } }}
-        >
+        <Button onClick={handleSave} variant="contained" color="primary">
           Save
         </Button>
       </DialogActions>
     </Dialog>
   );
-}
+};
 
 export default EditLegalLinksModal;

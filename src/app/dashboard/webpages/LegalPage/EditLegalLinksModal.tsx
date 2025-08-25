@@ -1,18 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
 import dynamic from 'next/dynamic';
+// ✅ ClassicEditor can be imported directly (no dynamic)
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
-// dynamic import for Next.js SSR
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import 'react-quill/dist/quill.snow.css';
+// ✅ Dynamic only for CKEditor React wrapper
+const CKEditor = dynamic(() => import('@ckeditor/ckeditor5-react').then((mod) => mod.CKEditor), { ssr: false });
 
 interface EditLegalLinksModalProps {
   open: boolean;
@@ -23,36 +18,36 @@ interface EditLegalLinksModalProps {
   onSave: (value: string) => void;
 }
 
-function EditLegalLinksModal({
-  open,
-  onClose,
-  field,
-  label,
-  value,
-  onSave,
-}: EditLegalLinksModalProps) {
+function EditLegalLinksModal({ open, onClose, field, label, value, onSave }: EditLegalLinksModalProps) {
   const [content, setContent] = useState(value);
-
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link'],
-      ['clean'],
-    ],
-  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Edit {label}</DialogTitle>
       <DialogContent dividers>
-        <ReactQuill
-          theme="snow"
-          value={content}
-          onChange={setContent}
-          modules={modules}
-          placeholder={`Edit ${label}...`}
+        <CKEditor
+          editor={ClassicEditor as any}
+          data={content}
+          onChange={(_, editor) => {
+            const data = editor.getData();
+            setContent(data);
+          }}
+          config={{
+            toolbar: [
+              'heading',
+              '|',
+              'bold',
+              'italic',
+              'underline',
+              'link',
+              '|',
+              'bulletedList',
+              'numberedList',
+              '|',
+              'undo',
+              'redo',
+            ],
+          }}
         />
       </DialogContent>
       <DialogActions>

@@ -1,61 +1,91 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
 
 interface EditFileUploadModalProps {
   open: boolean;
   onClose: () => void;
   label: string;
-  onSave: (file: File) => void;
+  onSave: (file: File | File[]) => void; // ✅ Support single OR multiple
+  multiple?: boolean; // ✅ optional prop
 }
 
-function EditFileUploadModal({ open, onClose, label, onSave }: EditFileUploadModalProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+function EditFileUploadModal({
+  open,
+  onClose,
+  label,
+  onSave,
+  multiple = false,
+}: EditFileUploadModalProps) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
+  // ✅ Handle file preview
   useEffect(() => {
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+    if (files.length > 0) {
+      const urls = files.map((file) => URL.createObjectURL(file));
+      setPreviewUrls(urls);
 
-      return () => URL.revokeObjectURL(url); // cleanup on unmount/change
+      return () => urls.forEach((url) => URL.revokeObjectURL(url));
     } else {
-      setPreviewUrl(null);
+      setPreviewUrls([]);
     }
-  }, [file]);
+  }, [files]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Upload {label}</DialogTitle>
       <DialogContent dividers>
-        {/* <input
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        /> */}
         <input
           type="file"
-          name="terms_conditions_pdf"
-          accept="application/pdf"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          accept={multiple ? 'image/*' : 'application/pdf'} // ✅ PDF for single, images for multiple
+          multiple={multiple}
+          onChange={(e) =>
+            setFiles(e.target.files ? Array.from(e.target.files) : [])
+          }
         />
 
-        {file && (
+        {files.length > 0 && (
           <Box mt={2}>
-            <Typography variant="body2" gutterBottom>
-              Selected File: {file.name}
-            </Typography>
+            {files.map((file, index) => (
+              <Box key={index} mb={2}>
+                <Typography variant="body2" gutterBottom>
+                  {file.name}
+                </Typography>
 
-            {/* Show inline PDF preview */}
-            {previewUrl && (
-              <iframe
-                src={previewUrl}
-                width="100%"
-                height="400px"
-                style={{ border: '1px solid #ccc', borderRadius: '8px' }}
-              />
-            )}
+                {/* ✅ Show preview for images */}
+                {multiple && previewUrls[index] ? (
+                  <img
+                    src={previewUrls[index]}
+                    alt={`preview-${index}`}
+                    width={120}
+                    height={120}
+                    style={{
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                      border: '1px solid #ddd',
+                    }}
+                  />
+                ) : !multiple && previewUrls[index] ? (
+                  // ✅ Show preview for PDF
+                  <iframe
+                    src={previewUrls[index]}
+                    width="100%"
+                    height="400px"
+                    style={{ border: '1px solid #ccc', borderRadius: '8px' }}
+                  />
+                ) : null}
+              </Box>
+            ))}
           </Box>
         )}
       </DialogContent>
@@ -64,10 +94,10 @@ function EditFileUploadModal({ open, onClose, label, onSave }: EditFileUploadMod
           Cancel
         </Button>
         <Button
-          onClick={() => file && onSave(file)}
+          onClick={() => onSave(multiple ? files : files[0])}
           variant="contained"
           sx={{ backgroundColor: '#333', '&:hover': { backgroundColor: '#000' } }}
-          disabled={!file}
+          disabled={files.length === 0}
         >
           Upload
         </Button>

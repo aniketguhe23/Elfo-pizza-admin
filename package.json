@@ -7,7 +7,7 @@
   "private": false,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --no-lint && tsc --noEmit || true",
+    "build": "next build --no-lint && tsc --noEmit || echo \"type errors ignored\"",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

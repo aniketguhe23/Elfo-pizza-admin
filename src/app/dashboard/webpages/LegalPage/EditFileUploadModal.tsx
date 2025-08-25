@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
   Button,
   Dialog,
   DialogActions,
@@ -15,31 +14,36 @@ interface EditFileUploadModalProps {
   open: boolean;
   onClose: () => void;
   label: string;
-  onSave: (file: File | File[]) => void; // ✅ Support single OR multiple
-  multiple?: boolean; // ✅ optional prop
+  multiple?: boolean;
+  onSave: (files: File | File[]) => void;
 }
 
 function EditFileUploadModal({
   open,
   onClose,
   label,
-  onSave,
   multiple = false,
+  onSave,
 }: EditFileUploadModalProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
 
-  // ✅ Handle file preview
-  useEffect(() => {
-    if (files.length > 0) {
-      const urls = files.map((file) => URL.createObjectURL(file));
-      setPreviewUrls(urls);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
 
-      return () => urls.forEach((url) => URL.revokeObjectURL(url));
-    } else {
-      setPreviewUrls([]);
+    const files = Array.from(event.target.files);
+    setSelectedFiles(files);
+  };
+
+  const handleSave = () => {
+    if (selectedFiles) {
+      if (multiple) {
+        onSave(selectedFiles);
+      } else {
+        onSave(selectedFiles[0]);
+      }
     }
-  }, [files]);
+    onClose();
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -47,46 +51,20 @@ function EditFileUploadModal({
       <DialogContent dividers>
         <input
           type="file"
-          accept={multiple ? 'image/*' : 'application/pdf'} // ✅ PDF for single, images for multiple
+          accept={multiple ? 'image/*' : undefined}
           multiple={multiple}
-          onChange={(e) =>
-            setFiles(e.target.files ? Array.from(e.target.files) : [])
-          }
+          onChange={handleFileChange}
         />
 
-        {files.length > 0 && (
-          <Box mt={2}>
-            {files.map((file, index) => (
-              <Box key={index} mb={2}>
-                <Typography variant="body2" gutterBottom>
-                  {file.name}
-                </Typography>
-
-                {/* ✅ Show preview for images */}
-                {multiple && previewUrls[index] ? (
-                  <img
-                    src={previewUrls[index]}
-                    alt={`preview-${index}`}
-                    width={120}
-                    height={120}
-                    style={{
-                      borderRadius: '8px',
-                      objectFit: 'cover',
-                      border: '1px solid #ddd',
-                    }}
-                  />
-                ) : !multiple && previewUrls[index] ? (
-                  // ✅ Show preview for PDF
-                  <iframe
-                    src={previewUrls[index]}
-                    width="100%"
-                    height="400px"
-                    style={{ border: '1px solid #ccc', borderRadius: '8px' }}
-                  />
-                ) : null}
-              </Box>
-            ))}
-          </Box>
+        {selectedFiles && selectedFiles.length > 0 && (
+          <div style={{ marginTop: '1rem' }}>
+            <Typography variant="body2">Selected Files:</Typography>
+            <ul>
+              {selectedFiles.map((file, idx) => (
+                <li key={idx}>{file.name}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </DialogContent>
       <DialogActions>
@@ -94,10 +72,13 @@ function EditFileUploadModal({
           Cancel
         </Button>
         <Button
-          onClick={() => onSave(multiple ? files : files[0])}
+          onClick={handleSave}
           variant="contained"
-          sx={{ backgroundColor: '#333', '&:hover': { backgroundColor: '#000' } }}
-          disabled={files.length === 0}
+          sx={{
+            backgroundColor: '#333',
+            '&:hover': { backgroundColor: '#000' },
+          }}
+          disabled={!selectedFiles}
         >
           Upload
         </Button>

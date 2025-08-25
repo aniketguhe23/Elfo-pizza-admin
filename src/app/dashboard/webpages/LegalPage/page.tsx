@@ -25,19 +25,15 @@ interface LegalLinksApiData {
 
 function LegalLinksComponent(): JSX.Element {
   const [open, setOpen] = useState(false);
-  const [selectedField, setSelectedField] =
-    useState<keyof Omit<LegalLinksApiData, 'id'> | null>(null);
+  const [selectedField, setSelectedField] = useState<keyof Omit<LegalLinksApiData, 'id'> | null>(null);
   const [data, setData] = useState<LegalLinksApiData | null>(null);
 
-  const { apiGetFooterLegalLinks, apiUpdateFooterLegalLinks } =
-    ProjectApiList();
+  const { apiGetFooterLegalLinks, apiUpdateFooterLegalLinks } = ProjectApiList();
 
   // ✅ Fetch API Data
   const fetchData = useCallback(async (): Promise<void> => {
     try {
-      const res = await axios.get<{ data: LegalLinksApiData[] }>(
-        apiGetFooterLegalLinks
-      );
+      const res = await axios.get<{ data: LegalLinksApiData[] }>(apiGetFooterLegalLinks);
       setData(res.data.data[0]);
     } catch {
       toast.error('Failed to fetch legal links');
@@ -145,32 +141,31 @@ function LegalLinksComponent(): JSX.Element {
                       No PDF uploaded yet
                     </Typography>
                   )
-                ) : 
-                // item.field === 'policy_images' ? (
-                //   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                //     {data.policy_images?.length > 0 ? (
-                //       data.policy_images.map((img, idx) => (
-                //         <img
-                //           key={idx}
-                //           src={`${BackendUrl}/${img}`}
-                //           alt={`policy-img-${idx}`}
-                //           width={120}
-                //           height={120}
-                //           style={{
-                //             borderRadius: '8px',
-                //             objectFit: 'cover',
-                //             border: '1px solid #ddd',
-                //           }}
-                //         />
-                //       ))
-                //     ) : (
-                //       <Typography variant="body2" color="text.secondary">
-                //         No images uploaded yet
-                //       </Typography>
-                //     )}
-                //   </Box>
-                // ) :
-                 (
+                ) : (
+                  // item.field === 'policy_images' ? (
+                  //   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  //     {data.policy_images?.length > 0 ? (
+                  //       data.policy_images.map((img, idx) => (
+                  //         <img
+                  //           key={idx}
+                  //           src={`${BackendUrl}/${img}`}
+                  //           alt={`policy-img-${idx}`}
+                  //           width={120}
+                  //           height={120}
+                  //           style={{
+                  //             borderRadius: '8px',
+                  //             objectFit: 'cover',
+                  //             border: '1px solid #ddd',
+                  //           }}
+                  //         />
+                  //       ))
+                  //     ) : (
+                  //       <Typography variant="body2" color="text.secondary">
+                  //         No images uploaded yet
+                  //       </Typography>
+                  //     )}
+                  //   </Box>
+                  // ) :
                   <div
                     dangerouslySetInnerHTML={{
                       __html: data[item.field] as string,
@@ -230,12 +225,16 @@ function LegalLinksComponent(): JSX.Element {
               setOpen(false);
               setSelectedField(null);
             }}
-            field={selectedField}
-            label={
-              items.find((i) => i.field === selectedField)?.label || ''
-            }
-            value={data[selectedField]}
-            onSave={(val) => handleSave(selectedField, val)}
+            initialData={{
+              terms_conditions: data.terms_conditions,
+              privacy_policy: data.privacy_policy,
+              cookie_policy: data.cookie_policy,
+            }}
+            onSubmit={(updatedData) => {
+              handleSave('terms_conditions', updatedData.terms_conditions);
+              handleSave('privacy_policy', updatedData.privacy_policy);
+              handleSave('cookie_policy', updatedData.cookie_policy);
+            }}
           />
         ))}
     </Box>

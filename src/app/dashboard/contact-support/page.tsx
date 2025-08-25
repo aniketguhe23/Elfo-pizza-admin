@@ -29,6 +29,7 @@ import axios from 'axios';
 type SupportRequest = {
   id: number;
   order_id: string;
+  resolutionMessage: string;
   restaurant_name: string;
   subject: string;
   message: string;
@@ -177,6 +178,7 @@ export default function ContactSupportPage() {
               <TableCell>Subject</TableCell>
               <TableCell>Message</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Messege</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
@@ -197,6 +199,7 @@ export default function ContactSupportPage() {
                 <TableCell>
                   <Chip label={req.status} color={getStatusColor(req.status)} variant="outlined" size="small" />
                 </TableCell>
+                <TableCell>{req.resolutionMessage || "-"}</TableCell>
                 <TableCell>
                   <Button
                     variant="outlined"
@@ -261,7 +264,7 @@ export default function ContactSupportPage() {
                         Select New Status:
                       </Typography>
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 16 }}>
-                        {['pending', 'resolved', 'rejected'].map((status) => (
+                        {['pending', 'acknowledge', 'resolved', 'rejected'].map((status) => (
                           <Button
                             key={status}
                             variant={selectedStatus === status ? 'contained' : 'outlined'}

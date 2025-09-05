@@ -253,7 +253,7 @@ useEffect(() => {
               <TableCell>S. No</TableCell>
               <TableCell>Item Name</TableCell>
               <TableCell>Size</TableCell>
-              <TableCell>Crust</TableCell>
+              {/* <TableCell>Crust</TableCell> */}
               <TableCell>Price (₹)</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -266,7 +266,7 @@ useEffect(() => {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{sub.itemName}</TableCell>
                     <TableCell>{sub.size}</TableCell>
-                    <TableCell>{sub.crustType ?? '-'}</TableCell>
+                    {/* <TableCell>{sub.crustType ?? '-'}</TableCell> */}
                     <TableCell>₹{sub.price}</TableCell>
                     <TableCell>
                       <IconButton
@@ -409,7 +409,7 @@ useEffect(() => {
             )}
 
             {/* Crust Type */}
-            <Box display="flex" alignItems="center" gap={2}>
+            {/* <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Crust Type</Box>
               <TextField
                 fullWidth
@@ -418,7 +418,7 @@ useEffect(() => {
                 helperText={errors.crustType?.message}
                 size="small"
               />
-            </Box>
+            </Box> */}
 
             {/* Price */}
             <Box display="flex" alignItems="center" gap={2}>

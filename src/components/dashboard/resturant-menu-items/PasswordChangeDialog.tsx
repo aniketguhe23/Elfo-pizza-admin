@@ -18,6 +18,7 @@ interface Props {
   onClose: () => void;
   restaurantId: string;
   onPasswordChange: () => void;
+  closeEditModal: () => void;
 }
 
 interface PasswordForm {
@@ -28,7 +29,7 @@ const schema = yup.object().shape({
   password: yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
 });
 
-export default function PasswordChangeDialog({ open, onClose, restaurantId, onPasswordChange }: Props) {
+export default function PasswordChangeDialog({ open, onClose, restaurantId, onPasswordChange,closeEditModal }: Props) {
   const { apiUpdateRestaurantData } = ProjectApiList();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,7 @@ export default function PasswordChangeDialog({ open, onClose, restaurantId, onPa
 
       if (res.data.status === 'success') {
         reset();
+        closeEditModal();
         onPasswordChange();
       } else {
         toast.error(res.data.message || 'Password update failed');

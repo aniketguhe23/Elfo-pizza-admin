@@ -45,7 +45,7 @@ interface MenuItem {
   variants: Variant[];
 }
 
-const SUGGESTION_CATEGORIES = ['Sides', 'Drinks', 'Desserts'];
+const SUGGESTION_CATEGORIES = ['SIDES', 'DRINKS', 'DESSERTS'];
 
 function ItemVariantComponent(): React.ReactElement {
   const [variants, setVariants] = useState<MenuItem[]>([]);

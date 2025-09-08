@@ -24,6 +24,7 @@ type CouponFormFields = {
   minOrderAmount: string;
   expiresAt: string;
   isActive: boolean;
+  is_coustom: boolean;   // ✅ added
   image: FileList | null;
 };
 
@@ -60,6 +61,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       minOrderAmount: '',
       expiresAt: '',
       isActive: true,
+      is_coustom: false,   // ✅ default false
       image: null,
     },
   });
@@ -78,12 +80,10 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
     try {
       const formData = new FormData();
 
-      // Append image separately
       if (data.image && data.image instanceof FileList && data.image.length > 0) {
         formData.append('image', data.image[0]);
       }
 
-      // Append all other fields individually
       formData.append('name', data.name || '');
       formData.append('code', data.code || '');
       formData.append('description', data.description || '');
@@ -91,19 +91,18 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       if (data.discountAmount) {
         formData.append('discountAmount', data.discountAmount.toString());
       }
-
       if (data.discountPercent) {
         formData.append('discountPercent', data.discountPercent.toString());
       }
       if (data.minOrderAmount) {
         formData.append('minOrderAmount', data.minOrderAmount.toString());
       }
-
       if (data.expiresAt) {
-        formData.append('expiresAt', data.expiresAt); // Keep it as plain text string (as you said)
+        formData.append('expiresAt', data.expiresAt);
       }
 
       formData.append('isActive', data.isActive ? 'true' : 'false');
+      formData.append('is_coustom', data.is_coustom ? 'true' : 'false'); // ✅ added
 
       if (defaultValues?.id) {
         await axios.put(`${apiUpdateCoupons}/${defaultValues.id}`, formData);
@@ -171,7 +170,24 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
               <Label>Flat Discount (₹)</Label>
             </Grid>
             <Grid item xs={9}>
-              <TextField fullWidth size="small" type="number" {...register('discountAmount')} />
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                {...register("discountAmount")}
+                disabled={!!watch("discountPercent")}
+                onChange={(e) => {
+                  setValue("discountAmount", e.target.value);
+                  if (e.target.value) {
+                    setValue("discountPercent", ""); 
+                  }
+                }}
+                helperText={
+                  watch("discountPercent")
+                    ? "Disabled because Percent Discount is filled"
+                    : ""
+                }
+              />
             </Grid>
           </Grid>
 
@@ -181,7 +197,24 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
               <Label>Percent Discount (%)</Label>
             </Grid>
             <Grid item xs={9}>
-              <TextField fullWidth size="small" type="number" {...register('discountPercent')} />
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                {...register("discountPercent")}
+                disabled={!!watch("discountAmount")}
+                onChange={(e) => {
+                  setValue("discountPercent", e.target.value);
+                  if (e.target.value) {
+                    setValue("discountAmount", ""); 
+                  }
+                }}
+                helperText={
+                  watch("discountAmount")
+                    ? "Disabled because Flat Discount is filled"
+                    : ""
+                }
+              />
             </Grid>
           </Grid>
 
@@ -224,55 +257,40 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
               <Grid item xs={9}>
                 <FormControlLabel
                   control={
-                    <Switch checked={watch('isActive')} onChange={(e) => setValue('isActive', e.target.checked)} />
+                    <Switch
+                      checked={watch('isActive')}
+                      onChange={(e) => setValue('isActive', e.target.checked)}
+                    />
                   }
                   label=""
                 />
               </Grid>
             </Grid>
           )}
+
+          {/* ✅ Custom Toggle */}
+          <Grid item xs={12} container spacing={1} alignItems="center">
+            <Grid item xs={3}>
+              <Label>Is Custom?</Label>
+            </Grid>
+            <Grid item xs={9}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={watch('is_coustom')}
+                    onChange={(e) => setValue('is_coustom', e.target.checked)}
+                  />
+                }
+                label=""
+              />
+            </Grid>
+          </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
-        <Button
-          onClick={onSuccess}
-          sx={{
-            width: 90,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            color: '#333',
-            borderColor: '#ccc',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#f2f2f2',
-              color: '#000',
-              borderColor: '#bbb',
-            },
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={loading}
-          sx={{
-            width: 90,
-            fontSize: '0.75rem',
-            padding: '5px 10px',
-            backgroundColor: '#000',
-            color: '#fff',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: '#222',
-            },
-          }}
-        >
+        <Button onClick={onSuccess}>Cancel</Button>
+        <Button type="submit" variant="contained" disabled={loading}>
           {loading ? 'Saving...' : defaultValues ? 'Save' : 'Create'}
         </Button>
       </DialogActions>

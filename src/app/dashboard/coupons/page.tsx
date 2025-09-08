@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -20,6 +21,8 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -30,11 +33,13 @@ interface Coupon {
   id: string;
   name: string;
   code: string;
+  isExpired: string;
   description: string;
   discountAmount: string | null;
   discountPercent: string | null;
   minOrderAmount: string | null;
   isActive: boolean;
+  is_coustom: boolean;
   image: string | null;
   expiresAt: string;
   createdAt: string;
@@ -53,10 +58,19 @@ const CouponsPage = () => {
   const [selectedCouponId, setSelectedCouponId] = useState<any>(null);
   const [open, setOpen] = useState(false);
 
+  // ✅ Tab state (0 = Regular, 1 = Custom)
+  const [tab, setTab] = useState(0);
+
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${apiGetCoupons}?page=${page}&limit=10`);
+
+      // ✅ backend filter by tab
+      const isCustom = tab === 1;
+      const res = await axios.get(
+        `${apiGetCoupons}?page=${page}&limit=10&is_coustom=${isCustom}`
+      );
+
       setCoupons(res.data.data || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (err) {
@@ -68,7 +82,7 @@ const CouponsPage = () => {
 
   useEffect(() => {
     fetchCoupons();
-  }, [page]);
+  }, [page, tab]); // ✅ fetch when page or tab changes
 
   const handleEdit = (coupon: Coupon) => {
     setSelected(coupon);
@@ -98,6 +112,19 @@ const CouponsPage = () => {
         </Button>
       </Box>
 
+      {/* ✅ Tabs */}
+      <Tabs
+        value={tab}
+        onChange={(_, newValue) => {
+          setTab(newValue);
+          setPage(1); // reset to page 1 when switching tab
+        }}
+        sx={{ mb: 2 }}
+      >
+        <Tab label="Regular Coupons" />
+        <Tab label="Custom Coupons" />
+      </Tabs>
+
       {loading ? (
         <Box display="flex" justifyContent="center" mt={5}>
           <CircularProgress />
@@ -117,6 +144,7 @@ const CouponsPage = () => {
                 <TableCell>Min Order</TableCell>
                 <TableCell>Expiry</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Is Active</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -126,11 +154,38 @@ const CouponsPage = () => {
                   <TableCell>{c.name}</TableCell>
                   <TableCell>{c.code}</TableCell>
                   <TableCell>
-                    {c.discountAmount ? `₹${c.discountAmount}` : `${c.discountPercent}%`}
+                    {c.discountAmount
+                      ? `₹${c.discountAmount}`
+                      : `${c.discountPercent}%`}
                   </TableCell>
-                  <TableCell>{c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}</TableCell>
-                  <TableCell>{dayjs(c.expiresAt).format('DD MMM YYYY')}</TableCell>
-                  <TableCell>{c.isActive ? '✅' : '❌'}</TableCell>
+                  <TableCell>
+                    {c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {dayjs(c.expiresAt).format('DD MMM YYYY')}
+                  </TableCell>
+
+                  {/* Expired / Valid */}
+                  <TableCell>
+                    <Chip
+                      label={c.isExpired ? 'Expired' : 'Valid'}
+                      color={c.isExpired ? 'error' : 'success'}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+
+                  {/* Active / Inactive */}
+                  <TableCell>
+                    <Chip
+                      label={c.isActive ? 'Active' : 'Inactive'}
+                      color={c.isActive ? 'success' : 'default'}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+
+                  {/* Actions */}
                   <TableCell>
                     <IconButton onClick={() => handleEdit(c)}>
                       <EditIcon />
@@ -149,7 +204,15 @@ const CouponsPage = () => {
             </TableBody>
           </Table>
 
-          <Stack direction="row" justifyContent="center" alignItems="center" spacing={3} mt={4} mb={5}>
+          {/* Pagination */}
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            spacing={3}
+            mt={4}
+            mb={5}
+          >
             <Button
               variant="contained"
               color="primary"
@@ -192,6 +255,8 @@ const CouponsPage = () => {
             discountPercent: selected?.discountPercent ?? undefined,
             minOrderAmount: selected?.minOrderAmount ?? undefined,
             isActive: selected?.isActive,
+            // ✅ If creating new, default is_coustom depends on active tab
+            is_coustom: selected?.is_coustom ?? (tab === 1),
             expiresAt: selected?.expiresAt,
           }}
           existingImageUrl={selected?.image ?? undefined}
@@ -206,7 +271,9 @@ const CouponsPage = () => {
       <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this coupon?</Typography>
+          <Typography>
+            Are you sure you want to delete this coupon?
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenConfirm(false)}>Cancel</Button>

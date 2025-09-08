@@ -10,7 +10,7 @@ function FooterTab(): React.JSX.Element {
     <>
       <FooterContactComponent />
       <QuickLinksComponent />
-      <LegalLinksComponent />
+      {/* <LegalLinksComponent /> */}
       <SocialLinksComponent />
     </>
   );

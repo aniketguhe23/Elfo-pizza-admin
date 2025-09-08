@@ -109,7 +109,7 @@ export function ListingTable({
                     {item.isVegetarian === 1 || item.is_vegetarian === true ? 'Yes' : 'No'}
                   </TableCell> */}
                   <TableCell>
-                    {item.isAvailable === true ? 'Yes' : 'No'}
+                    {item.is_available === true ? 'Yes' : 'No'}
                   </TableCell>
                   <TableCell>
                     <IconButton onClick={() => onClick?.(item)}>

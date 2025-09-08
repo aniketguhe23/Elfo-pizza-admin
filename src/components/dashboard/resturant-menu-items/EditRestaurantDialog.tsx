@@ -488,6 +488,7 @@ export default function EditRestaurantDialog({ open, onClose, restaurantData, on
       {/* Password Change Dialog */}
       <PasswordChangeDialog
         open={showPasswordModal}
+        closeEditModal={onClose}
         onClose={() => setShowPasswordModal(false)}
         restaurantId={restaurantData.restaurants_no}
         onPasswordChange={() => {

@@ -31,6 +31,7 @@ interface Item {
   id: number;
   name: string;
   itemName: string;
+  categoryName?: string;
 }
 
 interface ItemVariant {
@@ -78,28 +79,29 @@ function ItemVariantComponent(): JSX.Element {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>();
 
 
   // Wrapped fetch functions with useCallback to add to dependency array
-const fetchVariants = useCallback(async (): Promise<void> => {
-  setLoading(true);
-  try {
-    const res: AxiosResponse<{
-      data: ItemVariant[];
-      pagination: { totalPages: number; totalItems: number; currentPage: number; totalCount: number };
-    }> = await axios.get(`${apiGetItemVariants}?page=${page}&limit=${limit}`);
+  const fetchVariants = useCallback(async (): Promise<void> => {
+    setLoading(true);
+    try {
+      const res: AxiosResponse<{
+        data: ItemVariant[];
+        pagination: { totalPages: number; totalItems: number; currentPage: number; totalCount: number };
+      }> = await axios.get(`${apiGetItemVariants}?page=${page}&limit=${limit}`);
 
-    setVariants(res.data.data);
-    setTotalPages(res.data.pagination.totalPages);
-    setTotalCount(res.data.pagination.totalCount);
-  } catch (err) {
-    console.error('Failed to fetch item variants', err);
-  } finally {
-    setLoading(false);
-  }
-}, [apiGetItemVariants, page, limit]); // ✅ Add page and limit here
+      setVariants(res.data.data);
+      setTotalPages(res.data.pagination.totalPages);
+      setTotalCount(res.data.pagination.totalCount);
+    } catch (err) {
+      console.error('Failed to fetch item variants', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiGetItemVariants, page, limit]); // ✅ Add page and limit here
 
 
   const fetchItems = useCallback(async (): Promise<void> => {
@@ -111,9 +113,9 @@ const fetchVariants = useCallback(async (): Promise<void> => {
     }
   }, [apiGetItems]);
 
-useEffect(() => {
-  fetchVariants();
-}, [fetchVariants]);
+  useEffect(() => {
+    fetchVariants();
+  }, [fetchVariants]);
 
   useEffect(() => {
     // fetchVariants();
@@ -138,32 +140,32 @@ useEffect(() => {
   };
 
   const onSubmit = async (data: FormData): Promise<void> => {
-  console.log(data);
-  let payload = {
-    item_id: data?.item_id,
-    size: data?.size,
-    crust_type: data?.crustType,
-    price: data?.price,
+    console.log(data);
+    let payload = {
+      item_id: data?.item_id,
+      size: data?.size,
+      crust_type: data?.crustType,
+      price: data?.price,
+    };
+
+    try {
+      if (editingVariant) {
+        await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, payload);
+      } else {
+        await axios.post(apiCreateItemVariant, payload); // use payload instead of data for consistency
+      }
+      handleDialogClose();
+      await fetchVariants();
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error submitting item variant:", error.response?.data || error.message);
+        toast.error(error.response?.data?.message || "Failed to submit item variant");
+      } else {
+        console.error("Unexpected error:", error);
+        toast.error("Unexpected error occurred");
+      }
+    }
   };
-  
-  try {
-    if (editingVariant) {
-      await axios.put(`${apiUpdateItemVariant}/${editingVariant.variantId}`, payload);
-    } else {
-      await axios.post(apiCreateItemVariant, payload); // use payload instead of data for consistency
-    }
-    handleDialogClose();
-    await fetchVariants();
-  } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      console.error("Error submitting item variant:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to submit item variant");
-    } else {
-      console.error("Unexpected error:", error);
-      toast.error("Unexpected error occurred");
-    }
-  }
-};
 
 
   const filteredVariants = variants?.filter(
@@ -381,6 +383,7 @@ useEffect(() => {
             {/* Size */}
             <Box display="flex" alignItems="center" gap={2}>
               <Box sx={{ width: 120, fontWeight: 500 }}>Size</Box>
+
               <TextField
                 select
                 fullWidth
@@ -389,11 +392,25 @@ useEffect(() => {
                 error={Boolean(errors.size)}
                 helperText={errors.size?.message}
               >
-                {['small', 'medium', 'large'].map((size) => (
-                  <MenuItem key={size} value={size}>
-                    {size.charAt(0).toUpperCase() + size.slice(1)}
-                  </MenuItem>
-                ))}
+                {(() => {
+                  // ✅ find the selected item
+                  const selectedItem = items.find((item) => item.id === Number(watch('item_id')));
+                  const restrictedCategories = ['SIDES', 'PASTAS', 'DRINKS', 'DESSERTS'];
+
+                  // ✅ if selected item’s category is restricted → only Small
+                  if (selectedItem && restrictedCategories.includes(selectedItem.categoryName ?? '')) {
+                    return (
+                      <MenuItem value="small">Small</MenuItem>
+                    );
+                  }
+
+                  // ✅ otherwise show all sizes
+                  return ['small', 'medium', 'large'].map((size) => (
+                    <MenuItem key={size} value={size}>
+                      {size.charAt(0).toUpperCase() + size.slice(1)}
+                    </MenuItem>
+                  ));
+                })()}
               </TextField>
             </Box>
 

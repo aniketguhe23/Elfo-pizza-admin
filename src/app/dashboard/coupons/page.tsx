@@ -135,74 +135,85 @@ const CouponsPage = () => {
         </Typography>
       ) : (
         <>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Code</TableCell>
-                <TableCell>Discount</TableCell>
-                <TableCell>Min Order</TableCell>
-                <TableCell>Expiry</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Is Active</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {coupons.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>{c.name}</TableCell>
-                  <TableCell>{c.code}</TableCell>
-                  <TableCell>
-                    {c.discountAmount
-                      ? `₹${c.discountAmount}`
-                      : `${c.discountPercent}%`}
-                  </TableCell>
-                  <TableCell>
-                    {c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    {dayjs(c.expiresAt).format('DD MMM YYYY')}
-                  </TableCell>
+         <Table>
+  <TableHead>
+    <TableRow>
+      <TableCell>Name</TableCell>
+      <TableCell>Code</TableCell>
+      <TableCell>Discount Amount</TableCell>
+      <TableCell>Discount Percent</TableCell>
+      <TableCell>Min Order</TableCell>
+      <TableCell>Expiry</TableCell>
+      <TableCell>Status</TableCell>
+      <TableCell>Is Active</TableCell>
+      <TableCell>Actions</TableCell>
+    </TableRow>
+  </TableHead>
+  <TableBody>
+    {coupons.map((c) => (
+      <TableRow key={c.id}>
+        <TableCell>{c.name}</TableCell>
+        <TableCell>{c.code}</TableCell>
 
-                  {/* Expired / Valid */}
-                  <TableCell>
-                    <Chip
-                      label={c.isExpired ? 'Expired' : 'Valid'}
-                      color={c.isExpired ? 'error' : 'success'}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
+        {/* Discount Amount */}
+        <TableCell>
+          {c.discountAmount ? `₹${c.discountAmount}` : '—'}
+        </TableCell>
 
-                  {/* Active / Inactive */}
-                  <TableCell>
-                    <Chip
-                      label={c.isActive ? 'Active' : 'Inactive'}
-                      color={c.isActive ? 'success' : 'default'}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
+        {/* Discount Percent */}
+        <TableCell>
+          {c.discountPercent ? `${c.discountPercent}%` : '—'}
+        </TableCell>
 
-                  {/* Actions */}
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(c)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => {
-                        setSelectedCouponId(c.id);
-                        setOpenConfirm(true);
-                      }}
-                    >
-                      <DeleteIcon color="error" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        {/* Min Order */}
+        <TableCell>
+          {c.minOrderAmount ? `₹${c.minOrderAmount}` : 'N/A'}
+        </TableCell>
+
+        {/* Expiry */}
+        <TableCell>
+          {dayjs(c.expiresAt).format('DD MMM YYYY')}
+        </TableCell>
+
+        {/* Expired / Valid */}
+        <TableCell>
+          <Chip
+            label={c.isExpired ? 'Expired' : 'Valid'}
+            color={c.isExpired ? 'error' : 'success'}
+            variant="outlined"
+            size="small"
+          />
+        </TableCell>
+
+        {/* Active / Inactive */}
+        <TableCell>
+          <Chip
+            label={c.isActive ? 'Active' : 'Inactive'}
+            color={c.isActive ? 'success' : 'default'}
+            variant="outlined"
+            size="small"
+          />
+        </TableCell>
+
+        {/* Actions */}
+        <TableCell>
+          <IconButton onClick={() => handleEdit(c)}>
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setSelectedCouponId(c.id);
+              setOpenConfirm(true);
+            }}
+          >
+            <DeleteIcon color="error" />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+
 
           {/* Pagination */}
           <Stack

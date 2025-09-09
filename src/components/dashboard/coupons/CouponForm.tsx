@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProjectApiList from '@/app/api/ProjectApiList';
 import {
   Button,
@@ -11,6 +11,8 @@ import {
   Switch,
   TextField,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
@@ -24,7 +26,7 @@ type CouponFormFields = {
   minOrderAmount: string;
   expiresAt: string;
   isActive: boolean;
-  is_coustom: boolean;   // ✅ added
+  is_coustom: boolean;
   image: FileList | null;
 };
 
@@ -42,7 +44,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 
 const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => {
   const { apiCreateCoupons, apiUpdateCoupons } = ProjectApiList();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -61,10 +63,19 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       minOrderAmount: '',
       expiresAt: '',
       isActive: true,
-      is_coustom: false,   // ✅ default false
+      is_coustom: false,
       image: null,
     },
   });
+
+  // ✅ Discount type state with 3 options
+  const [discountType, setDiscountType] = useState<'amount' | 'percent' | 'both'>(
+    defaultValues?.discountAmount && defaultValues?.discountPercent
+      ? 'both'
+      : defaultValues?.discountAmount
+      ? 'amount'
+      : 'percent'
+  );
 
   useEffect(() => {
     if (defaultValues) {
@@ -72,6 +83,14 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
         ...defaultValues,
         expiresAt: defaultValues.expiresAt,
       });
+
+      if (defaultValues.discountAmount && defaultValues.discountPercent) {
+        setDiscountType('both');
+      } else if (defaultValues.discountAmount) {
+        setDiscountType('amount');
+      } else if (defaultValues.discountPercent) {
+        setDiscountType('percent');
+      }
     }
   }, [defaultValues, reset]);
 
@@ -88,12 +107,18 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       formData.append('code', data.code || '');
       formData.append('description', data.description || '');
 
-      if (data.discountAmount) {
-        formData.append('discountAmount', data.discountAmount.toString());
+      // ✅ Append based on selected type
+      if (discountType === 'amount' || discountType === 'both') {
+        if (data.discountAmount) {
+          formData.append('discountAmount', data.discountAmount.toString());
+        }
       }
-      if (data.discountPercent) {
-        formData.append('discountPercent', data.discountPercent.toString());
+      if (discountType === 'percent' || discountType === 'both') {
+        if (data.discountPercent) {
+          formData.append('discountPercent', data.discountPercent.toString());
+        }
       }
+
       if (data.minOrderAmount) {
         formData.append('minOrderAmount', data.minOrderAmount.toString());
       }
@@ -102,7 +127,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
       }
 
       formData.append('isActive', data.isActive ? 'true' : 'false');
-      formData.append('is_coustom', data.is_coustom ? 'true' : 'false'); // ✅ added
+      formData.append('is_coustom', data.is_coustom ? 'true' : 'false');
 
       if (defaultValues?.id) {
         await axios.put(`${apiUpdateCoupons}/${defaultValues.id}`, formData);
@@ -164,59 +189,73 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
             </Grid>
           </Grid>
 
-          {/* Flat Discount */}
+          {/* ✅ Discount Type Toggle */}
           <Grid item xs={12} container spacing={1} alignItems="center">
             <Grid item xs={3}>
-              <Label>Flat Discount (₹)</Label>
+              <Label>Discount Type</Label>
             </Grid>
             <Grid item xs={9}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                {...register("discountAmount")}
-                disabled={!!watch("discountPercent")}
-                onChange={(e) => {
-                  setValue("discountAmount", e.target.value);
-                  if (e.target.value) {
-                    setValue("discountPercent", ""); 
+              <ToggleButtonGroup
+                value={discountType}
+                exclusive
+                onChange={(_, newValue) => {
+                  if (newValue !== null) {
+                    setDiscountType(newValue);
+                    // clear values only if switching from both to single
+                    if (newValue === 'amount') setValue('discountPercent', '');
+                    if (newValue === 'percent') setValue('discountAmount', '');
                   }
                 }}
-                helperText={
-                  watch("discountPercent")
-                    ? "Disabled because Percent Discount is filled"
-                    : ""
-                }
-              />
+                size="small"
+              >
+                <ToggleButton value="amount">Flat (₹)</ToggleButton>
+                <ToggleButton value="percent">Percent (%)</ToggleButton>
+                <ToggleButton value="both">Both</ToggleButton>
+              </ToggleButtonGroup>
             </Grid>
           </Grid>
 
+          {/* Flat Discount */}
+          {(discountType === 'amount' || discountType === 'both') && (
+            <Grid item xs={12} container spacing={1} alignItems="center">
+              <Grid item xs={3}>
+                <Label>Flat Discount (₹)</Label>
+              </Grid>
+              <Grid item xs={9}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  {...register('discountAmount', {
+                    required: discountType === 'amount' ? 'Flat discount is required' : false,
+                  })}
+                  error={!!errors.discountAmount}
+                  helperText={errors.discountAmount?.message}
+                />
+              </Grid>
+            </Grid>
+          )}
+
           {/* Percent Discount */}
-          <Grid item xs={12} container spacing={1} alignItems="center">
-            <Grid item xs={3}>
-              <Label>Percent Discount (%)</Label>
+          {(discountType === 'percent' || discountType === 'both') && (
+            <Grid item xs={12} container spacing={1} alignItems="center">
+              <Grid item xs={3}>
+                <Label>Percent Discount (%)</Label>
+              </Grid>
+              <Grid item xs={9}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  {...register('discountPercent', {
+                    required: discountType === 'percent' ? 'Percent discount is required' : false,
+                  })}
+                  error={!!errors.discountPercent}
+                  helperText={errors.discountPercent?.message}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={9}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                {...register("discountPercent")}
-                disabled={!!watch("discountAmount")}
-                onChange={(e) => {
-                  setValue("discountPercent", e.target.value);
-                  if (e.target.value) {
-                    setValue("discountAmount", ""); 
-                  }
-                }}
-                helperText={
-                  watch("discountAmount")
-                    ? "Disabled because Flat Discount is filled"
-                    : ""
-                }
-              />
-            </Grid>
-          </Grid>
+          )}
 
           {/* Minimum Order */}
           <Grid item xs={12} container spacing={1} alignItems="center">
@@ -268,7 +307,7 @@ const CouponForm: React.FC<CouponFormProps> = ({ defaultValues, onSuccess }) => 
             </Grid>
           )}
 
-          {/* ✅ Custom Toggle */}
+          {/* Custom Toggle */}
           <Grid item xs={12} container spacing={1} alignItems="center">
             <Grid item xs={3}>
               <Label>Is Custom?</Label>

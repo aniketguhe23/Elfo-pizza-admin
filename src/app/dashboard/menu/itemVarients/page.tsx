@@ -400,7 +400,7 @@ function ItemVariantComponent(): JSX.Element {
                   // ✅ if selected item’s category is restricted → only Small
                   if (selectedItem && restrictedCategories.includes(selectedItem.categoryName ?? '')) {
                     return (
-                      <MenuItem value="small">Small</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
                     );
                   }
 

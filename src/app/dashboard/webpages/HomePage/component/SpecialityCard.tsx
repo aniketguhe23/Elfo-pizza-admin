@@ -111,11 +111,11 @@ function SpecialityCard(): JSX.Element {
     <>
       <Card sx={{ p: 2, mb: 3, backgroundColor: '#fafafa' }}>
         <Typography variant="h6" align="center" gutterBottom>
-          {specialityData.speciality1_maintitle}
+         {specialityData.speciality1_subtitle}
         </Typography>
-        <Typography variant="subtitle2" align="center" color="text.secondary" gutterBottom>
+        {/* <Typography variant="subtitle2" align="center" color="text.secondary" gutterBottom>
           {specialityData.speciality1_subtitle}
-        </Typography>
+        </Typography> */}
         <Divider sx={{ my: 2 }} />
 
         <Box>

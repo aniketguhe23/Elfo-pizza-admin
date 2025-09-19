@@ -9,6 +9,9 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import axios from 'axios';
 import ProjectApiList from '@/app/api/ProjectApiList';
+import { authClient } from '@/lib/auth/client';
+import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/default-logger';
 
 type Props = {
   open: boolean;
@@ -38,6 +41,8 @@ export const UpdateCredentialsModal: React.FC<Props> = ({
   currentEmail = '',
 }) => {
   const { apiUpdateUserDatabyId } = ProjectApiList();
+  const router = useRouter();
+
   const [email, setEmail] = useState(currentEmail);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -62,11 +67,26 @@ export const UpdateCredentialsModal: React.FC<Props> = ({
 
       await axios.put(`${apiUpdateUserDatabyId}/${adminId}`, payload);
 
+      // ✅ After updating credentials, force logout
+      try {
+        const { error: signOutError } = await authClient.signOut();
+        if (signOutError) {
+          logger.error('Sign out error', signOutError);
+        }
+      } catch (err) {
+        logger.error('Sign out error', err);
+      }
+
       setLoading(false);
       setNewPassword('');
       setConfirmPassword('');
+
       onCredentialsUpdated?.();
       onClose();
+
+      // ✅ Refresh the app so login screen shows
+      router.refresh();
+      window.location.reload();
     } catch (err: any) {
       setLoading(false);
       setError(err.response?.data?.message || 'Error updating credentials');

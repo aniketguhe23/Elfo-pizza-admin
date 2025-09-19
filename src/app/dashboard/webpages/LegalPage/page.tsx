@@ -84,7 +84,7 @@ function LegalLinksComponent(): JSX.Element {
 
   // ✅ List of editable fields
   const items = [
-    // { label: 'Terms & Conditions', field: 'terms_conditions', type: 'text' },
+    { label: 'Terms & Conditions', field: 'terms_conditions', type: 'text' },
     {
       label: 'Terms & Conditions (PDF)',
       field: 'terms_conditions_pdf',

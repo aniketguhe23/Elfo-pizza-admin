@@ -174,6 +174,7 @@ export default function ProjectApiList(): Record<string, string> {
     // User
     apiUserData: `${baseUrl}/api/user/getAllUsers`,
     apiUserDatabyId: `${baseUrl}/api/user/getUsers`,
+    apiUpdateUserDatabyId: `${baseUrl}/api/auth/update`,
 
     //Reports
      apiGetAllOrdersForResturant: `${baseUrl}/api/reports/orders/get-all-for-admin`,

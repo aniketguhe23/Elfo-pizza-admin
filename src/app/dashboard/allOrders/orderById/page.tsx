@@ -317,6 +317,7 @@ export default function OrderDetailPage() {
                 <MenuItem value="Delivered">Delivered</MenuItem>
                 <MenuItem value="Refunded">Refunded</MenuItem>
                 <MenuItem value="Cancelled">Cancelled</MenuItem>
+                <MenuItem value="Refund_Requested">Refund Requested</MenuItem>
                 {/* <MenuItem value="Cancelled_By_Customer">Cancelled By Customer</MenuItem> */}
                 {/* <MenuItem value="Refunded_Requested">Refunded Requested</MenuItem> */}
                 {/* <MenuItem value="Scheduled">Scheduled</MenuItem> */}
